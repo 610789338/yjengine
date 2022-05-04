@@ -4,17 +4,25 @@
 #include <queue>
 #include <shared_mutex>
 #include <unordered_map>
+#include <vector>
+#include "decode.h"
+#include "gvalue.h"
 
 using namespace std;
 
 class RpcImp {
 public:
-    RpcImp(string rpc_name) : m_rpc_name(std::move(rpc_name)) {}
+    RpcImp() = delete;
+    RpcImp(string& rpc_name, vector<GValue>& rpc_params) 
+        : m_rpc_name(std::move(rpc_name)), m_rpc_params(std::move(rpc_params)) {}
     ~RpcImp() {}
 
-	const char* get_rpc_name() { return m_rpc_name.c_str(); }
+    string& get_rpc_name() { return m_rpc_name; }
+    vector<GValue>& get_rpc_params() { return m_rpc_params; }
+
 private:
     string m_rpc_name;
+    vector<GValue> m_rpc_params;
 };
 
 // rpc method imp
@@ -32,6 +40,7 @@ class RpcManager {
 public:
     uint16_t rpc_imp_generate(const char* buf, uint16_t length);
     shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<string>& m_params_t);
 
     void imp_queue_push(shared_ptr<RpcImp> imp);
     shared_ptr<RpcImp> imp_queue_pop();

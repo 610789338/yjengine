@@ -121,11 +121,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="engine\boost_asio.cpp" />
+    <ClCompile Include="engine\decode.cpp" />
+    <ClCompile Include="engine\encode.cpp" />
+    <ClCompile Include="engine\gvalue.cpp" />
     <ClCompile Include="engine\rpc_manager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\boost_asio.h" />
+    <ClInclude Include="engine\decode.h" />
+    <ClInclude Include="engine\encode.h" />
+    <ClInclude Include="engine\gvalue.h" />
     <ClInclude Include="engine\log.h" />
     <ClInclude Include="engine\rpc_manager.h" />
   </ItemGroup>

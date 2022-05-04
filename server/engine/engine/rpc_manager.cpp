@@ -1,3 +1,4 @@
+#include <vector>
 #include "rpc_manager.h"
 #include "log.h"
 
@@ -42,39 +43,61 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
 }
 
 shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
-    string rpc_name = read_string(buf);
+    Decoder decoder(buf, pkg_len);
+    string rpc_name = decoder.read_string();
     
-    uint16_t offset = 0;
-    offset += uint16_t(rpc_name.length() + 1);
-
     auto iter = m_rpc_methods.find(rpc_name);
     if (iter == m_rpc_methods.end()) {
         ERROR_LOG("rpc %s unregister\n", rpc_name.c_str());
         return nullptr;
     }
+    
+    // 根据模板把参数反序列化出来
+    vector<GValue> params;
+    rpc_params_decode(decoder, params, iter->second->m_params_t);
+    return make_shared<RpcImp>(rpc_name, params);
+}
 
-    // 根据模板把参数反序列化出来，然后调用对应rpc
-    auto &params_t = iter->second->m_params_t;
-    for (auto iiter = params_t.begin(); iiter != params_t.end(); ++iiter) {
-        if (*iiter == typeid(uint16_t).name()) {
-            auto param = read_uint16(buf + offset);
-            //rpc_call(rpc_name, param);
-
-            offset += 2;
+void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<string>& params_t) {
+    for (auto iter = params_t.begin(); iter != params_t.end(); ++iter) {
+        if (*iter == typeid(int8_t).name()) {
+            params.push_back(GValue(decoder.read_int8()));
         }
-        else {
-
+        else if (*iter == typeid(int16_t).name()) {
+            params.push_back(GValue(decoder.read_int16()));
+        }
+        else if (*iter == typeid(int32_t).name()) {
+            params.push_back(GValue(decoder.read_int32()));
+        }
+        else if (*iter == typeid(int64_t).name()) {
+            params.push_back(GValue(decoder.read_int64()));
+        }
+        else if (*iter == typeid(uint8_t).name()) {
+            params.push_back(GValue(decoder.read_uint8()));
+        }
+        else if (*iter == typeid(uint16_t).name()) {
+            params.push_back(GValue(decoder.read_uint16()));
+        }
+        else if (*iter == typeid(uint32_t).name()) {
+            params.push_back(GValue(decoder.read_uint32()));
+        }
+        else if (*iter == typeid(uint64_t).name()) {
+            params.push_back(GValue(decoder.read_uint64()));
+        }
+        else if (*iter == typeid(float).name()) {
+            params.push_back(GValue(decoder.read_float()));
+        }
+        else if (*iter == typeid(double).name()) {
+            params.push_back(GValue(decoder.read_double()));
+        }
+        else if (*iter == typeid(string).name()) {
+            params.push_back(GValue(decoder.read_string()));
         }
 
-        if (offset >= pkg_len) {
+        if (decoder.is_finish()) {
             break;
         }
-
-        // TODO - 复杂类型参数的反序列化 - 子线程
-        // TODO - 反序列化参数之后的rpc调用 - 主线程
     }
-
-    return make_shared<RpcImp>(std::move(rpc_name));
 }
 
 void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
@@ -107,5 +130,26 @@ void rpc_imp_input_tick() {
         return;
 
     auto imp = g_rpc_manager.imp_queue_pop();
-    INFO_LOG("rpc_tick %s\n", imp->get_rpc_name());
+
+    // TODO
+    auto params = imp->get_rpc_params();
+    switch (params.size())
+    {
+    case 0:
+        rpc_call(imp->get_rpc_name());
+        break;
+    case 1:
+        rpc_call(imp->get_rpc_name(), params[0].real());
+        break;
+    case 2:
+        rpc_call(imp->get_rpc_name(), params[0].real(), params[1].real());
+        break;
+    case 3:
+        rpc_call(imp->get_rpc_name(), params[0].real(), params[1].real(), params[2].real());
+        break;
+    default:
+        break;
+    }
+
+    INFO_LOG("rpc_tick %s\n", imp->get_rpc_name().c_str());
 }
