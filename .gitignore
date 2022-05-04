@@ -1,6 +1,20 @@
 # Prerequisites
 *.d
 
+
+# Visual Studio Project files
+*.suo
+*.log
+*.tlog
+*.pdb
+*.user
+*.idb
+*.db
+*.opendb
+*.sdf
+*.ilk
+*.ipch
+
 # Compiled Object files
 *.slo
 *.lo
