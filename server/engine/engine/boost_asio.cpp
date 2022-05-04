@@ -29,19 +29,17 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
     if (!ec) {
         auto _id = boost::this_thread::get_id();
         string thread_id = boost::lexical_cast<string>(_id);
-
-        auto addr = m_socket.remote_endpoint().address().to_string();
         INFO_LOG("thread.%s on_read: length.%d from %s\n", thread_id.c_str(), int(length), get_remote_addr().c_str());
 
         // 粘包
-        memcpy(m_buffer_cache + m_cache_idx, m_buffer, length);
-        m_cache_idx += length;
+        memmove(m_buffer_cache + m_cache_idx, m_buffer, length);
+        m_cache_idx += uint16_t(length);
 
         // 反序列化
         auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx);
 
         // 拆包
-        memcpy(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
+		memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
         m_cache_idx -= process_len;
 
     } else {
@@ -94,6 +92,7 @@ uint16_t port = 8090;
 boost::asio::io_context io_context;
 Server server{ io_context, port };
 
+
 void boost_asio_init() {
     // 先run，do_accpet之后run会阻塞
     io_context.run();
@@ -118,7 +117,7 @@ void boost_asio_thread() {
 }
 
 void boost_asio_start() {
-    boost::thread t1(boost_asio_thread);
-    boost::thread t2(boost_asio_thread);
-    boost::thread t3(boost_asio_thread);
+    for (size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+        boost::thread t(boost_asio_thread);
+    }
 }

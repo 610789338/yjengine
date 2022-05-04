@@ -49,6 +49,5 @@ private:
 };
 
 extern void boost_asio_init();
-extern void boost_asio_tick();
-extern void boost_asio_thread();
 extern void boost_asio_start();
+extern void boost_asio_tick();
