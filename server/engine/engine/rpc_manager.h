@@ -84,12 +84,12 @@ struct RpcParamsParse<T> {
     vector<string> t;
 };
 
-template<class... T>
-void rpc_register(string rpc_name, void(*cb)(T... args))
+template<class... T, class... T2>
+void rpc_register(string rpc_name, void(*cb)(T... args), T2... args)
 {
     RpcMethod<T...>* method = new RpcMethod<T...>;
     method->cb = cb;
-    method->m_params_t = std::move(RpcParamsParse<T...>().t);
+    method->m_params_t = std::move(RpcParamsParse<T2...>().t);
 
     g_rpc_manager.add_rpc_method(rpc_name, method);
 }
@@ -101,7 +101,7 @@ void rpc_call(string rpc_name, T... args)
     ((RpcMethod<T...>*)(iter->second))->cb(args...);
 }
 
-#define RPC_REGISTER(name) rpc_register(#name, name)
+#define RPC_REGISTER(name, ...) rpc_register(#name, name, __VA_ARGS__)
 #define RPC_CALL(name, ...) rpc_call(#name, __VA_ARGS__)
 
 extern RpcManager g_rpc_manager;

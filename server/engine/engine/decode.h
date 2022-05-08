@@ -26,7 +26,7 @@ public:
 
     string read_string();
 
-    bool is_finish() { return m_offset >= m_max_offset; }
+    bool is_finish();
 private:
     const char* m_buf;
     uint16_t m_max_offset;

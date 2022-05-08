@@ -131,7 +131,6 @@ void rpc_imp_input_tick() {
 
     auto imp = g_rpc_manager.imp_queue_pop();
 
-    // TODO
     auto params = imp->get_rpc_params();
     switch (params.size())
     {
@@ -139,17 +138,36 @@ void rpc_imp_input_tick() {
         rpc_call(imp->get_rpc_name());
         break;
     case 1:
-        rpc_call(imp->get_rpc_name(), params[0].real());
+        rpc_call(imp->get_rpc_name(), params[0]);
         break;
     case 2:
-        rpc_call(imp->get_rpc_name(), params[0].real(), params[1].real());
+        rpc_call(imp->get_rpc_name(), params[0], params[1]);
         break;
     case 3:
-        rpc_call(imp->get_rpc_name(), params[0].real(), params[1].real(), params[2].real());
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2]);
+        break;
+    case 4:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3]);
+        break;
+    case 5:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4]);
+        break;
+    case 6:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5]);
+        break;
+    case 7:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
+        break;
+    case 8:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
+        break;
+    case 9:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
+        break;
+    case 10:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
         break;
     default:
         break;
     }
-
-    INFO_LOG("rpc_tick %s\n", imp->get_rpc_name().c_str());
 }

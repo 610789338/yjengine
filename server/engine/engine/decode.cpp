@@ -14,7 +14,7 @@ Decoder::Decoder(const char* buf, uint16_t max_offset) {
 }
 
 Decoder::~Decoder() {
-    if (m_need_release_buf) {
+    if (true == m_need_release_buf && m_buf != nullptr) {
         delete[] m_buf;
     }
 
@@ -79,14 +79,14 @@ uint32_t Decoder::read_uint32() {
 }
 
 uint64_t Decoder::read_uint64() {
-    uint32_t v = (uint32_t(m_buf[m_offset]) << 56)
-        | uint32_t(m_buf[m_offset + 1]) << 48
-        | uint32_t(m_buf[m_offset + 2]) << 40
-        | uint32_t(m_buf[m_offset + 3]) << 32
-        | uint32_t(m_buf[m_offset + 4]) << 24
-        | uint32_t(m_buf[m_offset + 5]) << 16
-        | uint32_t(m_buf[m_offset + 6]) << 8
-        | uint32_t(m_buf[m_offset + 7]) << 0;
+    uint64_t v = (uint64_t(m_buf[m_offset]) << 56)
+        | uint64_t(m_buf[m_offset + 1]) << 48
+        | uint64_t(m_buf[m_offset + 2]) << 40
+        | uint64_t(m_buf[m_offset + 3]) << 32
+        | uint64_t(m_buf[m_offset + 4]) << 24
+        | uint64_t(m_buf[m_offset + 5]) << 16
+        | uint64_t(m_buf[m_offset + 6]) << 8
+        | uint64_t(m_buf[m_offset + 7]) << 0;
     m_offset += 8;
     return v;
 }
