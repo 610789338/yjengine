@@ -7,8 +7,8 @@ using namespace std;
 
 class Encoder {
 public:
-    Encoder();
-    ~Encoder();
+    Encoder() = default;
+    ~Encoder() = default;
 
     void write_int8(int8_t v);
     void write_int16(int16_t v);
@@ -24,8 +24,11 @@ public:
     void write_double(double v);
 
     void write_string(string v);
+    void write_end();
 
+    char* get_buf() { return m_buf; }
+    uint16_t get_pkg_len() { return m_offset + 2; }
 private:
-    char m_buf[1024*1024];
-    uint16_t m_offset;
+    char m_buf[4 * 1024] = {0};
+    uint16_t m_offset = 2;  // pkg len offset
 };

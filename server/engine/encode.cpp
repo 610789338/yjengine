@@ -1,12 +1,5 @@
 #include "encode.h"
 
-Encoder::Encoder() {
-    m_offset = 0;
-}
-
-Encoder::~Encoder() {
-}
-
 void Encoder::write_int8(int8_t v) {
     m_buf[m_offset + 0] = v >> 0 & 0xFF;
     m_offset += 1;
@@ -94,5 +87,10 @@ void Encoder::write_double(double v) {
 void Encoder::write_string(string v) {
     memmove(m_buf + m_offset, v.c_str(), v.length());
     memset(m_buf + m_offset + v.length(), 0, 1);  // string end
-    m_offset += v.length() + 1;
+    m_offset += uint16_t(v.length()) + 1;
+}
+
+void Encoder::write_end() {
+    m_buf[0] = m_offset >> 8 & 0xFF;
+    m_buf[1] = m_offset >> 0 & 0xFF;
 }

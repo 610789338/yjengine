@@ -55,6 +55,8 @@ private:
     unordered_map<string, RpcMethodBase*> m_rpc_methods;
 };
 
+extern RpcManager g_rpc_manager;
+
 // 变参函数模板 - 可展开实参参数包
 // template<class T, class ...Args>
 // void rpc_params_parse(RpcMethodBase* method, const T& t, const Args&... rest) {
@@ -104,5 +106,4 @@ void rpc_call(string rpc_name, T... args)
 #define RPC_REGISTER(name, ...) rpc_register(#name, name, __VA_ARGS__)
 #define RPC_CALL(name, ...) rpc_call(#name, __VA_ARGS__)
 
-extern RpcManager g_rpc_manager;
 extern void rpc_imp_input_tick();

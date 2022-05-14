@@ -15,41 +15,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\boost_asio.cpp">
-      <Filter>source file</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\rpc_manager.cpp">
-      <Filter>source file</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="engine\decode.cpp">
-      <Filter>source file</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\encode.cpp">
-      <Filter>source file</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\gvalue.cpp">
-      <Filter>source file</Filter>
-    </ClCompile>
+    <ClInclude Include="boost_asio.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="decode.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="encode.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="gvalue.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="rpc_manager.h">
+      <Filter>head file</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="engine\boost_asio.h">
-      <Filter>head file</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\log.h">
-      <Filter>head file</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\rpc_manager.h">
-      <Filter>head file</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\decode.h">
-      <Filter>head file</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\encode.h">
-      <Filter>head file</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\gvalue.h">
-      <Filter>head file</Filter>
-    </ClInclude>
+    <ClCompile Include="boost_asio.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+    <ClCompile Include="decode.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+    <ClCompile Include="encode.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+    <ClCompile Include="gvalue.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+    <ClCompile Include="rpc_manager.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -23,11 +23,14 @@ class GValue {
         uint64_t ui64;
         float f;
         double d;
-        string s;
+        string* s = nullptr;
+        //string s = "";
     };
 
 public:
     GValue() = delete;
+    ~GValue() { if (m_t == GType::STRING_T && m_v.s != nullptr) { delete m_v.s; m_v.s = nullptr; } }
+    
     GValue(int8_t v) : m_t(GType::INT8_T) { m_v.i8 = v;}
     GValue(int16_t v) : m_t(GType::INT16_T) { m_v.i16 = v; }
     GValue(int32_t v) : m_t(GType::INT32_T) { m_v.i32 = v; }
@@ -38,15 +41,29 @@ public:
     GValue(uint64_t v) : m_t(GType::UINT64_T) { m_v.ui64 = v; }
     GValue(float v) : m_t(GType::FLOAT_T) { m_v.f = v; }
     GValue(double v) : m_t(GType::DOUBLE_T) { m_v.d = v; }
-    GValue(string v) : m_t(GType::STRING_T) { m_v.s = v; }
-    GValue(const GValue& rs) { memmove(this, &rs, sizeof(GValue)); }
-    GValue& operator=(const GValue& rs) { memmove(this, &rs, sizeof(GValue)); return *this; }
-    ~GValue() {}
+    GValue(string&& v) : m_t(GType::STRING_T) { m_v.s = new string(v); }
+    //GValue(string&& v) : m_t(GType::STRING_T) { m_v.s = v; }
+    
+    GValue(const GValue& rs);
+    GValue& operator=(const GValue& rs);
 
+    int8_t as_int8() { return m_v.i8; }
     int16_t as_int16() { return m_v.i16; }
+    int32_t as_int32() { return m_v.i32; }
+    int64_t as_int64() { return m_v.i64; }
+    uint8_t as_uint8() { return m_v.ui8; }
+    uint16_t as_uint16() { return m_v.ui16; }
+    uint32_t as_uint32() { return m_v.ui32; }
+    uint64_t as_uint64() { return m_v.ui64; }
+    float as_float() { return m_v.f; }
+    double as_double() { return m_v.d; }
+    string& as_string() const { return *(m_v.s); }
+    //string& as_string() { return m_v.s; }
 
 private:
     GType m_t;
     GV m_v;
 };
+
+extern void byte_print(char* buf, uint16_t length);
 

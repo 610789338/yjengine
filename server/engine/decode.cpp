@@ -122,7 +122,7 @@ double Decoder::read_double() {
 string Decoder::read_string() {
     int end = 0;
     for (; end < 16 * 1024; ++end) {
-        if (m_buf[end] == 0) break;
+        if (m_buf[m_offset + end] == 0) break;
     }
 
     string v(m_buf + m_offset, m_buf + m_offset  + end);

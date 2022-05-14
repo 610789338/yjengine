@@ -91,7 +91,7 @@ void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vec
             params.push_back(GValue(decoder.read_double()));
         }
         else if (*iter == typeid(string).name()) {
-            params.push_back(GValue(decoder.read_string()));
+            params.push_back(GValue(std::move(decoder.read_string())));
         }
 
         if (decoder.is_finish()) {
@@ -166,6 +166,21 @@ void rpc_imp_input_tick() {
         break;
     case 10:
         rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
+        break;
+    case 11:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
+        break;
+    case 12:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
+        break;
+    case 13:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
+        break;
+    case 14:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
+        break;
+    case 15:
+        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
         break;
     default:
         break;
