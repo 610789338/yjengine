@@ -6,6 +6,7 @@
 #include "boost_asio.h"
 #include "log.h"
 #include "rpc_manager.h"
+#include "utils.h"
 
 using boost::asio::ip::tcp;
 
@@ -25,6 +26,7 @@ void Session::do_read() {
 }
 
 void Session::on_read(boost::system::error_code ec, size_t length) {
+    //byte_print(m_buffer, length);
 
     if (!ec) {
         auto _id = boost::this_thread::get_id();

@@ -1,11 +1,15 @@
 #pragma once
 
-#include <string>
 #include <stdint.h>
+
+#include "gvalue.h"
 
 using namespace std;
 
 class Encoder {
+
+#define OFFSET_CHECK(cur, add) ASSERT((cur) < (0xffff - add))
+
 public:
     Encoder() = default;
     ~Encoder() = default;
@@ -23,12 +27,17 @@ public:
     void write_float(float v);
     void write_double(double v);
 
-    void write_string(string v);
+    void write_string(const GString& v);
+    void write_array(const GArray& v);
+    void write_dict(const GDict& v);
     void write_end();
 
     char* get_buf() { return m_buf; }
-    uint16_t get_pkg_len() { return m_offset + 2; }
+    uint16_t get_offset() { return m_offset; }
+
 private:
+    void write_gvalue(const GValue& v);
+
     char m_buf[4 * 1024] = {0};
     uint16_t m_offset = 2;  // pkg len offset
 };

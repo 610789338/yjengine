@@ -25,6 +25,7 @@
     <ClInclude Include="gvalue.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="rpc_manager.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp" />
@@ -32,6 +33,7 @@
     <ClCompile Include="encode.cpp" />
     <ClCompile Include="gvalue.cpp" />
     <ClCompile Include="rpc_manager.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E880729B-7C7B-46EB-8C53-A3AC60CD5550}</ProjectGuid>

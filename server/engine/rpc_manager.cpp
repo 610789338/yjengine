@@ -6,18 +6,6 @@ using namespace std;
 
 RpcManager g_rpc_manager;
 
-uint16_t read_uint16(const char *buf) {
-    return (uint16_t(buf[0]) << 8) | uint16_t(buf[1]);
-}
-
-string read_string(const char *buf) {
-    int end = 0;
-    for (; end < 16*1024; ++end) {
-        if (buf[end] == 0) break;
-    }
-
-    return string(buf, buf + end);
-}
 
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
 uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
@@ -28,8 +16,9 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
         
         // read pkg len
         READ_PRE_CHECK(ret + 2, length);
-        uint16_t pkg_len = read_uint16(buf + ret);
-        ret += 2;  // pkg head len
+        Decoder decoder(buf + ret, 2);
+        uint16_t pkg_len = decoder.read_uint16();
+        ret += decoder.get_offset();  // pkg head len
 
         // 生成RPC实例，塞进队列
         READ_PRE_CHECK(ret + pkg_len, length);
@@ -90,8 +79,14 @@ void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vec
         else if (*iter == typeid(double).name()) {
             params.push_back(GValue(decoder.read_double()));
         }
-        else if (*iter == typeid(string).name()) {
+        else if (*iter == typeid(GString).name()) {
             params.push_back(GValue(std::move(decoder.read_string())));
+        }
+        else if (*iter == typeid(GArray).name()) {
+            params.push_back(GValue(std::move(decoder.read_array())));
+        }
+        else if (*iter == typeid(GDict).name()) {
+            params.push_back(GValue(std::move(decoder.read_dict())));
         }
 
         if (decoder.is_finish()) {
@@ -107,6 +102,10 @@ void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
 
 shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
     unique_lock<shared_mutex> lock(m_mutex);
+    
+    if (m_rpc_imp_queue.empty())
+        return nullptr;
+
     auto imp = m_rpc_imp_queue.front();
     m_rpc_imp_queue.pop();
     return imp;
@@ -130,6 +129,8 @@ void rpc_imp_input_tick() {
         return;
 
     auto imp = g_rpc_manager.imp_queue_pop();
+    if (nullptr == imp)
+        return;
 
     auto params = imp->get_rpc_params();
     switch (params.size())

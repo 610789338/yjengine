@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <stdint.h>
+#include "gvalue.h"
 
 using namespace std;
 
@@ -24,10 +24,16 @@ public:
     float read_float();
     double read_double();
 
-    string read_string();
+    GString read_string();
+    GArray read_array();
+    GDict read_dict();
 
+    uint16_t get_offset() { return m_offset; }
     bool is_finish();
+
 private:
+    GValue read_gvalue();
+
     const char* m_buf;
     uint16_t m_max_offset;
     uint16_t m_offset;

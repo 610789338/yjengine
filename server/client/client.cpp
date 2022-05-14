@@ -10,7 +10,9 @@
 #include "boost/core/ignore_unused.hpp"
 #include "boost/thread.hpp"
 #include "boost/lexical_cast.hpp"
+
 #include "engine/encode.h"
+#include "engine/utils.h"
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -85,10 +87,26 @@ void Client::DoWrite() {
     encoder.write_float(123456789.123456789f);
     encoder.write_double(123456789123456789.123456789123456789);
     encoder.write_string("abc");
+
+    GArray array;
+    array.push_back(string("abc"));
+    array.push_back(10.0f);
+    array.push_back(65536);
+    array.push_back(123456789.987654321);
+    encoder.write_array(array);
+
+    GDict dict;
+    dict.insert(make_pair("key_int8", int8_t(10)));
+    dict.insert(make_pair("key_double", double(111111111111111111.222222222222222)));
+    dict.insert(make_pair("key_array", array));
+    encoder.write_dict(dict);
+
     encoder.write_end();
 
-    thread_safe_print("offset %d\n", encoder.get_pkg_len());
-    boost::asio::async_write(socket_, boost::asio::buffer(encoder.get_buf(), encoder.get_pkg_len()), std::bind(&Client::OnWrite, this, std::placeholders::_1, std::placeholders::_2));
+    //byte_print(encoder.get_buf(), encoder.get_pkg_len());
+
+    thread_safe_print("offset %d\n", encoder.get_offset());
+    boost::asio::async_write(socket_, boost::asio::buffer(encoder.get_buf(), encoder.get_offset()), std::bind(&Client::OnWrite, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void Client::OnWrite(boost::system::error_code ec, std::size_t length) {

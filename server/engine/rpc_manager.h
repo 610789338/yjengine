@@ -5,8 +5,10 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
+
 #include "decode.h"
 #include "gvalue.h"
+#include "log.h"
 
 using namespace std;
 
@@ -26,13 +28,8 @@ private:
 };
 
 // rpc method imp
-struct RpcMethodBase { vector<string> m_params_t; };
-
-template<class... T>
-struct RpcMethod : public RpcMethodBase {
-    RpcMethod() {}
-
-    void(*cb)(T... args);
+struct RpcMethodBase { 
+    vector<string> m_params_t; 
 };
 
 // rpc manager
@@ -57,6 +54,15 @@ private:
 
 extern RpcManager g_rpc_manager;
 
+
+template<class... T>
+struct RpcMethod : public RpcMethodBase {
+    RpcMethod() {}
+
+    void(*cb)(T... args);
+    void args_check(T... args) {}
+};
+
 // 变参函数模板 - 可展开实参参数包
 // template<class T, class ...Args>
 // void rpc_params_parse(RpcMethodBase* method, const T& t, const Args&... rest) {
@@ -70,7 +76,7 @@ extern RpcManager g_rpc_manager;
 //     method->m_params_t.push_back(string(typeid(T).name()));
 // }
 
-// 变参类模板 - 可展开类型参数包
+// 变参结构体模板 - 可展开类型参数包
 template<class T, class... T2>
 struct RpcParamsParse {
     RpcParamsParse() : t{ string(typeid(T).name()) } {
@@ -92,6 +98,7 @@ void rpc_register(string rpc_name, void(*cb)(T... args), T2... args)
     RpcMethod<T...>* method = new RpcMethod<T...>;
     method->cb = cb;
     method->m_params_t = std::move(RpcParamsParse<T2...>().t);
+    method->args_check(args...);
 
     g_rpc_manager.add_rpc_method(rpc_name, method);
 }
@@ -100,10 +107,16 @@ template<class... T>
 void rpc_call(string rpc_name, T... args)
 {
     auto iter = g_rpc_manager.find_rpc_method(rpc_name);
+
+    if (sizeof...(args) != iter->second->m_params_t.size()) {
+        ERROR_LOG("rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), iter->second->m_params_t.size());
+        return;
+    }
+
     ((RpcMethod<T...>*)(iter->second))->cb(args...);
 }
 
 #define RPC_REGISTER(name, ...) rpc_register(#name, name, __VA_ARGS__)
-#define RPC_CALL(name, ...) rpc_call(#name, __VA_ARGS__)
+//#define RPC_CALL(name, ...) rpc_call(#name, __VA_ARGS__)
 
 extern void rpc_imp_input_tick();

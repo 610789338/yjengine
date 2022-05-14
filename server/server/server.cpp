@@ -8,7 +8,7 @@
 using namespace std;
 
 
-void rpc_normal_param_test(GValue i8, GValue i16, GValue i32, GValue i64, GValue ui8, GValue ui16, GValue ui32, GValue ui64, GValue f, GValue d, GValue s) {
+void rpc_normal_param_test(GValue i8, GValue i16, GValue i32, GValue i64, GValue ui8, GValue ui16, GValue ui32, GValue ui64, GValue f, GValue d, GValue s, GValue array, GValue dict) {
     cout << "i8." << int(i8.as_int8()) 
         << " i16." << i16.as_int16()
         << " i32." << i32.as_int32()
@@ -26,7 +26,7 @@ void rpc_normal_param_test(GValue i8, GValue i16, GValue i32, GValue i64, GValue
 int main() {
     INFO_LOG("start\n");
 
-    RPC_REGISTER(rpc_normal_param_test, int8_t(), int16_t(), int32_t(), int64_t(), uint8_t(), uint16_t(), uint32_t(), uint64_t(), float(), double(), string());
+    RPC_REGISTER(rpc_normal_param_test, int8_t(), int16_t(), int32_t(), int64_t(), uint8_t(), uint16_t(), uint32_t(), uint64_t(), float(), double(), GString(), GArray(), GDict());
 
     boost_asio_init();
     boost_asio_start();
