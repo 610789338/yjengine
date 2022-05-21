@@ -48,6 +48,6 @@ private:
     tcp::acceptor m_acceptor;
 };
 
-extern void boost_asio_init();
+extern void boost_asio_init(uint16_t port);
 extern void boost_asio_start();
 extern void boost_asio_tick();

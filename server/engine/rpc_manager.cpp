@@ -95,6 +95,14 @@ void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vec
     }
 }
 
+void RpcManager::add_rpc_method(string rpc_name, RpcMethodBase* method) {
+    m_rpc_methods.emplace(rpc_name, method);
+}
+
+auto RpcManager::find_rpc_method(string rpc_name) {
+    return m_rpc_methods.find(rpc_name);
+}
+
 void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
     unique_lock<shared_mutex> lock(m_mutex);
     m_rpc_imp_queue.push(imp);
@@ -114,14 +122,6 @@ shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
 bool RpcManager::imp_queue_empty() {
     shared_lock<shared_mutex> lock(m_mutex);
     return m_rpc_imp_queue.empty();
-}
-
-void RpcManager::add_rpc_method(string rpc_name, RpcMethodBase* method) {
-    m_rpc_methods.emplace(rpc_name, method);
-}
-
-auto RpcManager::find_rpc_method(string rpc_name) {
-    return m_rpc_methods.find(rpc_name);
 }
 
 void rpc_imp_input_tick() {

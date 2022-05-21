@@ -14,5 +14,11 @@
     <ClCompile Include="server.cpp">
       <Filter>source file</Filter>
     </ClCompile>
+    <ClCompile Include="rpc_test.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="server.ini" />
   </ItemGroup>
 </Project>

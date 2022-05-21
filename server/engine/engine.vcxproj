@@ -23,6 +23,7 @@
     <ClInclude Include="decode.h" />
     <ClInclude Include="encode.h" />
     <ClInclude Include="gvalue.h" />
+    <ClInclude Include="ini.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="rpc_manager.h" />
     <ClInclude Include="utils.h" />
@@ -32,6 +33,7 @@
     <ClCompile Include="decode.cpp" />
     <ClCompile Include="encode.cpp" />
     <ClCompile Include="gvalue.cpp" />
+    <ClCompile Include="ini.cpp" />
     <ClCompile Include="rpc_manager.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
@@ -109,6 +111,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\boost\boost_1_78_0\stage\lib</AdditionalLibraryDirectories>
     </Link>
+    <Lib>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

@@ -36,6 +36,9 @@
     <ClInclude Include="utils.h">
       <Filter>head file</Filter>
     </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>head file</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp">
@@ -54,6 +57,9 @@
       <Filter>source file</Filter>
     </ClCompile>
     <ClCompile Include="utils.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
+    <ClCompile Include="ini.cpp">
       <Filter>source file</Filter>
     </ClCompile>
   </ItemGroup>

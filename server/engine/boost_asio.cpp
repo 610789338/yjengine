@@ -90,13 +90,15 @@ void Server::do_accept() {
     });
 }
 
-uint16_t port = 8090;
 boost::asio::io_context io_context;
-Server server{ io_context, port };
+std::shared_ptr<Server> server = nullptr;
 
 
-void boost_asio_init() {
+void boost_asio_init(uint16_t port = 8090) {
+    server = make_shared<Server>(io_context, port);
+
     // 先run，do_accpet之后run会阻塞
+
     io_context.run();
     INFO_LOG("boost asio init\n");
 }
@@ -104,7 +106,7 @@ void boost_asio_init() {
 // boost_asio_tick是asio的主tick函数，可以放在主线程也可以在子线程
 void boost_asio_tick() {
 
-    server.do_accept();
+    server->do_accept();
     io_context.run();
 
     //INFO_LOG("tick\n");

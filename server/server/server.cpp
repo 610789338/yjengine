@@ -1,35 +1,36 @@
+#include <string>
+
 #include "boost/thread.hpp"
 #include "engine/log.h"
 #include "engine/boost_asio.h"
 #include "engine/rpc_manager.h"
 #include "engine/gvalue.h"
-#include <iostream>
+#include "engine/ini.h"
 
 using namespace std;
 
+extern void rpc_handle_register();
 
-void rpc_normal_param_test(GValue i8, GValue i16, GValue i32, GValue i64, GValue ui8, GValue ui16, GValue ui32, GValue ui64, GValue f, GValue d, GValue s, GValue array, GValue dict) {
-    cout << "i8." << int(i8.as_int8()) 
-        << " i16." << i16.as_int16()
-        << " i32." << i32.as_int32()
-        << " i64." << i64.as_int64()
-        << " ui8." << unsigned int(ui8.as_uint8())
-        << " ui16." << ui16.as_uint16()
-        << " ui32." << ui32.as_uint32()
-        << " ui64." << ui64.as_uint64()
-        << " float." << f.as_float()
-        << " double." << d.as_double()
-        << " string." << s.as_string()
-        << endl;
+void init(int argc, char* args[]) {
+
+    const char* ini_file = "server.ini";
+    g_ini.parser_ini(ini_file);
+
+    auto port = g_ini.get_int("Listen", "port");
+
+    INFO_LOG("init port - %d\n", port);
+    
+    boost_asio_init(port);
+    boost_asio_start();
 }
 
-int main() {
-    INFO_LOG("start\n");
+int main(int argc, char* args[]) {
 
-    RPC_REGISTER(rpc_normal_param_test, int8_t(), int16_t(), int32_t(), int64_t(), uint8_t(), uint16_t(), uint32_t(), uint64_t(), float(), double(), GString(), GArray(), GDict());
+    init(argc, args);
 
-    boost_asio_init();
-    boost_asio_start();
+    rpc_handle_register();
+
+    INFO_LOG("main tick start\n");
 
     // main tick
     while (true) {
