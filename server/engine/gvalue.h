@@ -14,7 +14,7 @@ typedef string GString;
 typedef vector<GValue> GArray;
 typedef map<GString, GValue> GDict;
 
-enum GType : uint8_t {INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T};
+enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T};
 
 class GValue {
 
@@ -22,7 +22,8 @@ class GValue {
         GV() {}
         ~GV() {}
 
-        int8_t  i8 = 0;
+        bool    b = false;
+        int8_t  i8;
         int16_t i16;
         int32_t i32;
         int64_t i64;
@@ -42,7 +43,8 @@ public:
     GValue() = delete;
     ~GValue() { release(); };
     void release();
-    
+
+    GValue(bool v) : m_t(GType::BOOL_T) { m_v.b = v; }
     GValue(int8_t v) : m_t(GType::INT8_T) { m_v.i8 = v;}
     GValue(int16_t v) : m_t(GType::INT16_T) { m_v.i16 = v; }
     GValue(int32_t v) : m_t(GType::INT32_T) { m_v.i32 = v; }
@@ -63,6 +65,8 @@ public:
     GValue(GValue&& rs);
     GValue& operator=(GValue&& rs);
 
+    
+    bool as_bool() const { ASSERT(m_t == GType::BOOL_T); return m_v.b; }
     int8_t as_int8() const { ASSERT(m_t == GType::INT8_T); return m_v.i8; }
     int16_t as_int16() const { ASSERT(m_t == GType::INT16_T); return m_v.i16; }
     int32_t as_int32() const { ASSERT(m_t == GType::INT32_T); return m_v.i32; }

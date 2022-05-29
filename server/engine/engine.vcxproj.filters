@@ -62,5 +62,8 @@
     <ClCompile Include="ini.cpp">
       <Filter>source file</Filter>
     </ClCompile>
+    <ClCompile Include="engine.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

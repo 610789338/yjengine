@@ -24,6 +24,12 @@ Decoder::~Decoder() {
     m_buf = nullptr;
 }
 
+bool Decoder::read_bool() {
+    bool v = *(bool*)(m_buf + m_offset);
+    m_offset += 1;
+    return v;
+}
+
 int8_t Decoder::read_int8() {
     int8_t v = *(int8_t*)(m_buf + m_offset);
     m_offset += 1;

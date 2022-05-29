@@ -14,6 +14,25 @@ public:
     Encoder() = default;
     ~Encoder() = default;
 
+    template<class T>
+    void write(T v) {}
+
+    template<class T> void write(bool v) { write_bool(v); }
+    template<class T> void write(int8_t v) { write_int8(v); }
+    template<class T> void write(int16_t v) { write_int16(v); }
+    template<class T> void write(int32_t v) { write_int32(v); }
+    template<class T> void write(int64_t v) { write_int64(v); }
+    template<class T> void write(uint8_t v) { write_uint8(v); }
+    template<class T> void write(uint16_t v) { write_uint16(v); }
+    template<class T> void write(uint32_t v) { write_uint32(v); }
+    template<class T> void write(uint64_t v) { write_uint64(v); }
+    template<class T> void write(float v) { write_float(v); }
+    template<class T> void write(double v) { write_double(v); }
+    template<class T> void write(const GString& v) { write_string(v); }
+    template<class T> void write(const GArray& v) { write_array(v); }
+    template<class T> void write(const GDict& v) { write_dict(v); }
+
+    void write_bool(bool v);
     void write_int8(int8_t v);
     void write_int16(int16_t v);
     void write_int32(int32_t v);

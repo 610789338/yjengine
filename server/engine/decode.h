@@ -11,6 +11,13 @@ public:
     Decoder(const char* buf, uint16_t max_offset);
     ~Decoder();
 
+    //template<class T>
+    //GValue read() {}
+
+    //template<class T>
+    //GValue  read<bool>() { return read_bool(); }
+
+    bool    read_bool();
     int8_t  read_int8();
     int16_t read_int16();
     int32_t read_int32();

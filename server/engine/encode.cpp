@@ -4,6 +4,13 @@
 #include "encode.h"
 #include "log.h"
 
+
+void Encoder::write_bool(bool v) {
+    OFFSET_CHECK(m_offset, 1);
+    *(bool*)(m_buf + m_offset) = v;
+    m_offset += 1;
+}
+
 void Encoder::write_int8(int8_t v) {
     OFFSET_CHECK(m_offset, 1);
     *(int8_t*)(m_buf + m_offset) = v;
@@ -68,7 +75,7 @@ void Encoder::write_string(const GString& v) {
     OFFSET_CHECK(m_offset, v.length() + 1);
 
     memmove(m_buf + m_offset, v.c_str(), v.length());
-    memset(m_buf + m_offset + v.length(), 0, 1);  // string end
+    memset(m_buf + m_offset + v.length(), 0, 1);  // GString end
     m_offset += uint16_t(v.length()) + 1;
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <queue>
 #include <shared_mutex>
 #include <unordered_map>
@@ -9,103 +8,128 @@
 #include "decode.h"
 #include "gvalue.h"
 #include "log.h"
+#include "encode.h"
 
 using namespace std;
+
+class Session;
 
 class RpcImp {
 public:
     RpcImp() = delete;
-    RpcImp(string& rpc_name, vector<GValue>& rpc_params) 
+    RpcImp(GString& rpc_name, vector<GValue>& rpc_params) 
         : m_rpc_name(std::move(rpc_name)), m_rpc_params(std::move(rpc_params)) {}
     ~RpcImp() {}
 
-    string& get_rpc_name() { return m_rpc_name; }
+    GString& get_rpc_name() { return m_rpc_name; }
     vector<GValue>& get_rpc_params() { return m_rpc_params; }
 
+    void set_session(Session* session) { m_session = session; }
+    Session* get_session() { return m_session; }
+
 private:
-    string m_rpc_name;
+    GString m_rpc_name;
     vector<GValue> m_rpc_params;
+
+    Session* m_session = nullptr;
 };
 
 // rpc method imp
 struct RpcMethodBase { 
-    vector<string> m_params_t; 
+    vector<GString> m_params_t; 
 };
-
-// rpc manager
-class RpcManager {
-public:
-    uint16_t rpc_imp_generate(const char* buf, uint16_t length);
-    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
-    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<string>& m_params_t);
-
-    void imp_queue_push(shared_ptr<RpcImp> imp);
-    shared_ptr<RpcImp> imp_queue_pop();
-	bool imp_queue_empty();
-
-    void add_rpc_method(string rpc_name, RpcMethodBase* method);
-    auto find_rpc_method(string rpc_name);
-
-private:
-    queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
-    shared_mutex m_mutex;
-    unordered_map<string, RpcMethodBase*> m_rpc_methods;
-};
-
-extern RpcManager g_rpc_manager;
-
 
 template<class... T>
 struct RpcMethod : public RpcMethodBase {
     RpcMethod() {}
 
     void(*cb)(T... args);
-    void args_check(T... args) {}
+    void args_num_check(T... args) {}
+
+    // 变参函数模板 - 可展开实参参数包
+    template<class T1, class ...T2>
+    void rpc_params_parse(const T1& t, const T2&... rest) {
+        m_params_t.push_back(GString(typeid(T1).name()));
+        rpc_params_parse(rest...);
+    }
+    template<class T3>
+    void rpc_params_parse(const T3& t) {
+        m_params_t.push_back(GString(typeid(T3).name()));
+    }
 };
 
-// 变参函数模板 - 可展开实参参数包
-// template<class T, class ...Args>
-// void rpc_params_parse(RpcMethodBase* method, const T& t, const Args&... rest) {
-//     method->m_params_t.push_back(string(typeid(T).name()));
+// rpc manager
+class RpcManager {
+public:
+    uint16_t rpc_imp_generate(const char* buf, uint16_t length, Session* session);
 
-//     rpc_params_parse(method, rest...);
-// }
+    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<GString>& m_params_t);
+    
+    template<class ...T>
+    Encoder rpc_encode(const GString& rpc_name, const T&... args) {
+        Encoder encoder;
+        encoder.write_string(rpc_name);
+        rpc_params_encode(encoder, args...);
+        encoder.write_end();
 
-// template<class T>
-// void rpc_params_parse(RpcMethodBase* method, const T& t) {
-//     method->m_params_t.push_back(string(typeid(T).name()));
-// }
+        return encoder;
+    }
+    template<class T, class ...T2>
+    void rpc_params_encode(Encoder& encoder, const T& arg, const T2&... args) {
+        encoder.write<T>(arg);
+        rpc_params_encode(encoder, args...);
+    }
+    template<class T>
+    void rpc_params_encode(Encoder& encoder, const T& arg) {
+        encoder.write<T>(arg);
+    }
+
+    void imp_queue_push(shared_ptr<RpcImp> imp);
+    shared_ptr<RpcImp> imp_queue_pop();
+	bool imp_queue_empty();
+
+    void add_rpc_method(GString rpc_name, RpcMethodBase* method);
+    auto find_rpc_method(GString rpc_name);
+
+private:
+    queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
+    shared_mutex m_mutex;
+    unordered_map<GString, RpcMethodBase*> m_rpc_methods;
+};
+
+extern RpcManager g_rpc_manager;
+
 
 // 变参结构体模板 - 可展开类型参数包
-template<class T, class... T2>
-struct RpcParamsParse {
-    RpcParamsParse() : t{ string(typeid(T).name()) } {
-        auto next = RpcParamsParse<T2...>();
-        t.insert(t.end(), next.t.begin(), next.t.end());
-    }
-    vector<string> t;
-};
-
-template<class T>
-struct RpcParamsParse<T> {
-    RpcParamsParse() : t{ string(typeid(T).name()) } {}
-    vector<string> t;
-};
+//template<class T, class... T2>
+//struct RpcParamsParse {
+//    RpcParamsParse() : t{ GString(typeid(T).name()) } {
+//        auto next = RpcParamsParse<T2...>();
+//        t.insert(t.end(), next.t.begin(), next.t.end());
+//    }
+//    vector<GString> t;
+//};
+//
+//template<class T>
+//struct RpcParamsParse<T> {
+//    RpcParamsParse() : t{ GString(typeid(T).name()) } {}
+//    vector<GString> t;
+//};
 
 template<class... T, class... T2>
-void rpc_register(string rpc_name, void(*cb)(T... args), T2... args)
-{
+void rpc_register(GString rpc_name, void(*cb)(T... args), T2... args) {
     RpcMethod<T...>* method = new RpcMethod<T...>;
     method->cb = cb;
-    method->m_params_t = std::move(RpcParamsParse<T2...>().t);
-    method->args_check(args...);
+    method->args_num_check(args...);
+    method->rpc_params_parse(args...);
+    //method->m_params_t = std::move(RpcParamsParse<T2...>().t);
 
     g_rpc_manager.add_rpc_method(rpc_name, method);
 }
 
 template<class... T>
-void rpc_call(string rpc_name, T... args)
-{
+void rpc_call(GString rpc_name, T... args) {
     auto iter = g_rpc_manager.find_rpc_method(rpc_name);
 
     if (sizeof...(args) != iter->second->m_params_t.size()) {
@@ -116,7 +140,13 @@ void rpc_call(string rpc_name, T... args)
     ((RpcMethod<T...>*)(iter->second))->cb(args...);
 }
 
-#define RPC_REGISTER(name, ...) rpc_register(#name, name, __VA_ARGS__)
-//#define RPC_CALL(name, ...) rpc_call(#name, __VA_ARGS__)
+template<class... T>
+void remote_rpc_call(GString rpc_name, T... args) {
+    auto iter = g_rpc_manager.find_rpc_method(rpc_name);
+
+}
+
+#define RPC_REGISTER(rpc_name, ...) rpc_register(#rpc_name, rpc_name, __VA_ARGS__)
+#define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, __VA_ARGS__)
 
 extern void rpc_imp_input_tick();

@@ -11,14 +11,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="server.cpp">
+    <ClCompile Include="framework\game_rpc.cpp">
       <Filter>source file</Filter>
     </ClCompile>
-    <ClCompile Include="rpc_test.cpp">
+    <ClCompile Include="game_app.cpp">
       <Filter>source file</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="server.ini" />
+    <None Include="game.ini" />
   </ItemGroup>
 </Project>

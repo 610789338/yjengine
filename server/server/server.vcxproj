@@ -19,17 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="rpc_test.cpp" />
-    <ClCompile Include="server.cpp" />
+    <ClCompile Include="framework\game_rpc.cpp" />
+    <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="server.ini" />
+    <None Include="game.ini" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{62389DB3-4807-4A36-AD96-06AB77DDEDAC}</ProjectGuid>
     <RootNamespace>server</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>game</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

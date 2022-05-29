@@ -6,9 +6,8 @@ using namespace std;
 
 RpcManager g_rpc_manager;
 
-
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
-uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
+uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, Session* session) {
 
     uint16_t ret = 0;
 
@@ -25,6 +24,7 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
         auto imp = rpc_decode(buf + ret, pkg_len);
         ret += pkg_len;  // pkg len
 
+        imp->set_session(session);
         imp_queue_push(imp);
     }
 
@@ -33,7 +33,7 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length) {
 
 shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
     Decoder decoder(buf, pkg_len);
-    string rpc_name = decoder.read_string();
+    GString rpc_name = decoder.read_string();
     
     auto iter = m_rpc_methods.find(rpc_name);
     if (iter == m_rpc_methods.end()) {
@@ -47,9 +47,12 @@ shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
     return make_shared<RpcImp>(rpc_name, params);
 }
 
-void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<string>& params_t) {
+void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<GString>& params_t) {
     for (auto iter = params_t.begin(); iter != params_t.end(); ++iter) {
-        if (*iter == typeid(int8_t).name()) {
+        if (*iter == typeid(bool).name()) {
+            params.push_back(GValue(decoder.read_bool()));
+        }
+        else if (*iter == typeid(int8_t).name()) {
             params.push_back(GValue(decoder.read_int8()));
         }
         else if (*iter == typeid(int16_t).name()) {
@@ -95,11 +98,11 @@ void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vec
     }
 }
 
-void RpcManager::add_rpc_method(string rpc_name, RpcMethodBase* method) {
+void RpcManager::add_rpc_method(GString rpc_name, RpcMethodBase* method) {
     m_rpc_methods.emplace(rpc_name, method);
 }
 
-auto RpcManager::find_rpc_method(string rpc_name) {
+auto RpcManager::find_rpc_method(GString rpc_name) {
     return m_rpc_methods.find(rpc_name);
 }
 
@@ -124,6 +127,7 @@ bool RpcManager::imp_queue_empty() {
     return m_rpc_imp_queue.empty();
 }
 
+shared_ptr<RpcImp> g_cur_imp = nullptr;
 void rpc_imp_input_tick() {
     if (g_rpc_manager.imp_queue_empty())
         return;
@@ -131,6 +135,8 @@ void rpc_imp_input_tick() {
     auto imp = g_rpc_manager.imp_queue_pop();
     if (nullptr == imp)
         return;
+
+    g_cur_imp = imp;
 
     auto params = imp->get_rpc_params();
     switch (params.size())
