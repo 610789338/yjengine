@@ -1,5 +1,6 @@
 #include <vector>
 #include "rpc_manager.h"
+#include "boost_asio.h"
 #include "log.h"
 
 using namespace std;
@@ -45,6 +46,12 @@ shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
     // 根据模板把参数反序列化出来
     vector<GValue> params;
     rpc_params_decode(decoder, params, iter->second->m_params_t);
+
+    if (decoder.get_offset() < decoder.get_max_offset()) {
+        auto remain_len = decoder.get_max_offset() - decoder.get_offset();
+        WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
+    }
+
     return make_shared<RpcImp>(rpc_name, params);
 }
 
@@ -194,5 +201,11 @@ void rpc_imp_input_tick() {
         break;
     default:
         break;
+    }
+
+    auto session = g_cur_imp->get_session();
+    if (imp->get_rpc_name() != "connect_from_client" && session && !session->get_verify()) {
+        ERROR_LOG("client(%s) not verify\n", session->get_remote_addr().c_str());
+        session->close();
     }
 }

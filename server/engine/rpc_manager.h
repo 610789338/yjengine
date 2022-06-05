@@ -92,6 +92,8 @@ public:
     void rpc_params_encode(Encoder& encoder, const T& arg) {
         encoder.write<T>(arg);
     }
+    void rpc_params_encode(Encoder& encoder) {
+    }
 
     void imp_queue_push(shared_ptr<RpcImp> imp);
     shared_ptr<RpcImp> imp_queue_pop();

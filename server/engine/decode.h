@@ -35,6 +35,7 @@ public:
     GArray read_array();
     GDict read_dict();
 
+    uint16_t get_max_offset() { return m_max_offset; }
     uint16_t get_offset() { return m_offset; }
     bool is_finish();
 
