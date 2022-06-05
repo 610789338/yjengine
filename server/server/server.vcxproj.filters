@@ -17,8 +17,19 @@
     <ClCompile Include="game_app.cpp">
       <Filter>source file</Filter>
     </ClCompile>
+    <ClCompile Include="framework\mailbox.cpp">
+      <Filter>source file</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework\mailbox.h">
+      <Filter>head file</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\game_rpc.h">
+      <Filter>head file</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

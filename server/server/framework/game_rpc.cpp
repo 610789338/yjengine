@@ -1,7 +1,6 @@
 #include <iostream>
 #include <map>
 
-#include "engine/gvalue.h"
 #include "engine/rpc_manager.h"
 #include "engine/boost_asio.h"
 

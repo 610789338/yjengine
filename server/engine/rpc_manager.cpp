@@ -7,7 +7,7 @@ using namespace std;
 RpcManager g_rpc_manager;
 
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
-uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, Session* session) {
+uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote) {
 
     uint16_t ret = 0;
 
@@ -25,6 +25,7 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, Session*
         ret += pkg_len;  // pkg len
 
         imp->set_session(session);
+        imp->set_remote(remote);
         imp_queue_push(imp);
     }
 
@@ -126,6 +127,8 @@ bool RpcManager::imp_queue_empty() {
     shared_lock<shared_mutex> lock(m_mutex);
     return m_rpc_imp_queue.empty();
 }
+
+void args2vector(vector<GValue>& rpc_params) {}
 
 shared_ptr<RpcImp> g_cur_imp = nullptr;
 void rpc_imp_input_tick() {

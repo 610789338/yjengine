@@ -1,8 +1,8 @@
-#include "engine/gvalue.h"
-#include "engine/log.h"
-#include "engine/rpc_manager.h"
-#include "engine/boost_asio.h"
-#include "engine/ini.h"
+#include "gvalue.h"
+#include "log.h"
+#include "rpc_manager.h"
+#include "boost_asio.h"
+#include "ini.h"
 
 #include "remote_manager.h"
 
@@ -29,18 +29,18 @@ void Remote::on_resolve(boost::system::error_code ec, tcp::resolver::results_typ
     auto self(shared_from_this());
     boost::asio::async_connect(m_socket, endpoints,
         [this, self](boost::system::error_code ec, tcp::endpoint endpoints) {
-        on_connect(ec, endpoints, self);
+        on_connect(ec, endpoints);
     });
 }
 
-void Remote::on_connect(boost::system::error_code ec, tcp::endpoint endpoint, shared_ptr<Remote> self) {
+void Remote::on_connect(boost::system::error_code ec, tcp::endpoint endpoint) {
     if (ec) {
         ERROR_LOG("Connect failed: %s\n", ec.message().c_str());
         close();
         return;
     }
 
-    g_remote_mgr.on_remote_connected(self);
+    LOCAL_RPC_CALL(shared_from_this(), "on_remote_connected");
 
     do_read();
 }
@@ -67,7 +67,7 @@ void Remote::on_read(boost::system::error_code ec, std::size_t length) {
             ERROR_LOG("socket read error: %s\n", ec.message().c_str());
         }
 
-        g_remote_mgr.on_remote_disconnected(get_remote_addr());
+        LOCAL_RPC_CALL(shared_from_this(), "on_remote_disconnected", get_remote_addr());
         close();
 
         return;
@@ -82,7 +82,7 @@ void Remote::on_read(boost::system::error_code ec, std::size_t length) {
     m_cache_idx += uint16_t(length);
 
     // 反序列化
-    auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx, nullptr);
+    auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx, nullptr, shared_from_this());
 
     // 拆包
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
@@ -96,15 +96,21 @@ void Remote::close() {
 }
 
 GString Remote::get_local_addr() {
-    auto ip = m_socket.local_endpoint().address().to_string();
-    auto port = m_socket.local_endpoint().port();
-    return ip + ":" + std::to_string(port);
+    if (m_local_addr.empty()) {
+        auto ip = m_socket.local_endpoint().address().to_string();
+        auto port = m_socket.local_endpoint().port();
+        m_local_addr = ip + ":" + std::to_string(port);
+    }
+    return m_local_addr;
 }
 
 GString Remote::get_remote_addr() {
-    auto ip = m_socket.remote_endpoint().address().to_string();
-    auto port = m_socket.remote_endpoint().port();
-    return ip + ":" + std::to_string(port);
+    if (m_remote_addr.empty()) {
+        auto ip = m_socket.remote_endpoint().address().to_string();
+        auto port = m_socket.remote_endpoint().port();
+        m_remote_addr = ip + ":" + std::to_string(port);
+    }
+    return m_remote_addr;
 }
 
 void Remote::on_write(boost::system::error_code ec, std::size_t length) {
@@ -115,34 +121,29 @@ void Remote::on_write(boost::system::error_code ec, std::size_t length) {
 
 // ------------------------------ rpc manager ------------------------------
 
-void RemoteManager::connect_remote(GString ip, GString port) {
+void RemoteManager::connect_remote(const GString& ip, const GString& port) {
     make_shared<Remote>(io_context)->start(ip, port);
 }
 
-void RemoteManager::on_remote_connected(shared_ptr<Remote> remote) {
-    INFO_LOG("on_remote_connected %s\n", remote->get_remote_addr().c_str());
-
+void RemoteManager::on_remote_connected(const shared_ptr<Remote>& remote) {
     add_remote(remote);
-
-    REMOTE_RPC_CALL(remote, "register_from_gate", server->get_listen_addr());
 }
 
-void RemoteManager::on_remote_disconnected(GString remote_addr) {
-    INFO_LOG("on_remote_disconnected %s\n", remote_addr.c_str());
+void RemoteManager::on_remote_disconnected(const GString& remote_addr) {
     remove_remote(remote_addr);
 }
 
-void RemoteManager::add_remote(shared_ptr<Remote> remote) {
+void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
     unique_lock<shared_mutex> lock(m_mutex);
     m_remotes.insert(make_pair(remote->get_remote_addr(), remote));
 }
 
-void RemoteManager::remove_remote(GString remote_addr) {
+void RemoteManager::remove_remote(const GString& remote_addr) {
     unique_lock<shared_mutex> lock(m_mutex);
     m_remotes.erase(remote_addr);
 }
 
-shared_ptr<Remote> RemoteManager::get_remote(GString remote_addr) {
+shared_ptr<Remote> RemoteManager::get_remote(const GString& remote_addr) {
     shared_lock<shared_mutex> lock(m_mutex);
     auto iter = m_remotes.find(remote_addr);
     if (iter == m_remotes.end()) {
@@ -152,5 +153,6 @@ shared_ptr<Remote> RemoteManager::get_remote(GString remote_addr) {
     return iter->second;
 }
 
-void client_disconnected(GString client_addr) {
-}
+void(*on_remote_connected_cb)(const shared_ptr<Remote>& remote) = [](const shared_ptr<Remote>& remote) {};
+void(*on_remote_disconnected_cb)(const GString& remote_addr) = [](const GString& remote_addr) {};
+

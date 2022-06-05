@@ -35,6 +35,9 @@ public:
         });
     }
 
+    bool get_verify() { return is_verify; }
+    void set_verify(bool success) { is_verify = success; }
+
 private:
     void on_write(boost::system::error_code ec, std::size_t length);
 
@@ -51,7 +54,31 @@ private:
     char m_buffer[RCV_BUF] = {0};
     char m_buffer_cache[BUF_CACHE] = {0};
     short m_cache_idx = 0;
+
+    GString m_remote_addr;
+    GString m_local_addr;
+
+    bool is_verify = false;
 };
+
+class SessionManager {
+public:
+    SessionManager() {}
+    ~SessionManager() {}
+
+    void on_session_connected(const shared_ptr<Session>& session);
+    void on_session_disconnected(const GString& session_addr);
+
+    void add_session(const shared_ptr<Session>& session);
+    void remove_session(const GString& session_addr);
+    shared_ptr<Session> get_session(const GString& session_addr);
+    shared_ptr<Session> get_rand_session();
+
+private:
+    shared_mutex m_mutex;
+    map<GString, shared_ptr<Session>> m_sessions;
+};
+
 
 // -----------------------------------------------------------------------------
 
@@ -71,8 +98,9 @@ private:
 };
 
 extern boost::asio::io_context io_context;
-extern void boost_asio_init(GString ip, uint16_t port);
+extern void boost_asio_init();
 extern void boost_asio_start();
 extern void boost_asio_tick();
 
 extern std::shared_ptr<Server> server;
+extern SessionManager g_session_mgr;

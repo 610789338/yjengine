@@ -1,11 +1,8 @@
-#include <string>
-
 #include "boost/thread.hpp"
 #include "engine/log.h"
 #include "engine/rpc_manager.h"
 #include "engine/gvalue.h"
 #include "engine/ini.h"
-#include "engine/remote_manager.h"
 
 using namespace std;
 
@@ -13,35 +10,25 @@ extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();
 
-extern void client_rpc_handle_register();
+extern void game_rpc_handle_register();
 
 void init(int argc, char* args[]) {
 
-    const char* ini_file = "client.ini";
+    const char* ini_file = "game.ini";
     g_ini.parser_ini(ini_file);
+
+    auto ip = g_ini.get_string("Listen", "ip");
+    auto port = g_ini.get_int("Listen", "port");
+    set_engine_listen_ipport(ip, port);
 
     engine_init();
 
-    client_rpc_handle_register();
-}
-
-void connect_gate() {
-    auto ip = g_ini.get_string("Gate", "ip");
-    auto port = g_ini.get_string("Gate", "port");
-
-    INFO_LOG("connect gate %s:%s\n", ip.c_str(), port.c_str());
-    g_remote_mgr.connect_remote(ip, port);
+    game_rpc_handle_register();
 }
 
 int main(int argc, char* args[]) {
 
     init(argc, args);
-
-    connect_gate();
-    //connect_gate();
-    //connect_gate();
-    //connect_gate();
-    //connect_gate();
 
     INFO_LOG("main tick start\n");
 

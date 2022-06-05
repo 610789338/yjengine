@@ -1,5 +1,4 @@
 #pragma once
-// Asynchronous echo client.
 
 #include <array>
 #include <functional>
@@ -11,8 +10,9 @@
 #include "boost/core/ignore_unused.hpp"
 #include "boost/thread.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost_asio.h"
 
-#include "engine/gvalue.h"
+#include "gvalue.h"
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -42,7 +42,7 @@ public:
 
 private:
     void on_resolve(boost::system::error_code ec, tcp::resolver::results_type endpoints);
-    void on_connect(boost::system::error_code ec, tcp::endpoint endpoint, shared_ptr<Remote> self);
+    void on_connect(boost::system::error_code ec, tcp::endpoint endpoint);
 
     void on_write(boost::system::error_code ec, std::size_t length);
 
@@ -60,6 +60,9 @@ private:
     char m_buffer[RCV_BUF] = { 0 };
     char m_buffer_cache[BUF_CACHE] = { 0 };
     short m_cache_idx = 0;
+
+    GString m_remote_addr;
+    GString m_local_addr;
 };
 
 class RemoteManager {
@@ -67,13 +70,13 @@ public:
     RemoteManager() {}
     ~RemoteManager() {}
 
-    void connect_remote(GString ip, GString port);
-    void on_remote_connected(shared_ptr<Remote> remote);
-    void on_remote_disconnected(GString remote_addr);
+    void connect_remote(const GString& ip, const GString& port);
+    void on_remote_connected(const shared_ptr<Remote>& remote);
+    void on_remote_disconnected(const GString& remote_addr);
 
-    void add_remote(shared_ptr<Remote> remote);
-    void remove_remote(GString remote_addr);
-    shared_ptr<Remote> get_remote(GString remote_addr);
+    void add_remote(const shared_ptr<Remote>& remote);
+    void remove_remote(const GString& remote_addr);
+    shared_ptr<Remote> get_remote(const GString& remote_addr);
 
 private:
     shared_mutex m_mutex;

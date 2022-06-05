@@ -22,9 +22,11 @@
     <ClInclude Include="boost_asio.h" />
     <ClInclude Include="decode.h" />
     <ClInclude Include="encode.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="gvalue.h" />
     <ClInclude Include="ini.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="remote_manager.h" />
     <ClInclude Include="rpc_manager.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
@@ -33,8 +35,10 @@
     <ClCompile Include="decode.cpp" />
     <ClCompile Include="encode.cpp" />
     <ClCompile Include="engine.cpp" />
+    <ClCompile Include="entity.cpp" />
     <ClCompile Include="gvalue.cpp" />
     <ClCompile Include="ini.cpp" />
+    <ClCompile Include="remote_manager.cpp" />
     <ClCompile Include="rpc_manager.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>

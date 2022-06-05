@@ -13,25 +13,31 @@
 using namespace std;
 
 class Session;
+class Remote;
 
 class RpcImp {
 public:
     RpcImp() = delete;
+    RpcImp(GString& rpc_name) : m_rpc_name(std::move(rpc_name)) {}
     RpcImp(GString& rpc_name, vector<GValue>& rpc_params) 
         : m_rpc_name(std::move(rpc_name)), m_rpc_params(std::move(rpc_params)) {}
+    
     ~RpcImp() {}
 
     GString& get_rpc_name() { return m_rpc_name; }
     vector<GValue>& get_rpc_params() { return m_rpc_params; }
 
-    void set_session(Session* session) { m_session = session; }
-    Session* get_session() { return m_session; }
+    void set_session(shared_ptr<Session> session) { m_session = session; }
+    shared_ptr<Session> get_session() { return m_session; }
 
+    void set_remote(shared_ptr<Remote> remote) { m_remote = remote; }
+    shared_ptr<Remote> get_remote() { return m_remote; }
 private:
     GString m_rpc_name;
     vector<GValue> m_rpc_params;
 
-    Session* m_session = nullptr;
+    shared_ptr<Session> m_session = nullptr;
+    shared_ptr<Remote> m_remote = nullptr;
 };
 
 // rpc method imp
@@ -56,12 +62,14 @@ struct RpcMethod : public RpcMethodBase {
     void rpc_params_parse(const T3& t) {
         m_params_t.push_back(GString(typeid(T3).name()));
     }
+    void rpc_params_parse() {
+    }
 };
 
 // rpc manager
 class RpcManager {
 public:
-    uint16_t rpc_imp_generate(const char* buf, uint16_t length, Session* session);
+    uint16_t rpc_imp_generate(const char* buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote);
 
     shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
     void rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<GString>& m_params_t);
@@ -140,13 +148,38 @@ void rpc_call(GString rpc_name, T... args) {
     ((RpcMethod<T...>*)(iter->second))->cb(args...);
 }
 
+template<class T, class ...T2>
+void args2vector(vector<GValue>& rpc_params, T arg, T2 ...args) {
+    rpc_params.push_back(arg);
+    args2vector(rpc_params, args...);
+}
+template<class T>
+void args2vector(vector<GValue>& rpc_params, T arg) {
+    rpc_params.push_back(arg);
+}
+extern void args2vector(vector<GValue>& rpc_params);
+
 template<class... T>
-void remote_rpc_call(GString rpc_name, T... args) {
-    auto iter = g_rpc_manager.find_rpc_method(rpc_name);
+void local_rpc_call(shared_ptr<Session>& session, GString rpc_name, T ...args) {
+    vector<GValue> rpc_params;
+    args2vector(rpc_params, args...);
+    auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
+    imp->set_session(session);
+    g_rpc_manager.imp_queue_push(imp);
+
+}
+template<class... T>
+void local_rpc_call(shared_ptr<Remote>& remote, GString rpc_name, T ...args) {
+    vector<GValue> rpc_params;
+    args2vector(rpc_params, args...);
+    auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
+    imp->set_remote(remote);
+    g_rpc_manager.imp_queue_push(imp);
 
 }
 
 #define RPC_REGISTER(rpc_name, ...) rpc_register(#rpc_name, rpc_name, __VA_ARGS__)
 #define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, __VA_ARGS__)
+#define LOCAL_RPC_CALL(r, rpc_name, ...) local_rpc_call((r), (rpc_name), __VA_ARGS__)
 
 extern void rpc_imp_input_tick();

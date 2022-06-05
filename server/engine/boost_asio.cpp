@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "boost/thread.hpp"
 #include "boost/lexical_cast.hpp"
 
@@ -6,11 +8,12 @@
 #include "rpc_manager.h"
 #include "utils.h"
 
+using namespace std;
 using boost::asio::ip::tcp;
 
 boost::asio::io_context io_context;
 
-extern void client_disconnected(GString client_addr);
+SessionManager g_session_mgr;
 
 void Session::start() {
     do_read();
@@ -41,7 +44,7 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
             ERROR_LOG("socket read error: %s\n", ec.message().c_str());
         }
 
-        client_disconnected(get_remote_addr());
+        LOCAL_RPC_CALL(shared_from_this(), "disconnect_from_client", get_remote_addr());
         close();
 
         return;
@@ -56,7 +59,7 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
     m_cache_idx += uint16_t(length);
 
     // 反序列化
-    auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx, this);
+    auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx, shared_from_this(), nullptr);
 
     // 拆包
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
@@ -76,24 +79,83 @@ void Session::close() {
 }
 
 GString Session::get_local_addr() {
-    auto ip = m_socket.local_endpoint().address().to_string();
-    auto port = m_socket.local_endpoint().port();
-    return ip + ":" + std::to_string(port);
+    if (m_local_addr.empty()) {
+        auto ip = m_socket.local_endpoint().address().to_string();
+        auto port = m_socket.local_endpoint().port();
+        m_local_addr = ip + ":" + std::to_string(port);
+    }
+    return m_local_addr;
 }
 
 GString Session::get_remote_addr() {
-    auto ip = m_socket.remote_endpoint().address().to_string();
-    auto port = m_socket.remote_endpoint().port();
-    return ip + ":" + std::to_string(port);
+    if (m_remote_addr.empty()) {
+        auto ip = m_socket.remote_endpoint().address().to_string();
+        auto port = m_socket.remote_endpoint().port();
+        m_remote_addr = ip + ":" + std::to_string(port);
+    }
+    return m_remote_addr;
 }
+
+// -----------------------------------------------------------------------------
+
+void SessionManager::on_session_connected(const shared_ptr<Session>& session) {
+    add_session(session);
+}
+
+void SessionManager::on_session_disconnected(const GString& session_addr) {
+    remove_session(session_addr);
+}
+
+void SessionManager::add_session(const shared_ptr<Session>& session) {
+    unique_lock<shared_mutex> lock(m_mutex);
+    m_sessions.insert(make_pair(session->get_remote_addr(), session));
+}
+
+void SessionManager::remove_session(const GString& session_addr) {
+    unique_lock<shared_mutex> lock(m_mutex);
+    m_sessions.erase(session_addr);
+}
+
+shared_ptr<Session> SessionManager::get_session(const GString& session_addr) {
+    shared_lock<shared_mutex> lock(m_mutex);
+    
+    auto iter = m_sessions.find(session_addr);
+    if (iter == m_sessions.end()) {
+        return nullptr;
+    }
+
+    return iter->second;
+}
+shared_ptr<Session> SessionManager::get_rand_session() {
+    shared_lock<shared_mutex> lock(m_mutex);
+
+    if (m_sessions.empty()) {
+        return nullptr;
+    }
+
+    auto idx = rand() % m_sessions.size();
+    for (auto iter = m_sessions.begin(); iter != m_sessions.end(); ++iter) {
+        if (idx == 0) {
+            return iter->second;
+        }
+
+        --idx;
+    }
+
+    return nullptr;
+}
+
 
 // -----------------------------------------------------------------------------
 
 void Server::do_accept() {
     m_acceptor.async_accept([this](boost::system::error_code ec, tcp::socket socket) {
         if (!ec) {
-            // TODO - Session管理，Session的接口都是线程安全的，主线程可以直接使用
-            make_shared<Session>(std::move(socket))->start();
+            // Session的接口都是线程安全的，主线程可以直接使用
+            auto session = make_shared<Session>(std::move(socket));
+            session->start();
+            
+            LOCAL_RPC_CALL(session, "connect_from_client");
         }
         else {
             ERROR_LOG("accept %s", ec.message().c_str());
@@ -110,21 +172,33 @@ GString Server::get_listen_addr() {
     return ip + ":" + std::to_string(port);
 }
 
+
+GString listen_ip = "";
+uint16_t listen_port = 0;
 std::shared_ptr<Server> server = nullptr;
 
+void set_engine_listen_ipport(GString ip, uint16_t port) {
+    listen_ip = ip;
+    listen_port = port;
+}
 
-void boost_asio_init(GString ip, uint16_t port = 8090) {
-    server = make_shared<Server>(io_context, ip.c_str(), port);
+void boost_asio_init() {
+    if (!listen_ip.empty() && listen_port != 0) {
+        server = make_shared<Server>(io_context, listen_ip.c_str(), listen_port);
 
-    // 先run，do_accpet之后run会阻塞
-    io_context.run();
-    INFO_LOG("boost asio init %d\n", port);
+        // 先run，do_accpet之后run会阻塞
+        io_context.run();
+        INFO_LOG("boost asio listen@%s\n", IPPORT_STRING(listen_ip, listen_port).c_str());
+    }
 }
 
 // boost_asio_tick是asio的主tick函数，可以放在主线程也可以在子线程
 void boost_asio_tick() {
 
-    server->do_accept();
+    if (server != nullptr) {
+        server->do_accept();
+    }
+
     io_context.run();
 
     //INFO_LOG("tick\n");

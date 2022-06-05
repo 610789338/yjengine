@@ -5,35 +5,74 @@
 #include "engine/rpc_manager.h"
 #include "engine/boost_asio.h"
 #include "engine/ini.h"
-#include "remote_manager.h"
+#include "engine/remote_manager.h"
 
 using namespace std;
 
-map<GString, Session*> g_clients;
-map<GString, GString>  g_client_remotes;
-
 extern shared_ptr<RpcImp> g_cur_imp;
 
-void register_ask_from_game(GValue game_addr, GValue result) {
-    if (result.as_bool()) {
-        INFO_LOG("register ask from game@%s success\n", game_addr.as_string().c_str());
-    }
+// ------------------------------  to && from game ------------------------------ 
 
-    // 循环无敌连环发
-    auto remote = g_remote_mgr.get_remote(game_addr.as_string());
-    REMOTE_RPC_CALL(remote, "register_from_gate", server->get_listen_addr());
+void on_remote_connected() {
+    auto remote = g_cur_imp->get_remote();
+    g_remote_mgr.on_remote_connected(remote);
+    INFO_LOG("on_game_connected %s\n", remote->get_remote_addr().c_str());
+    
+    REMOTE_RPC_CALL(remote, "register_from_gate", remote->get_local_addr());
 }
 
-void register_from_client(GValue gate_addr, GValue identity) {
-    auto session = g_cur_imp->get_session();
-    if (identity.as_string() != g_ini.get_string("Identity", "md5")) {
-        session->close();
+void on_remote_disconnected(GValue remote_addr) {
+    g_remote_mgr.on_remote_disconnected(remote_addr.as_string());
+    INFO_LOG("on_game_disconnected %s\n", remote_addr.as_string().c_str());
+}
+
+void register_ack_from_game(GValue game_addr, GValue result) {
+    if (result.as_bool()) {
+        INFO_LOG("register ack from game@%s\n", game_addr.as_string().c_str());
     }
-    g_clients.insert(make_pair(gate_addr.as_string(), session));
-    g_client_remotes.insert(make_pair(session->get_remote_addr(), gate_addr.as_string()));
+
+    //// 循环无敌连环发
+    //auto remote = g_remote_mgr.get_remote(game_addr.as_string());
+    //REMOTE_RPC_CALL(remote, "register_from_gate", server->get_listen_addr());
+}
+
+
+// ------------------------------  from && to client ------------------------------ 
+
+void connect_from_client() {
+    auto session = g_cur_imp->get_session();
+    g_session_mgr.on_session_connected(session);
+    INFO_LOG("on_connect_from_client %s\n", session->get_remote_addr().c_str());
+}
+
+void disconnect_from_client(GValue session_addr) {
+    g_session_mgr.on_session_disconnected(session_addr.as_string());
+    INFO_LOG("on_disconnect_from_client %s\n", session_addr.as_string().c_str());
+}
+
+void register_from_client(GValue identity) {
+
+    auto session = g_cur_imp->get_session();
+    auto local_identity = g_ini.get_string("Identity", "md5");
+    if (identity.as_string() != local_identity) {
+        ERROR_LOG("client identity(%s) != %s\n", identity.as_string().c_str(), local_identity.c_str());
+        session->close();
+        return;
+    }
+
+    session->set_verify(true);
+    INFO_LOG("register from client@%s\n", session->get_remote_addr().c_str());
+
+    REMOTE_RPC_CALL(session, "register_ack_from_gate", session->get_local_addr(), true);
 }
 
 void gate_rpc_handle_register() {
-    RPC_REGISTER(register_ask_from_game, GString(), bool());
+    RPC_REGISTER(on_remote_connected);
+    RPC_REGISTER(on_remote_disconnected, GString());
+
+    RPC_REGISTER(connect_from_client);
+    RPC_REGISTER(disconnect_from_client, GString());
+
+    RPC_REGISTER(register_ack_from_game, GString(), bool());
     RPC_REGISTER(register_from_client, GString(), GString());
 }

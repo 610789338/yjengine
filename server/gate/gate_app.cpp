@@ -5,12 +5,12 @@
 #include "engine/rpc_manager.h"
 #include "engine/gvalue.h"
 #include "engine/ini.h"
-
-#include "framework/remote_manager.h"
+#include "engine/remote_manager.h"
 
 using namespace std;
 
-extern void engine_init(GString ip, uint16_t port);
+extern void set_engine_listen_ipport(GString ip, uint16_t port);
+extern void engine_init();
 extern void engine_tick();
 
 extern void gate_rpc_handle_register();
@@ -22,7 +22,9 @@ void init(int argc, char* args[]) {
 
     auto ip = g_ini.get_string("Listen", "ip");
     auto port = g_ini.get_int("Listen", "port");
-    engine_init(ip, port);
+    set_engine_listen_ipport(ip, port);
+    
+    engine_init();
 
     gate_rpc_handle_register();
 }
@@ -31,7 +33,7 @@ void connect_game() {
     auto ip = g_ini.get_string("Game1", "ip");
     auto port = g_ini.get_string("Game1", "port");
 
-    INFO_LOG("connect remote %s:%s\n", ip.c_str(), port.c_str());
+    INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
     g_remote_mgr.connect_remote(ip, port);
 }
 
@@ -39,7 +41,7 @@ int main(int argc, char* args[]) {
 
     init(argc, args);
 
-    connect_game();
+     connect_game();
 
     INFO_LOG("main tick start\n");
 

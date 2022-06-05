@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\boost\boost_1_78_0;..\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\boost\boost_1_78_0;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,14 +127,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="framework\gate_rpc.cpp" />
-    <ClCompile Include="framework\remote_manager.cpp" />
     <ClCompile Include="gate_app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="gate.ini" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="framework\remote_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
