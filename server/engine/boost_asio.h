@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost/asio.hpp"
+#include "boost/thread.hpp"
 
 #include "gvalue.h"
 #include "rpc_manager.h"

@@ -35,10 +35,10 @@
     <ClInclude Include="ini.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="entity.h">
+    <ClInclude Include="remote_manager.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="remote_manager.h">
+    <ClInclude Include="engine.h">
       <Filter>engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -65,9 +65,6 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="utils.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="entity.cpp">
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="remote_manager.cpp">

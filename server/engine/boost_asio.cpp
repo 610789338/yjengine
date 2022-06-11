@@ -107,12 +107,12 @@ void SessionManager::on_session_disconnected(const GString& session_addr) {
 }
 
 void SessionManager::add_session(const shared_ptr<Session>& session) {
-    unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<shared_mutex> lock(m_mutex);
     m_sessions.insert(make_pair(session->get_remote_addr(), session));
 }
 
 void SessionManager::remove_session(const GString& session_addr) {
-    unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<shared_mutex> lock(m_mutex);
     m_sessions.erase(session_addr);
 }
 
@@ -126,6 +126,7 @@ shared_ptr<Session> SessionManager::get_session(const GString& session_addr) {
 
     return iter->second;
 }
+
 shared_ptr<Session> SessionManager::get_rand_session() {
     shared_lock<shared_mutex> lock(m_mutex);
 

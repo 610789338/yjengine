@@ -30,10 +30,6 @@ void register_ack_from_game(GValue game_addr, GValue result) {
     if (result.as_bool()) {
         INFO_LOG("register ack from game@%s\n", game_addr.as_string().c_str());
     }
-
-    //// 循环无敌连环发
-    //auto remote = g_remote_mgr.get_remote(game_addr.as_string());
-    //REMOTE_RPC_CALL(remote, "register_from_gate", server->get_listen_addr());
 }
 
 
@@ -66,7 +62,19 @@ void register_from_client(GValue identity) {
     REMOTE_RPC_CALL(session, "register_ack_from_gate", session->get_local_addr(), true);
 }
 
-void gate_rpc_handle_register() {
+void create_entity_from_client(GValue entity_type) {
+    auto remote = g_remote_mgr.get_rand_remote();
+    if ( nullptr == remote ) {
+        return;
+    }
+
+    INFO_LOG("create_entity_from_client %s\n", entity_type.as_string().c_str());
+
+    auto session = g_cur_imp->get_session();
+    REMOTE_RPC_CALL(remote, "create_entity_from_client", entity_type.as_string(), session->get_remote_addr());
+}
+
+void rpc_handle_register() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
 
@@ -75,4 +83,6 @@ void gate_rpc_handle_register() {
 
     RPC_REGISTER(register_ack_from_game, GString(), bool());
     RPC_REGISTER(register_from_client, GString(), GString());
+
+    RPC_REGISTER(create_entity_from_client, GString());
 }

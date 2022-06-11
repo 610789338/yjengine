@@ -110,8 +110,8 @@ private:
 
 extern RpcManager g_rpc_manager;
 
-
-// 变参结构体模板 - 可展开类型参数包
+//extern RpcManager g_rpc_manager;
+//
 //template<class T, class... T2>
 //struct RpcParamsParse {
 //    RpcParamsParse() : t{ GString(typeid(T).name()) } {
@@ -127,6 +127,8 @@ extern RpcManager g_rpc_manager;
 //    vector<GString> t;
 //};
 
+
+// T is GValue list, T2 is not GValue list
 template<class... T, class... T2>
 void rpc_register(GString rpc_name, void(*cb)(T... args), T2... args) {
     RpcMethod<T...>* method = new RpcMethod<T...>;
@@ -185,3 +187,4 @@ void local_rpc_call(shared_ptr<Remote>& remote, GString rpc_name, T ...args) {
 #define LOCAL_RPC_CALL(r, rpc_name, ...) local_rpc_call((r), (rpc_name), __VA_ARGS__)
 
 extern void rpc_imp_input_tick();
+extern void rpc_handle_register();

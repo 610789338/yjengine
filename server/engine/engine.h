@@ -1,0 +1,12 @@
+#pragma once
+
+#include "log.h"
+#include "rpc_manager.h"
+#include "remote_manager.h"
+#include "boost_asio.h"
+#include "gvalue.h"
+#include "ini.h"
+
+extern void set_engine_listen_ipport(GString ip, uint16_t port);
+extern void engine_init();
+extern void engine_tick();

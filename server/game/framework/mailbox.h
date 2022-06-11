@@ -23,6 +23,26 @@ protected:
     int16_t     m_port;
 };
 
+class BaseMailBox : public MailBox {
+
+public:
+    BaseMailBox() = delete;
+    BaseMailBox(int64_t entity_id, const GString& ip, int16_t port) : MailBox(entity_id, ip, port) {}
+    ~BaseMailBox() {}
+
+public:
+    template<class... T>
+    void call(GString rpc_name, T... args) {
+        auto gate = g_session_mgr.get_rand_session();
+        if (nullptr == gate) {
+            WARN_LOG("gate empty\n");
+            return;
+        }
+
+        REMOTE_RPC_CALL(gate, "call_base_entity", m_ip, m_port, m_entityid, rpc_name, args...);
+    }
+};
+
 class CellMailBox : public MailBox {
 
 public:
@@ -39,7 +59,7 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_cell", m_ip, m_port, m_entityid, rpc_name, args...);
+        REMOTE_RPC_CALL(gate, "call_cell_entity", m_ip, m_port, m_entityid, rpc_name, args...);
     }
 };
 
@@ -59,6 +79,6 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_client", m_entityid, rpc_name, args...);
+        REMOTE_RPC_CALL(gate, "call_client_entity", m_entityid, rpc_name, args...);
     }
 };

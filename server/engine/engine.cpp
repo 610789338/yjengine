@@ -7,6 +7,7 @@ void engine_init() {
 
     boost_asio_init();
     boost_asio_start();
+    rpc_handle_register();
 }
 
 void engine_tick() {

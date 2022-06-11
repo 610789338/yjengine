@@ -29,6 +29,7 @@ public:
     template<class T> void write(float v) { write_float(v); }
     template<class T> void write(double v) { write_double(v); }
     template<class T> void write(const GString& v) { write_string(v); }
+    template<class T> void write(const char* v) { write_string(GString(v)); }
     template<class T> void write(const GArray& v) { write_array(v); }
     template<class T> void write(const GDict& v) { write_dict(v); }
 

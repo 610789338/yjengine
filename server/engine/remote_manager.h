@@ -77,6 +77,7 @@ public:
     void add_remote(const shared_ptr<Remote>& remote);
     void remove_remote(const GString& remote_addr);
     shared_ptr<Remote> get_remote(const GString& remote_addr);
+    shared_ptr<Remote> get_rand_remote();
 
 private:
     shared_mutex m_mutex;

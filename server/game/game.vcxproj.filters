@@ -4,6 +4,12 @@
     <Filter Include="framework">
       <UniqueIdentifier>{cc6b3770-e5a5-4c4f-abc2-27a579b384d3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gameplay">
+      <UniqueIdentifier>{0d2333ac-1bba-4324-88be-8620bc0a009d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gameplay\entities">
+      <UniqueIdentifier>{0c647cf2-a265-46e8-9389-1ffaecfdf484}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.ini" />
@@ -16,10 +22,22 @@
     <ClCompile Include="framework\mailbox.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="framework\entity.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework\mailbox.h">
       <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\entity.h">
+      <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\game_utils.h">
+      <Filter>gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\entities\account.h">
+      <Filter>gameplay\entities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

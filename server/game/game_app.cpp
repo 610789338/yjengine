@@ -1,16 +1,8 @@
-#include "boost/thread.hpp"
-#include "engine/log.h"
-#include "engine/rpc_manager.h"
-#include "engine/gvalue.h"
-#include "engine/ini.h"
+#include "engine/engine.h"
+
+#include "gameplay/game_utils.h"
 
 using namespace std;
-
-extern void set_engine_listen_ipport(GString ip, uint16_t port);
-extern void engine_init();
-extern void engine_tick();
-
-extern void game_rpc_handle_register();
 
 void init(int argc, char* args[]) {
 
@@ -23,7 +15,7 @@ void init(int argc, char* args[]) {
 
     engine_init();
 
-    game_rpc_handle_register();
+    regist_game_entity_creator();
 }
 
 int main(int argc, char* args[]) {

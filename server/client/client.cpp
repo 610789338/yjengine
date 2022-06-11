@@ -13,16 +13,12 @@ extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();
 
-extern void client_rpc_handle_register();
-
 void init(int argc, char* args[]) {
 
     const char* ini_file = "client.ini";
     g_ini.parser_ini(ini_file);
 
     engine_init();
-
-    client_rpc_handle_register();
 }
 
 void connect_gate() {

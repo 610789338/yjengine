@@ -31,14 +31,12 @@ void register_ack_from_gate(GValue game_addr, GValue result) {
         INFO_LOG("register ack from gate@%s\n", game_addr.as_string().c_str());
     }
 
-    //// 循环无敌连环发
-    //auto remote = g_remote_mgr.get_remote(game_addr.as_string());
-    //REMOTE_RPC_CALL(remote, "register_from_client", g_ini.get_string("Identity", "md5"));
+    auto remote = g_remote_mgr.get_remote(game_addr.as_string());
+    REMOTE_RPC_CALL(remote, "create_entity_from_client", "BaseAccount");
 }
 
-void client_rpc_handle_register() {
+void rpc_handle_register() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
-
     RPC_REGISTER(register_ack_from_gate, GString(), bool());
 }

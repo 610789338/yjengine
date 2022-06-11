@@ -134,12 +134,12 @@ void RemoteManager::on_remote_disconnected(const GString& remote_addr) {
 }
 
 void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
-    unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<shared_mutex> lock(m_mutex);
     m_remotes.insert(make_pair(remote->get_remote_addr(), remote));
 }
 
 void RemoteManager::remove_remote(const GString& remote_addr) {
-    unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<shared_mutex> lock(m_mutex);
     m_remotes.erase(remote_addr);
 }
 
@@ -153,6 +153,21 @@ shared_ptr<Remote> RemoteManager::get_remote(const GString& remote_addr) {
     return iter->second;
 }
 
-void(*on_remote_connected_cb)(const shared_ptr<Remote>& remote) = [](const shared_ptr<Remote>& remote) {};
-void(*on_remote_disconnected_cb)(const GString& remote_addr) = [](const GString& remote_addr) {};
+shared_ptr<Remote> RemoteManager::get_rand_remote() {
+    shared_lock<shared_mutex> lock(m_mutex);
 
+    if (m_remotes.empty()) {
+        return nullptr;
+    }
+
+    auto idx = rand() % m_remotes.size();
+    for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
+        if (idx == 0) {
+            return iter->second;
+        }
+
+        --idx;
+    }
+
+    return nullptr;
+}
