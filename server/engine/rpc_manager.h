@@ -50,19 +50,18 @@ struct RpcMethod : public RpcMethodBase {
     RpcMethod() {}
 
     void(*cb)(T... args);
-    void args_num_check(T... args) {}
 
     // 变参函数模板 - 可展开实参参数包
     template<class T1, class ...T2>
-    void rpc_params_parse(const T1& t, const T2&... rest) {
+    void rpc_real_params_parse(const T1& t, const T2&... rest) {
         m_params_t.push_back(GString(typeid(T1).name()));
-        rpc_params_parse(rest...);
+        rpc_real_params_parse(rest...);
     }
     template<class T3>
-    void rpc_params_parse(const T3& t) {
+    void rpc_real_params_parse(const T3& t) {
         m_params_t.push_back(GString(typeid(T3).name()));
     }
-    void rpc_params_parse() {
+    void rpc_real_params_parse() {
     }
 };
 
@@ -110,32 +109,42 @@ private:
 
 extern RpcManager g_rpc_manager;
 
-//extern RpcManager g_rpc_manager;
-//
-//template<class T, class... T2>
-//struct RpcParamsParse {
-//    RpcParamsParse() : t{ GString(typeid(T).name()) } {
-//        auto next = RpcParamsParse<T2...>();
-//        t.insert(t.end(), next.t.begin(), next.t.end());
-//    }
-//    vector<GString> t;
-//};
-//
-//template<class T>
-//struct RpcParamsParse<T> {
-//    RpcParamsParse() : t{ GString(typeid(T).name()) } {}
-//    vector<GString> t;
-//};
 
+template<class T, class... T2>
+struct RpcFormalParamsCheck {
+    RpcFormalParamsCheck() {
+        ASSERT_LOG(GString(typeid(T).name()) == GString(typeid(GValue).name()), "formal param must be GValue\n");
 
-// T is GValue list, T2 is not GValue list
+        RpcFormalParamsCheck<T2...>();
+    }
+};
+
+template<class T>
+struct RpcFormalParamsCheck<T> {
+    RpcFormalParamsCheck() {
+        ASSERT_LOG(GString(typeid(T).name()) == GString(typeid(GValue).name()), "formal param must be GValue\n");
+    }
+};
+
+// T(GValue list) != T2
 template<class... T, class... T2>
-void rpc_register(GString rpc_name, void(*cb)(T... args), T2... args) {
+void rpc_register(GString rpc_name, void(*cb)(T...), T2... args) {
+    ASSERT_LOG(sizeof...(T) == sizeof...(args), "rpc(%s) formal param size(%zu) != real param size(%zu)\n", rpc_name.c_str(), sizeof...(T), sizeof...(args));
+
     RpcMethod<T...>* method = new RpcMethod<T...>;
     method->cb = cb;
-    method->args_num_check(args...);
-    method->rpc_params_parse(args...);
-    //method->m_params_t = std::move(RpcParamsParse<T2...>().t);
+    method->rpc_real_params_parse(args...);
+    
+    RpcFormalParamsCheck<T...> _check;
+
+    g_rpc_manager.add_rpc_method(rpc_name, method);
+}
+
+template<class... T>
+void rpc_register(GString rpc_name, void(*cb)()) {
+ 
+    RpcMethod<T...>* method = new RpcMethod<T...>;
+    method->cb = cb;
 
     g_rpc_manager.add_rpc_method(rpc_name, method);
 }

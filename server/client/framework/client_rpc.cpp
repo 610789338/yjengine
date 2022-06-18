@@ -21,18 +21,18 @@ void on_remote_connected() {
     REMOTE_RPC_CALL(remote, "register_from_client", g_ini.get_string("Identity", "md5"));
 }
 
-void on_remote_disconnected(GValue remote_addr) {
+void on_remote_disconnected(const GValue& remote_addr) {
     g_remote_mgr.on_remote_disconnected(remote_addr.as_string());
     INFO_LOG("on_gate_disconnected %s\n", remote_addr.as_string().c_str());
 }
 
-void register_ack_from_gate(GValue game_addr, GValue result) {
+void register_ack_from_gate(const GValue& game_addr, const GValue& result) {
     if (result.as_bool()) {
         INFO_LOG("register ack from gate@%s\n", game_addr.as_string().c_str());
     }
 
     auto remote = g_remote_mgr.get_remote(game_addr.as_string());
-    REMOTE_RPC_CALL(remote, "create_entity_from_client", "BaseAccount");
+    REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
 }
 
 void rpc_handle_register() {

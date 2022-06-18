@@ -32,11 +32,48 @@ void register_from_gate() {
     REMOTE_RPC_CALL(session, "register_ack_from_game", session->get_local_addr(), true);
 }
 
-void create_entity_from_client(GValue entity_type, GValue client_addr) {
+void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
 
-    auto create_data = GDict();
+    GDict create_data;
     create_data.insert(make_pair("client_addr", client_addr));
-    auto entity = create_entity(entity_type.as_string(), create_data);
+    create_data.insert(make_pair("gate_addr", gate_addr));
+    auto entity = create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+}
+
+void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr) {
+
+    GDict create_data;
+    create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
+    create_data.insert(make_pair("base_addr", base_addr));
+    create_data.insert(make_pair("gate_addr", gate_addr));
+    create_data.insert(make_pair("client_addr", client_addr));
+    auto entity = create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+}
+
+void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+
+    INFO_LOG("call_base_entity %s\n", entity_uuid.as_string().c_str());
+
+    auto iter = g_entities.find(entity_uuid.as_string());
+    if (iter == g_entities.end()) {
+        ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        return;
+    }
+
+    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
+}
+
+void call_cell_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+
+    INFO_LOG("call_cell_entity %s\n", entity_uuid.as_string().c_str());
+
+    auto iter = g_entities.find(entity_uuid.as_string());
+    if (iter == g_entities.end()) {
+        ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        return;
+    }
+
+    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
 }
 
 void rpc_handle_register() {
@@ -45,5 +82,9 @@ void rpc_handle_register() {
     RPC_REGISTER(disconnect_from_client, GString());
     RPC_REGISTER(register_from_gate);
 
-    RPC_REGISTER(create_entity_from_client, GString(), GString());
+    RPC_REGISTER(create_base_entity, GString(), GString(), GString());
+    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
+
+    RPC_REGISTER(call_base_entity, GString(), GString(), GArray());
+    RPC_REGISTER(call_cell_entity, GString(), GString(), GArray());
 }

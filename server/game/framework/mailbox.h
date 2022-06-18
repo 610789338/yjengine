@@ -12,22 +12,20 @@
 class MailBox {
 
 public:
-    MailBox() = delete;
-    MailBox(int64_t entity_id, const GString& ip, int16_t port) 
-        : m_entityid(entity_id), m_ip(ip), m_port(port) {}
+    MailBox() {}
     ~MailBox() {}
 
+    void set_entity_and_addr(const GString& entity_uuid, const GString& addr) { m_entity_uuid = entity_uuid; m_addr = addr; }
+
 protected:
-    int64_t     m_entityid;
-    GString     m_ip;
-    int16_t     m_port;
+    GString     m_entity_uuid = "";
+    GString     m_addr = "";
 };
 
 class BaseMailBox : public MailBox {
 
 public:
-    BaseMailBox() = delete;
-    BaseMailBox(int64_t entity_id, const GString& ip, int16_t port) : MailBox(entity_id, ip, port) {}
+    BaseMailBox() {}
     ~BaseMailBox() {}
 
 public:
@@ -39,15 +37,17 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_base_entity", m_ip, m_port, m_entityid, rpc_name, args...);
+        vector<GValue> rpc_params;
+        args2vector(rpc_params, args...);
+
+        REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
     }
 };
 
 class CellMailBox : public MailBox {
 
 public:
-    CellMailBox() = delete;
-    CellMailBox(int64_t entity_id, const GString& ip, int16_t port) : MailBox(entity_id, ip, port) {}
+    CellMailBox() {}
     ~CellMailBox() {}
 
 public:
@@ -59,26 +59,35 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_cell_entity", m_ip, m_port, m_entityid, rpc_name, args...);
+        vector<GValue> rpc_params;
+        args2vector(rpc_params, args...);
+
+        REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
     }
 };
 
 class ClientMailBox : public MailBox {
 
 public:
-    ClientMailBox() = delete;
-    ClientMailBox(int64_t entity_id, const GString& ip, int16_t port) : MailBox(entity_id, ip, port) {}
+    ClientMailBox() {}
     ~ClientMailBox() {}
 
 public:
     template<class... T>
     void call(GString rpc_name, T... args) {
-        auto gate = g_session_mgr.get_session(IPPORT_STRING(m_ip, m_port));
+        auto gate = g_session_mgr.get_session(m_addr);
         if (nullptr == gate) {
-            ERROR_LOG("client mailbox address(%s) error\n", IPPORT_STRING(m_ip, m_port).c_str());
+            ERROR_LOG("client mailbox address(%s) error\n", m_addr.c_str());
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_client_entity", m_entityid, rpc_name, args...);
+        vector<GValue> rpc_params;
+        args2vector(rpc_params, args...);
+
+        REMOTE_RPC_CALL(gate, "call_client_entity", m_entity_uuid, rpc_name, rpc_params);
     }
+
+    void set_gate_addr(const GString& gate_addr) { m_gate_addr = gate_addr; }
+
+    GString m_gate_addr;
 };

@@ -4,7 +4,7 @@
 
 class BaseAccount : public BaseEntityWithCellAndClient {
 public:
-    BaseAccount() {}
+    BaseAccount() : BaseEntityWithCellAndClient("CellAccount") {}
     ~BaseAccount() {}
 
 };
@@ -17,7 +17,7 @@ public:
 
 
 Entity* create_base_account() {
-    return new BaseAccount;
+    return new BaseAccount();
 }
 
 Entity* create_cell_account() {
