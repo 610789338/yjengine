@@ -18,7 +18,7 @@ void on_remote_connected() {
     g_remote_mgr.on_remote_connected(remote);
     INFO_LOG("on_gate_connected %s\n", remote->get_remote_addr().c_str());
 
-    REMOTE_RPC_CALL(remote, "register_from_client", g_ini.get_string("Identity", "md5"));
+    REMOTE_RPC_CALL(remote, "regist_from_client", g_ini.get_string("Identity", "md5"));
 }
 
 void on_remote_disconnected(const GValue& remote_addr) {
@@ -26,17 +26,17 @@ void on_remote_disconnected(const GValue& remote_addr) {
     INFO_LOG("on_gate_disconnected %s\n", remote_addr.as_string().c_str());
 }
 
-void register_ack_from_gate(const GValue& game_addr, const GValue& result) {
+void regist_ack_from_gate(const GValue& game_addr, const GValue& result) {
     if (result.as_bool()) {
-        INFO_LOG("register ack from gate@%s\n", game_addr.as_string().c_str());
+        INFO_LOG("regist ack from gate@%s\n", game_addr.as_string().c_str());
     }
 
     auto remote = g_remote_mgr.get_remote(game_addr.as_string());
     REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
 }
 
-void rpc_handle_register() {
+void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
-    RPC_REGISTER(register_ack_from_gate, GString(), bool());
+    RPC_REGISTER(regist_ack_from_gate, GString(), bool());
 }

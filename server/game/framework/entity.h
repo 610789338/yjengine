@@ -29,7 +29,7 @@ enum EntityType {
 };
 
 class Entity {
-
+    friend struct _RpcDeCoratorHelper;
 public:
     Entity() {}
     virtual ~Entity() {}
@@ -37,15 +37,17 @@ public:
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
 
-    //template<class... T, class... T2>
-    //void rpc_regist(GString rpc_name, void(*cb)(T... args), T2... args);
+    template<class... T, class... T2>
+    void rpc_regist(const GString& rpc_name, void(Entity::*cb)(T... args), T2... args) { /*rpc_manager.rpc_regist(rpc_name, cb, args...);*/ }
 
-    void rpc_call(const GString& rpc_name, const GArray& rpc_params) {}
+    void rpc_call(const GString& rpc_name, const GArray& params);
 
     EntityType type = EntityType::EntityType_None;
 
     GString uuid = "";
     GString class_name = "";
+
+    static RpcManager rpc_manager;
 };
 
 class BaseEntity : public Entity {
@@ -60,6 +62,16 @@ public:
     virtual void on_destroy() {}
 };
 
+//struct _RpcDeCoratorHelper {
+//    _RpcDeCoratorHelper() {
+//    }
+//
+//    template<class... T, class... T2>
+//    _RpcDeCoratorHelper(RpcManager& rpc_manager, const GString& rpc_name, void(*cb)(T... args), T2... args) { rpc_manager.rpc_regist(rpc_name, cb, args...); }
+//};
+//
+//#define RPC_DECORATOR(entity_rpc_flag, rpc_name, ...) _RpcDeCoratorHelper(this->rpc_manager, #rpc_name, rpc_name, __VA_ARGS__);
+
 class BaseEntityWithCell : virtual public BaseEntity {
 
 public:
@@ -71,7 +83,14 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
-    virtual void on_cell_create(const GString& cell_entity_uuid, const GString& cell_addr);
+
+    //RPC_DECORATOR(ServerOnly, on_cell_create, GString(), GString())
+    //_RpcDeCoratorHelper(rpc_manager, "on_cell_create", on_cell_create, GString(), GString());
+
+    //void __rdc() {
+    //    rpc_regist("on_cell_create", &BaseEntityWithCell::on_cell_create, GString(), GString());
+    //}
+    virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
 
     void create_cell(const GDict& create_data);
 

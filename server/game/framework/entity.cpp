@@ -1,6 +1,65 @@
 #include "entity.h"
 
 
+RpcManager Entity::rpc_manager;
+
+void Entity::rpc_call(const GString& rpc_name, const GArray& params) {
+
+    switch (params.size()) {
+
+    case 0:
+        rpc_manager.rpc_call(rpc_name);
+        break;
+    case 1:
+        rpc_manager.rpc_call(rpc_name, params[0]);
+        break;
+    case 2:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1]);
+        break;
+    case 3:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2]);
+        break;
+    case 4:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3]);
+        break;
+    case 5:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4]);
+        break;
+    case 6:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]);
+        break;
+    case 7:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
+        break;
+    case 8:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
+        break;
+    case 9:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
+        break;
+    case 10:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
+        break;
+    case 11:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
+        break;
+    case 12:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
+        break;
+    case 13:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
+        break;
+    case 14:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
+        break;
+    case 15:
+        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
+        break;
+    default:
+        break;
+    }
+}
+
 void BaseEntityWithCell::on_create(const GDict& create_data) {
     create_cell(create_data);
 }
@@ -15,8 +74,8 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
     REMOTE_RPC_CALL(session, "create_cell_entity", cell_class_name, uuid, session->get_local_addr(), create_data.at("gate_addr").as_string(), create_data.at("client_addr").as_string());
 }
 
-void BaseEntityWithCell::on_cell_create(const GString& cell_entity_uuid, const GString& cell_addr) {
-    cell.set_entity_and_addr(cell_entity_uuid, cell_addr);
+void BaseEntityWithCell::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
+    cell.set_entity_and_addr(cell_entity_uuid.as_string(), cell_addr.as_string());
 }
 
 void BaseEntityWithClient::on_create(const GDict& create_data) {

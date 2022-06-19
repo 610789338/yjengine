@@ -23,13 +23,13 @@ void disconnect_from_client(GValue session_addr) {
     INFO_LOG("on_disconnect_from_gate %s\n", session_addr.as_string().c_str());
 }
 
-void register_from_gate() {
+void regist_from_gate() {
     
     auto session = g_cur_imp->get_session();
     session->set_verify(true);
-    INFO_LOG("register from gate@%s\n", session->get_remote_addr().c_str());
+    INFO_LOG("regist from gate@%s\n", session->get_remote_addr().c_str());
     
-    REMOTE_RPC_CALL(session, "register_ack_from_game", session->get_local_addr(), true);
+    REMOTE_RPC_CALL(session, "regist_ack_from_game", session->get_local_addr(), true);
 }
 
 void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
@@ -76,11 +76,11 @@ void call_cell_entity(const GValue& entity_uuid, const GValue& rpc_name, const G
     iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
 }
 
-void rpc_handle_register() {
+void rpc_handle_regist() {
 
     RPC_REGISTER(connect_from_client);
     RPC_REGISTER(disconnect_from_client, GString());
-    RPC_REGISTER(register_from_gate);
+    RPC_REGISTER(regist_from_gate);
 
     RPC_REGISTER(create_base_entity, GString(), GString(), GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());

@@ -40,6 +40,15 @@ public:
         });
     }
 
+    template<class... T>
+    void local_rpc_call(GString rpc_name, T ...args) {
+        vector<GValue> rpc_params;
+        args2vector(rpc_params, args...);
+        auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
+        imp->set_remote(shared_from_this());
+        g_rpc_manager.imp_queue_push(imp);
+    }
+
 private:
     void on_resolve(boost::system::error_code ec, tcp::resolver::results_type endpoints);
     void on_connect(boost::system::error_code ec, tcp::endpoint endpoint);

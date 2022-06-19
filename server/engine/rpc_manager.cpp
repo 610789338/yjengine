@@ -39,7 +39,7 @@ shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
     
     auto iter = m_rpc_methods.find(rpc_name);
     if (iter == m_rpc_methods.end()) {
-        ERROR_LOG("rpc %s unregister\n", rpc_name.c_str());
+        ERROR_LOG("rpc %s unregist\n", rpc_name.c_str());
         return nullptr;
     }
     
@@ -110,8 +110,12 @@ void RpcManager::add_rpc_method(GString rpc_name, RpcMethodBase* method) {
     m_rpc_methods.emplace(rpc_name, method);
 }
 
-auto RpcManager::find_rpc_method(GString rpc_name) {
-    return m_rpc_methods.find(rpc_name);
+RpcMethodBase* RpcManager::find_rpc_method(GString rpc_name) {
+    auto iter = m_rpc_methods.find(rpc_name);
+    if (iter == m_rpc_methods.end()) {
+        return nullptr;
+    }
+    return iter->second;
 }
 
 void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
@@ -152,52 +156,52 @@ void rpc_imp_input_tick() {
     switch (params.size())
     {
     case 0:
-        rpc_call(imp->get_rpc_name());
+        g_rpc_manager.rpc_call(imp->get_rpc_name());
         break;
     case 1:
-        rpc_call(imp->get_rpc_name(), params[0]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0]);
         break;
     case 2:
-        rpc_call(imp->get_rpc_name(), params[0], params[1]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1]);
         break;
     case 3:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2]);
         break;
     case 4:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3]);
         break;
     case 5:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4]);
         break;
     case 6:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5]);
         break;
     case 7:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
         break;
     case 8:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
         break;
     case 9:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
         break;
     case 10:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
         break;
     case 11:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
         break;
     case 12:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
         break;
     case 13:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
         break;
     case 14:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
         break;
     case 15:
-        rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
+        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
         break;
     default:
         break;
