@@ -5,44 +5,16 @@
 
 using namespace std;
 
-RpcManager g_rpc_manager;
-
-#define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
-uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote) {
-
-    uint16_t ret = 0;
-
-    while (true) {
-        
-        // read pkg len
-        READ_PRE_CHECK(ret + 2, length);
-        Decoder decoder(buf + ret, 2);
-        uint16_t pkg_len = decoder.read_uint16();
-        ret += decoder.get_offset();  // pkg head len
-
-        // 生成RPC实例，塞进队列
-        READ_PRE_CHECK(ret + pkg_len, length);
-        auto imp = rpc_decode(buf + ret, pkg_len);
-        ret += pkg_len;  // pkg len
-
-        imp->set_session(session);
-        imp->set_remote(remote);
-        imp_queue_push(imp);
-    }
-
-    return ret;
-}
-
-shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
+shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len) {
     Decoder decoder(buf, pkg_len);
     GString rpc_name = decoder.read_string();
-    
+
     auto iter = m_rpc_methods.find(rpc_name);
     if (iter == m_rpc_methods.end()) {
         ERROR_LOG("rpc %s unregist\n", rpc_name.c_str());
         return nullptr;
     }
-    
+
     // 根据模板把参数反序列化出来
     vector<GValue> params;
     rpc_params_decode(decoder, params, iter->second->m_params_t);
@@ -55,7 +27,7 @@ shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
     return make_shared<RpcImp>(rpc_name, params);
 }
 
-void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<GString>& params_t) {
+void RpcManagerBase::rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& params_t) {
     for (auto iter = params_t.begin(); iter != params_t.end(); ++iter) {
         if (*iter == typeid(bool).name()) {
             params.push_back(GValue(decoder.read_bool()));
@@ -106,16 +78,44 @@ void RpcManager::rpc_params_decode(Decoder& decoder, vector<GValue>& params, vec
     }
 }
 
-void RpcManager::add_rpc_method(GString rpc_name, RpcMethodBase* method) {
+void RpcManagerBase::add_rpc_method(const GString& rpc_name, RpcMethodBase* method) {
     m_rpc_methods.emplace(rpc_name, method);
 }
 
-RpcMethodBase* RpcManager::find_rpc_method(GString rpc_name) {
+RpcMethodBase* RpcManagerBase::find_rpc_method(const GString& rpc_name) {
     auto iter = m_rpc_methods.find(rpc_name);
     if (iter == m_rpc_methods.end()) {
         return nullptr;
     }
     return iter->second;
+}
+
+RpcManager g_rpc_manager;
+
+#define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
+uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote) {
+
+    uint16_t ret = 0;
+
+    while (true) {
+        
+        // read pkg len
+        READ_PRE_CHECK(ret + 2, length);
+        Decoder decoder(buf + ret, 2);
+        uint16_t pkg_len = decoder.read_uint16();
+        ret += decoder.get_offset();  // pkg head len
+
+        // 生成RPC实例，塞进队列
+        READ_PRE_CHECK(ret + pkg_len, length);
+        auto imp = rpc_decode(buf + ret, pkg_len);
+        ret += pkg_len;  // pkg len
+
+        imp->set_session(session);
+        imp->set_remote(remote);
+        imp_queue_push(imp);
+    }
+
+    return ret;
 }
 
 void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
@@ -139,7 +139,7 @@ bool RpcManager::imp_queue_empty() {
     return m_rpc_imp_queue.empty();
 }
 
-void args2vector(vector<GValue>& rpc_params) {}
+void args2array(vector<GValue>& rpc_params) {}
 
 shared_ptr<RpcImp> g_cur_imp = nullptr;
 void rpc_imp_input_tick() {

@@ -42,8 +42,8 @@ public:
 
     template<class... T>
     void local_rpc_call(GString rpc_name, T ...args) {
-        vector<GValue> rpc_params;
-        args2vector(rpc_params, args...);
+        GArray rpc_params;
+        args2array(rpc_params, args...);
         auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
         imp->set_remote(shared_from_this());
         g_rpc_manager.imp_queue_push(imp);

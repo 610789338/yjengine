@@ -41,28 +41,27 @@ private:
 };
 
 // rpc method imp
-struct RpcMethodBase { 
+struct RpcMethodBase {
+
+    // 变参函数模板 - 可展开实参参数包
+    template<class T, class ...T2>
+    void rpc_real_params_parse(const T& t, const T2&... rest) {
+        m_params_t.push_back(GString(typeid(T).name()));
+        rpc_real_params_parse(rest...);
+    }
+    template<class T>
+    void rpc_real_params_parse(const T& t) {
+        m_params_t.push_back(GString(typeid(T).name()));
+    }
+    void rpc_real_params_parse() {
+    }
+
     vector<GString> m_params_t; 
 };
 
 template<class... T>
 struct RpcMethod : public RpcMethodBase {
-    RpcMethod() {}
-
     void(*cb)(T... args);
-
-    // 变参函数模板 - 可展开实参参数包
-    template<class T1, class ...T2>
-    void rpc_real_params_parse(const T1& t, const T2&... rest) {
-        m_params_t.push_back(GString(typeid(T1).name()));
-        rpc_real_params_parse(rest...);
-    }
-    template<class T3>
-    void rpc_real_params_parse(const T3& t) {
-        m_params_t.push_back(GString(typeid(T3).name()));
-    }
-    void rpc_real_params_parse() {
-    }
 };
 
 template<class T, class... T2>
@@ -81,8 +80,45 @@ struct RpcFormalParamsCheck<T> {
     }
 };
 
+class RpcManagerBase {
+    friend void entity_rpc_mgr_init();
+public:
+    RpcManagerBase() {}
+    virtual ~RpcManagerBase() {}
+
+    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& m_params_t);
+
+    template<class ...T>
+    Encoder rpc_encode(const GString& rpc_name, const T&... args) {
+        Encoder encoder;
+        encoder.write_string(rpc_name);
+        rpc_params_encode(encoder, args...);
+        encoder.write_end();
+
+        return encoder;
+    }
+    template<class T, class ...T2>
+    void rpc_params_encode(Encoder& encoder, const T& arg, const T2&... args) {
+        encoder.write<T>(arg);
+        rpc_params_encode(encoder, args...);
+    }
+    template<class T>
+    void rpc_params_encode(Encoder& encoder, const T& arg) {
+        encoder.write<T>(arg);
+    }
+    void rpc_params_encode(Encoder& encoder) {
+    }
+
+    void add_rpc_method(const GString& rpc_name, RpcMethodBase* method);
+    RpcMethodBase* find_rpc_method(const GString& rpc_name);
+
+private:
+    unordered_map<GString, RpcMethodBase*> m_rpc_methods;
+};
+
 // rpc manager
-class RpcManager {
+class RpcManager : public RpcManagerBase {
 public:
     // T(GValue list) != T2
     template<class... T, class... T2>
@@ -93,7 +129,7 @@ public:
         method->cb = cb;
         method->rpc_real_params_parse(args...);
 
-        RpcFormalParamsCheck<T...> _check;
+        RpcFormalParamsCheck<T...>();
 
         add_rpc_method(rpc_name, method);
     }
@@ -121,41 +157,13 @@ public:
 
     uint16_t rpc_imp_generate(const char* buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote);
 
-    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
-    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, vector<GString>& m_params_t);
-    
-    template<class ...T>
-    Encoder rpc_encode(const GString& rpc_name, const T&... args) {
-        Encoder encoder;
-        encoder.write_string(rpc_name);
-        rpc_params_encode(encoder, args...);
-        encoder.write_end();
-
-        return encoder;
-    }
-    template<class T, class ...T2>
-    void rpc_params_encode(Encoder& encoder, const T& arg, const T2&... args) {
-        encoder.write<T>(arg);
-        rpc_params_encode(encoder, args...);
-    }
-    template<class T>
-    void rpc_params_encode(Encoder& encoder, const T& arg) {
-        encoder.write<T>(arg);
-    }
-    void rpc_params_encode(Encoder& encoder) {
-    }
-
     void imp_queue_push(shared_ptr<RpcImp> imp);
     shared_ptr<RpcImp> imp_queue_pop();
 	bool imp_queue_empty();
 
-    void add_rpc_method(GString rpc_name, RpcMethodBase* method);
-    RpcMethodBase* find_rpc_method(GString rpc_name);
-
 private:
     queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
     shared_mutex m_mutex;
-    unordered_map<GString, RpcMethodBase*> m_rpc_methods;
 };
 
 extern RpcManager g_rpc_manager;
@@ -168,12 +176,12 @@ extern void rpc_imp_input_tick();
 extern void rpc_handle_regist();
 
 template<class T, class ...T2>
-void args2vector(vector<GValue>& rpc_params, T arg, T2 ...args) {
+void args2array(GArray& rpc_params, T arg, T2 ...args) {
     rpc_params.push_back(arg);
-    args2vector(rpc_params, args...);
+    args2array(rpc_params, args...);
 }
 template<class T>
-void args2vector(vector<GValue>& rpc_params, T arg) {
+void args2array(GArray& rpc_params, T arg) {
     rpc_params.push_back(arg);
 }
-extern void args2vector(vector<GValue>& rpc_params);
+extern void args2array(GArray& rpc_params);

@@ -16,6 +16,8 @@ void init(int argc, char* args[]) {
     engine_init();
 
     regist_game_entity_creator();
+
+    entity_rpc_mgr_init();
 }
 
 int main(int argc, char* args[]) {

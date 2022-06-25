@@ -37,8 +37,8 @@ public:
             return;
         }
 
-        vector<GValue> rpc_params;
-        args2vector(rpc_params, args...);
+        GArray rpc_params;
+        args2array(rpc_params, args...);
 
         REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
     }
@@ -59,8 +59,8 @@ public:
             return;
         }
 
-        vector<GValue> rpc_params;
-        args2vector(rpc_params, args...);
+        GArray rpc_params;
+        args2array(rpc_params, args...);
 
         REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
     }
@@ -81,8 +81,8 @@ public:
             return;
         }
 
-        vector<GValue> rpc_params;
-        args2vector(rpc_params, args...);
+        GArray rpc_params;
+        args2array(rpc_params, args...);
 
         REMOTE_RPC_CALL(gate, "call_client_entity", m_entity_uuid, rpc_name, rpc_params);
     }

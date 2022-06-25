@@ -32,12 +32,7 @@ public:
     template<class T> void write(const char* v) { write_string(GString(v)); }
     template<class T> void write(const GArray& v) { write_array(v); }
     template<class T> void write(const GDict& v) { write_dict(v); }
-    template<class T> void write(const GValue& v) { 
-        // can not use GValue type
-        // crash for stack
-        int* p = 0;
-        *p = 0; 
-    }
+    template<class T> void write(const GValue& v) { ASSERT_LOG(false, "can not use GValuetype\n"); }
 
     void write_bool(bool v);
     void write_int8(int8_t v);

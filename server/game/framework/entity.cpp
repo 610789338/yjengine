@@ -1,59 +1,82 @@
+#include <vector>
+
 #include "entity.h"
 
+// intitle is too difficulty
+vector<EntityRpcManager*> yj;
+EntityRpcManager g_base_entity_rpc("all");
+EntityRpcManager g_cell_entity_rpc("all");
 
-RpcManager Entity::rpc_manager;
+EntityRpcManager::EntityRpcManager(const GString& belong) { 
+    m_belong = belong;
+
+    if (m_belong != "all") 
+        yj.push_back(this);
+}
+
+void entity_rpc_mgr_init() {
+    g_base_entity_rpc.entity_rpc_regist("on_cell_create", &BaseEntityWithCell::on_cell_create, GString(), GString());
+
+    for (auto iter = yj.begin(); iter != yj.end(); ++iter) {
+        auto mgr = *iter;
+        if (mgr->m_belong == "base") 
+            mgr->m_rpc_methods = g_base_entity_rpc.m_rpc_methods;
+        else if (mgr->m_belong == "cell")
+            mgr->m_rpc_methods = g_cell_entity_rpc.m_rpc_methods;
+    }
+}
 
 void Entity::rpc_call(const GString& rpc_name, const GArray& params) {
 
     switch (params.size()) {
 
     case 0:
-        rpc_manager.rpc_call(rpc_name);
+        get_rpc_mgr()->entity_rpc_call(rpc_name);
         break;
     case 1:
-        rpc_manager.rpc_call(rpc_name, params[0]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0]);
         break;
     case 2:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1]);
         break;
     case 3:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2]);
         break;
     case 4:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3]);
         break;
     case 5:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4]);
         break;
     case 6:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]);
         break;
     case 7:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
         break;
     case 8:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
         break;
     case 9:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
         break;
     case 10:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
         break;
     case 11:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
         break;
     case 12:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
         break;
     case 13:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
         break;
     case 14:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
         break;
     case 15:
-        rpc_manager.rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
+        get_rpc_mgr()->entity_rpc_call(rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
         break;
     default:
         break;
@@ -104,7 +127,7 @@ void BaseEntityWithCellAndClient::on_destroy() {
 
 }
 
-void BaseEntityWithCellAndClient::on_cell_create(const GString& cell_entity_uuid, const GString& cell_addr) {
+void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
     this->BaseEntityWithCell::on_cell_create(cell_entity_uuid, cell_addr);
 }
 

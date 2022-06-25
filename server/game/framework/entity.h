@@ -28,17 +28,67 @@ enum EntityType {
     EntityType_None
 };
 
+template<class TEntity, class... T>
+struct EntityRpcMethod : public RpcMethodBase {
+    typedef void(TEntity::*CBType)(T... args);
+    CBType cb;
+};
+
+// entity rpc manager
+class EntityRpcManager : public RpcManagerBase {
+public:
+    EntityRpcManager() = delete;
+    EntityRpcManager(const GString& belong);
+
+    GString m_belong = "all";
+
+    template<class TEntity, class... T, class... T2>
+    void entity_rpc_regist(const GString& rpc_name, void(TEntity::*cb)(T...), T2... args) {
+        ASSERT_LOG(sizeof...(T) == sizeof...(args), "rpc(%s) formal param size(%zu) != real param size(%zu)\n", rpc_name.c_str(), sizeof...(T), sizeof...(args));
+
+        EntityRpcMethod<TEntity, T...>* method = new EntityRpcMethod<TEntity, T...>;
+        method->cb = cb;
+        method->rpc_real_params_parse(args...);
+
+        RpcFormalParamsCheck<T...>();
+
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class TEntity, class... T>
+    void entity_rpc_regist(const GString& rpc_name, void(TEntity::*cb)(T...)) {
+        EntityRpcMethod<TEntity, T...>* method = new EntityRpcMethod<TEntity, T...>;
+        method->cb = cb;
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class... T>
+    void entity_rpc_call(const GString& rpc_name, T... args) {
+        RpcMethodBase* method = find_rpc_method(rpc_name);
+
+        if (sizeof...(args) != method->m_params_t.size()) {
+            ERROR_LOG("rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), method->m_params_t.size());
+            return;
+        }
+
+        //auto _cb = ((EntityRpcMethod<BaseEntityWithCellAndClient, T...>*)method)->cb;
+        //auto _cb = (*method).cb;
+        //(_this.*_cb)(args...);
+    }
+};
+
+extern EntityRpcManager g_base_entity_rpc;
+extern EntityRpcManager g_cell_entity_rpc;
+extern void entity_rpc_mgr_init();
+
 class Entity {
-    friend struct _RpcDeCoratorHelper;
 public:
     Entity() {}
     virtual ~Entity() {}
 
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
-
-    template<class... T, class... T2>
-    void rpc_regist(const GString& rpc_name, void(Entity::*cb)(T... args), T2... args) { /*rpc_manager.rpc_regist(rpc_name, cb, args...);*/ }
+    virtual EntityRpcManager* get_rpc_mgr() { return nullptr; }
 
     void rpc_call(const GString& rpc_name, const GArray& params);
 
@@ -46,8 +96,6 @@ public:
 
     GString uuid = "";
     GString class_name = "";
-
-    static RpcManager rpc_manager;
 };
 
 class BaseEntity : public Entity {
@@ -62,16 +110,6 @@ public:
     virtual void on_destroy() {}
 };
 
-//struct _RpcDeCoratorHelper {
-//    _RpcDeCoratorHelper() {
-//    }
-//
-//    template<class... T, class... T2>
-//    _RpcDeCoratorHelper(RpcManager& rpc_manager, const GString& rpc_name, void(*cb)(T... args), T2... args) { rpc_manager.rpc_regist(rpc_name, cb, args...); }
-//};
-//
-//#define RPC_DECORATOR(entity_rpc_flag, rpc_name, ...) _RpcDeCoratorHelper(this->rpc_manager, #rpc_name, rpc_name, __VA_ARGS__);
-
 class BaseEntityWithCell : virtual public BaseEntity {
 
 public:
@@ -84,12 +122,6 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
 
-    //RPC_DECORATOR(ServerOnly, on_cell_create, GString(), GString())
-    //_RpcDeCoratorHelper(rpc_manager, "on_cell_create", on_cell_create, GString(), GString());
-
-    //void __rdc() {
-    //    rpc_regist("on_cell_create", &BaseEntityWithCell::on_cell_create, GString(), GString());
-    //}
     virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
 
     void create_cell(const GDict& create_data);
@@ -126,7 +158,7 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
-    virtual void on_cell_create(const GString& cell_entity_uuid, const GString& cell_addr);
+    virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
     virtual void on_client_create();
 };
 
