@@ -11,9 +11,14 @@ void BaseEntityWithCell::on_destroy() {
 }
 
 void BaseEntityWithCell::create_cell(const GDict& create_data) {
+    
     // game -> gate -> game
     auto const& session = g_session_mgr.get_rand_session();
-    REMOTE_RPC_CALL(session, "create_cell_entity", cell_class_name, uuid, session->get_local_addr(), create_data.at("gate_addr").as_string(), create_data.at("client_addr").as_string());
+    REMOTE_RPC_CALL(session, "create_cell_entity", cell_class_name, 
+        /*base entity addr*/ uuid,
+        /*base addr*/ session->get_local_addr(),
+        /*gate addr*/ create_data.at("gate_addr").as_string(),
+        /*client addr*/ create_data.at("client_addr").as_string());
 }
 
 void BaseEntityWithCell::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
@@ -29,8 +34,8 @@ void BaseEntityWithClient::on_destroy() {
 
 }
 
-void BaseEntityWithClient::on_client_create() {
-
+void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
+    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
 }
 
 void BaseEntityWithClient::create_client() {
@@ -48,11 +53,21 @@ void BaseEntityWithCellAndClient::on_destroy() {
 
 void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
     this->BaseEntityWithCell::on_cell_create(cell_entity_uuid, cell_addr);
+
+    auto gate = g_session_mgr.get_session(client.m_gate_addr);
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
+        /*base entity uuid*/ uuid, 
+        /*base addr*/ gate->get_local_addr(), 
+        /*cell entity uuid*/ cell_entity_uuid.as_string(), 
+        /*cell addr*/ cell_addr.as_string()
+    );
 }
 
-void BaseEntityWithCellAndClient::on_client_create() {
-
+void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_uuid) {
+    this->BaseEntityWithClient::on_client_create(client_entity_uuid);
+    cell.call("on_client_create", client_entity_uuid.as_string());
 }
+
 void CellEntityWithClient::on_create(const GDict& create_data) {
     base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
     client.set_entity_and_addr("", create_data.at("client_addr").as_string());
@@ -61,20 +76,37 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
     base.call("on_cell_create", uuid, server->get_listen_addr());
 }
 
+void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
+    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+}
+
 void CellEntityWithClient::on_destroy() {
 
 }
 
+void ClientEntity::on_create(const GDict& create_data) {
+    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
+    cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
+
+    base.call("on_client_create", uuid);
+}
+
 unordered_map<GString, Entity*> g_entities;
-unordered_map<GString, function<Entity*()>> g_entity_creator;
+typedef unordered_map<GString, function<Entity*()>> CreatorMap;
+//shared_ptr<CreatorMap> g_entity_creator(nullptr);
+CreatorMap* g_entity_creator = nullptr;
 
 void regist_entity_creator(const GString& entity_class_name, const function<Entity*()>& creator) {
-    g_entity_creator.insert(make_pair(entity_class_name, creator));
+    if (g_entity_creator == nullptr)
+        //g_entity_creator = make_shared<CreatorMap>();
+        g_entity_creator = new CreatorMap;
+
+    g_entity_creator->insert(make_pair(entity_class_name, creator));
 }
 
 function<Entity*()> get_entity_creator(const GString& entity_class_name) {
-    auto iter = g_entity_creator.find(entity_class_name);
-    if (iter == g_entity_creator.end()) {
+    auto iter = g_entity_creator->find(entity_class_name);
+    if (iter == g_entity_creator->end()) {
         return nullptr;
     }
 

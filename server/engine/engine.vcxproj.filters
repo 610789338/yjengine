@@ -41,6 +41,15 @@
     <ClInclude Include="engine.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_rpc_manager.h">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="mailbox.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp">
@@ -68,6 +77,15 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="remote_manager.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="entity.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="entity_rpc_manager.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="mailbox.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>

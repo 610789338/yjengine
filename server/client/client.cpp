@@ -1,11 +1,10 @@
 #include <string>
 
 #include "boost/thread.hpp"
-#include "engine/log.h"
-#include "engine/rpc_manager.h"
-#include "engine/gvalue.h"
-#include "engine/ini.h"
-#include "engine/remote_manager.h"
+
+#include "engine/engine.h"
+
+#include "gameplay/entities/account.h"
 
 using namespace std;
 

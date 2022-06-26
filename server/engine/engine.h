@@ -6,6 +6,9 @@
 #include "boost_asio.h"
 #include "gvalue.h"
 #include "ini.h"
+#include "mailbox.h"
+#include "entity.h"
+#include "entity_rpc_manager.h"
 
 extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();

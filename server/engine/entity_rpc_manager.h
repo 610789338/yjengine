@@ -1,6 +1,8 @@
 ﻿#pragma once
 
-#include "engine/engine.h"
+#include "gvalue.h"
+#include "log.h"
+#include "rpc_manager.h"
 
 //entity rpc难点在于：
 // 1，entity基类记录所有rpc的话有两个痛点：
@@ -56,7 +58,6 @@ public:
         }
 
         auto _cb = ((EntityRpcMethod<TEntity, T...>*)method)->cb;
-        //auto _cb = (*method).cb;
         (_this->*_cb)(args...);
     }
 };

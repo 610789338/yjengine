@@ -1,11 +1,7 @@
 #include <iostream>
 #include <map>
 
-#include "engine/gvalue.h"
-#include "engine/rpc_manager.h"
-#include "engine/boost_asio.h"
-#include "engine/ini.h"
-#include "engine/remote_manager.h"
+#include "engine/engine.h"
 
 using namespace std;
 
@@ -35,8 +31,19 @@ void regist_ack_from_gate(const GValue& game_addr, const GValue& result) {
     REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
 }
 
+void create_client_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
+
+    GDict create_data;
+    create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
+    create_data.insert(make_pair("base_addr", base_addr));
+    create_data.insert(make_pair("cell_entity_uuid", cell_entity_uuid));
+    create_data.insert(make_pair("cell_addr", cell_addr));
+    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+}
+
 void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
     RPC_REGISTER(regist_ack_from_gate, GString(), bool());
+    RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString());
 }

@@ -10,10 +10,7 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     GString rpc_name = decoder.read_string();
 
     auto iter = m_rpc_methods.find(rpc_name);
-    if (iter == m_rpc_methods.end()) {
-        ERROR_LOG("rpc %s unregist\n", rpc_name.c_str());
-        return nullptr;
-    }
+    ASSERT_LOG(iter != m_rpc_methods.end(), "rpc %s unregist\n", rpc_name.c_str());
 
     // 根据模板把参数反序列化出来
     vector<GValue> params;

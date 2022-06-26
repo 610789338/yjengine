@@ -1,6 +1,7 @@
 #pragma once
 
-#include "framework/entity.h"
+#include "engine/engine.h"
+
 
 
 class BaseAccount : public BaseEntityWithCellAndClient {
@@ -8,7 +9,7 @@ class BaseAccount : public BaseEntityWithCellAndClient {
     GENERATE_BASE_ENTITY_INNER()
 
 public:
-    BaseAccount() : BaseEntityWithCellAndClient("CellAccount") {}
+    BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {}
     ~BaseAccount() {}
 };
 

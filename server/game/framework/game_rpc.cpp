@@ -1,10 +1,8 @@
 #include <iostream>
 #include <map>
 
-#include "engine/rpc_manager.h"
-#include "engine/boost_asio.h"
+#include "engine/engine.h"
 
-#include "entity.h"
 
 using namespace std;
 
@@ -37,7 +35,7 @@ void create_base_entity(const GValue& entity_class_name, const GValue& client_ad
     GDict create_data;
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
-    auto entity = create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
 }
 
 void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr) {
@@ -47,7 +45,7 @@ void create_cell_entity(const GValue& entity_class_name, const GValue&  base_ent
     create_data.insert(make_pair("base_addr", base_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
     create_data.insert(make_pair("client_addr", client_addr));
-    auto entity = create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
 }
 
 void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {

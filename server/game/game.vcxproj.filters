@@ -19,31 +19,13 @@
     <ClCompile Include="framework\game_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
-    <ClCompile Include="framework\mailbox.cpp">
-      <Filter>framework</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\entity.cpp">
-      <Filter>framework</Filter>
-    </ClCompile>
-    <ClCompile Include="framework\entity_rpc_manager.cpp">
-      <Filter>framework</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework\mailbox.h">
-      <Filter>framework</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\entity.h">
-      <Filter>framework</Filter>
-    </ClInclude>
     <ClInclude Include="gameplay\game_utils.h">
       <Filter>gameplay</Filter>
     </ClInclude>
     <ClInclude Include="gameplay\entities\account.h">
       <Filter>gameplay\entities</Filter>
-    </ClInclude>
-    <ClInclude Include="framework\entity_rpc_manager.h">
-      <Filter>framework</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -5,6 +5,12 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="gameplay">
+      <UniqueIdentifier>{32823a26-b0df-4ca1-871c-1cfbf6731c26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gameplay\entities">
+      <UniqueIdentifier>{c010911b-5d63-4439-92ce-e86f5f21367e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client.cpp" />
@@ -14,5 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gameplay\entities\account.h">
+      <Filter>gameplay\entities</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

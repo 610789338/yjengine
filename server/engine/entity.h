@@ -3,7 +3,10 @@
 #include <stdint.h>
 #include <unordered_map>
 
-#include "engine/engine.h"
+#include "gvalue.h"
+#include "log.h"
+#include "rpc_manager.h"
+#include "boost_asio.h"
 
 #include "mailbox.h"
 #include "entity_rpc_manager.h"
@@ -80,6 +83,12 @@ public: \
     EntityRpcManager* get_rpc_mgr() { return &rpc_manager_cell; } \
     RPC_CALL_DEFINE
 
+#define GENERATE_CLIENT_ENTITY_INNER() \
+public: \
+    static EntityRpcManager rpc_manager_client; \
+    EntityRpcManager* get_rpc_mgr() { return &rpc_manager_client; } \
+    RPC_CALL_DEFINE
+
 
 #define GENERATE_BASE_ENTITY_OUT(TCLASS) \
 class TCLASS; \
@@ -89,9 +98,12 @@ EntityRpcManager TCLASS::rpc_manager_base("base", #TCLASS, []()->TCLASS* { retur
 class TCLASS; \
 EntityRpcManager TCLASS::rpc_manager_cell("cell", #TCLASS, []()->TCLASS* { return new TCLASS();});
 
+#define GENERATE_CLIENT_ENTITY_OUT(TCLASS) \
+class TCLASS; \
+EntityRpcManager TCLASS::rpc_manager_client("client", #TCLASS, []()->TCLASS* { return new TCLASS();});
+
 
 extern unordered_map<GString, Entity*> g_entities;
-extern unordered_map<GString, function<Entity*()>> g_entity_creator;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
 extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
 
@@ -102,6 +114,7 @@ enum EntityType {
     EntityType_BaseWithCellAndClient,
     EntityType_Cell,
     EntityType_CellWithClient,
+    EntityType_Client,
 
     EntityType_None
 };
@@ -123,6 +136,8 @@ public:
     GString class_name = "";
 };
 
+
+// ------------------------------- base ------------------------------- //
 class BaseEntity : public Entity {
 
 public:
@@ -158,17 +173,19 @@ public:
 class BaseEntityWithClient : virtual public BaseEntity {
 
 public:
-    BaseEntityWithClient() {
+    BaseEntityWithClient() = delete;
+    BaseEntityWithClient(const GString& client_class) : client_class_name(client_class) {
         type = EntityType::EntityType_BaseWithClient;
     }
     virtual ~BaseEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
-    virtual void on_client_create();
+    virtual void on_client_create(const GValue& client_entity_uuid);
 
     void create_client();
 
+    GString client_class_name;
     ClientMailBox client;
 };
 
@@ -176,7 +193,7 @@ class BaseEntityWithCellAndClient : public BaseEntityWithCell, public BaseEntity
 
 public:
     BaseEntityWithCellAndClient() = delete;
-    BaseEntityWithCellAndClient(const GString& cell_class) : BaseEntityWithCell(cell_class) {
+    BaseEntityWithCellAndClient(const GString& cell_class, const GString& client_class) : BaseEntityWithCell(cell_class), BaseEntityWithClient(client_class) {
         type = EntityType::EntityType_BaseWithCellAndClient;
     }
     virtual ~BaseEntityWithCellAndClient() {}
@@ -184,9 +201,11 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
     virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
-    virtual void on_client_create();
+    virtual void on_client_create(const GValue& client_entity_uuid);
 };
 
+
+// ------------------------------- cell ------------------------------- //
 class CellEntity : public Entity {
 
 public:
@@ -211,6 +230,27 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void on_destroy();
+    virtual void on_client_create(const GValue& client_entity_uuid);
 
     ClientMailBox client;
+};
+
+// ------------------------------- client ------------------------------- //
+
+
+class ClientEntity : public Entity {
+
+public:
+    ClientEntity() {
+        type = EntityType::EntityType_Client;
+        base.set_side("client");
+        cell.set_side("client");
+    }
+    virtual ~ClientEntity() {}
+
+    virtual void on_create(const GDict& create_data);
+    virtual void on_destroy() {}
+
+    BaseMailBox base;
+    CellMailBox cell;
 };
