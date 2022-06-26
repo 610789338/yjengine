@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <queue>
 #include <shared_mutex>
@@ -43,7 +43,7 @@ private:
 // rpc method imp
 struct RpcMethodBase {
 
-    // ±ä²Îº¯ÊıÄ£°å - ¿ÉÕ¹¿ªÊµ²Î²ÎÊı°ü
+    // å˜å‚å‡½æ•°æ¨¡æ¿ - å¯å±•å¼€å®å‚å‚æ•°åŒ…
     template<class T, class ...T2>
     void rpc_real_params_parse(const T& t, const T2&... rest) {
         m_params_t.push_back(GString(typeid(T).name()));

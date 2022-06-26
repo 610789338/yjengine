@@ -1,4 +1,4 @@
-#include <stdlib.h>
+ï»¿#include <stdlib.h>
 
 #include "boost/thread.hpp"
 #include "boost/lexical_cast.hpp"
@@ -20,7 +20,7 @@ void Session::start() {
 }
 
 void Session::do_read() {
-    // Ôö¼ÓÒıÓÃ¼ÆÊı£¬±ÜÃâSession±»ÊÍ·Å
+    // å¢åŠ å¼•ç”¨è®¡æ•°ï¼Œé¿å…Sessionè¢«é‡Šæ”¾
     auto self(shared_from_this());
 
     m_socket.async_read_some(
@@ -54,14 +54,14 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
     //GString thread_id = boost::lexical_cast<GString>(_id);
     //INFO_LOG("thread.%s on_read: length.%d from %s\n", thread_id.c_str(), int(length), get_remote_addr().c_str());
 
-    // Õ³°ü
+    // ç²˜åŒ…
     memmove(m_buffer_cache + m_cache_idx, m_buffer, length);
     m_cache_idx += uint16_t(length);
 
-    // ·´ĞòÁĞ»¯
+    // ååºåˆ—åŒ–
     auto process_len = g_rpc_manager.rpc_imp_generate(m_buffer_cache, m_cache_idx, shared_from_this(), nullptr);
 
-    // ²ğ°ü
+    // æ‹†åŒ…
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
     m_cache_idx -= process_len;
 
@@ -152,7 +152,7 @@ shared_ptr<Session> SessionManager::get_rand_session() {
 void Server::do_accept() {
     m_acceptor.async_accept([this](boost::system::error_code ec, tcp::socket socket) {
         if (!ec) {
-            // SessionµÄ½Ó¿Ú¶¼ÊÇÏß³Ì°²È«µÄ£¬Ö÷Ïß³Ì¿ÉÒÔÖ±½ÓÊ¹ÓÃ
+            // Sessionçš„æ¥å£éƒ½æ˜¯çº¿ç¨‹å®‰å…¨çš„ï¼Œä¸»çº¿ç¨‹å¯ä»¥ç›´æ¥ä½¿ç”¨
             auto session = make_shared<Session>(std::move(socket));
             session->start();
             
@@ -162,7 +162,7 @@ void Server::do_accept() {
             ERROR_LOG("accept %s", ec.message().c_str());
         }
 
-        // ²»ÓÃÖØ¸´accept
+        // ä¸ç”¨é‡å¤accept
         //do_accept();
     });
 }
@@ -187,13 +187,13 @@ void boost_asio_init() {
     if (!listen_ip.empty() && listen_port != 0) {
         server = make_shared<Server>(io_context, listen_ip.c_str(), listen_port);
 
-        // ÏÈrun£¬do_accpetÖ®ºórun»á×èÈû
+        // å…ˆrunï¼Œdo_accpetä¹‹årunä¼šé˜»å¡
         io_context.run();
         INFO_LOG("boost asio listen@%s\n", IPPORT_STRING(listen_ip, listen_port).c_str());
     }
 }
 
-// boost_asio_tickÊÇasioµÄÖ÷tickº¯Êı£¬¿ÉÒÔ·ÅÔÚÖ÷Ïß³ÌÒ²¿ÉÒÔÔÚ×ÓÏß³Ì
+// boost_asio_tickæ˜¯asioçš„ä¸»tickå‡½æ•°ï¼Œå¯ä»¥æ”¾åœ¨ä¸»çº¿ç¨‹ä¹Ÿå¯ä»¥åœ¨å­çº¿ç¨‹
 void boost_asio_tick() {
 
     if (server != nullptr) {
@@ -205,7 +205,7 @@ void boost_asio_tick() {
     //INFO_LOG("tick\n");
 }
 
-// ×ÓÏß³Ìboost_asio_tick
+// å­çº¿ç¨‹boost_asio_tick
 void boost_asio_thread() {
     while (true) {
         boost_asio_tick();

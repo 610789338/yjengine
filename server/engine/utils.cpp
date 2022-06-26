@@ -18,7 +18,7 @@ void byte_print(char* buf, uint16_t length) {
 
 boost::uuids::random_generator generator;
 
-GString gen_uuid() {
+string gen_uuid() {
     boost::uuids::uuid random_u = generator();
 
     return boost::uuids::to_string(random_u);

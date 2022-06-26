@@ -130,12 +130,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framework\entity.cpp" />
+    <ClCompile Include="framework\entity_rpc_manager.cpp" />
     <ClCompile Include="framework\game_rpc.cpp" />
     <ClCompile Include="framework\mailbox.cpp" />
     <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework\entity.h" />
+    <ClInclude Include="framework\entity_rpc_manager.h" />
     <ClInclude Include="framework\mailbox.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\game_utils.h" />
