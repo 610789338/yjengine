@@ -50,7 +50,7 @@ void create_cell_entity(const GValue& entity_class_name, const GValue&  base_ent
 
 void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
 
-    INFO_LOG("call_base_entity %s\n", entity_uuid.as_string().c_str());
+    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     auto iter = g_entities.find(entity_uuid.as_string());
     if (iter == g_entities.end()) {
@@ -63,7 +63,7 @@ void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const G
 
 void call_cell_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
 
-    INFO_LOG("call_cell_entity %s\n", entity_uuid.as_string().c_str());
+    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     auto iter = g_entities.find(entity_uuid.as_string());
     if (iter == g_entities.end()) {

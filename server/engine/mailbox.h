@@ -85,7 +85,7 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
         }
         else if (m_side == "client") {
             auto gate = g_remote_mgr.get_rand_remote();
@@ -94,7 +94,7 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
         }
     }
 };
@@ -118,7 +118,7 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_client_entity", m_entity_uuid, rpc_name, rpc_params);
+        REMOTE_RPC_CALL(gate, "call_client_entity", m_addr, m_entity_uuid, rpc_name, rpc_params);
     }
 
     void set_gate_addr(const GString& gate_addr) { m_gate_addr = gate_addr; }

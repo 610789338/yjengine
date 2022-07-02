@@ -41,9 +41,24 @@ void create_client_entity(const GValue& entity_class_name, const GValue& base_en
     create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
 }
 
+void call_client_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+
+    INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+
+    auto iter = g_entities.find(entity_uuid.as_string());
+    if (iter == g_entities.end()) {
+        ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        return;
+    }
+
+    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
+}
+
+
 void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
     RPC_REGISTER(regist_ack_from_gate, GString(), bool());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(call_client_entity, GString(), GString(), GArray());
 }

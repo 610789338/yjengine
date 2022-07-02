@@ -3,6 +3,7 @@
 #include "gvalue.h"
 #include "log.h"
 #include "rpc_manager.h"
+#include "entity.h"
 
 //entity rpc难点在于：
 // 1，entity基类记录所有rpc的话有两个痛点：
@@ -24,9 +25,7 @@ struct EntityRpcMethod : public RpcMethodBase {
 class EntityRpcManager : public RpcManagerBase {
 public:
     EntityRpcManager() = delete;
-    EntityRpcManager(const GString& belong, const GString& entity_class_name, const function<Entity*()>& creator);
-
-    GString m_belong = "all";
+    EntityRpcManager(enum EntityType entity_type, const GString& entity_class_name, const function<Entity*()>& creator);
 
     template<class TEntity, class... T, class... T2>
     void entity_rpc_regist(const GString& rpc_name, void(TEntity::*cb)(T...), T2... args) {

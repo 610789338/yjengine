@@ -6,21 +6,29 @@
 
 class BaseAccount : public BaseEntityWithCellAndClient {
     
-    GENERATE_BASE_ENTITY_INNER()
+    GENERATE_ENTITY_INNER()
 
 public:
     BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {}
     ~BaseAccount() {}
+
+    void on_ready() {
+        INFO_LOG("BaseAccount on_ready\n");
+    }
 };
 
 class CellAccount : public CellEntityWithClient {
 
-    GENERATE_CELL_ENTITY_INNER()
+    GENERATE_ENTITY_INNER()
 
 public:
     CellAccount() {}
     ~CellAccount() {}
+
+    void on_ready() {
+        INFO_LOG("CellAccount on_ready\n");
+    }
 };
 
-GENERATE_BASE_ENTITY_OUT(BaseAccount)
-GENERATE_CELL_ENTITY_OUT(CellAccount)
+GENERATE_ENTITY_OUT(BaseAccount)
+GENERATE_ENTITY_OUT(CellAccount)

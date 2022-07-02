@@ -102,7 +102,7 @@ void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const 
         return;
     }
 
-    INFO_LOG("call_base_entity %s\n", entity_uuid.as_string().c_str());
+    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     auto session = g_cur_imp->get_session();
     REMOTE_RPC_CALL(remote, "call_base_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
@@ -114,10 +114,21 @@ void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const 
         return;
     }
 
-    INFO_LOG("call_base_entity %s\n", entity_uuid.as_string().c_str());
+    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     auto session = g_cur_imp->get_session();
     REMOTE_RPC_CALL(remote, "call_cell_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+}
+
+void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+    auto session = g_session_mgr.get_session(client_addr.as_string());
+    if (nullptr == session) {
+        return;
+    }
+
+    INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+
+    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
 }
 
 void rpc_handle_regist() {
@@ -136,4 +147,5 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(call_base_entity, GString(), GString(), GString(), GArray());
     RPC_REGISTER(call_cell_entity, GString(), GString(), GString(), GArray());
+    RPC_REGISTER(call_client_entity, GString(), GString(), GString(), GArray());
 }
