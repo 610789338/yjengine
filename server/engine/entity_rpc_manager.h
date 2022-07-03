@@ -53,7 +53,6 @@ public:
         regist_entity_creator(entity_class_name, creator);
 
         EntityClassType::rpc_method_define();
-        EntityClassType::property_define();
     }
 
     template<class TEntity, class... T, class... T2>
@@ -103,7 +102,7 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
         return; \
     } \
 \
-    if (method->type == RpcType::SERVER_ONLY && from_client) { \
+    if (from_client && method->type != RpcType::EXPOSED) { \
         ERROR_LOG("entity rpc.%s can not call from client\n", rpc_name.c_str()); \
         return; \
     } \
@@ -162,4 +161,4 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
     } \
 }
 
-#define ENTITY_RPC_REGIST(rpc_type, rpc_name, ...) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &decltype(rpc_manager.tclass)::rpc_name, __VA_ARGS__);
+#define ENTITY_RPC_REGIST(rpc_type, rpc_name, ...) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &decltype(rpc_manager.tclass)::rpc_name, __VA_ARGS__)

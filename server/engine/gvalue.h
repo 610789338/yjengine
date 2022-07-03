@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 #include "utils.h"
 
@@ -12,7 +12,7 @@ using namespace std;
 class GValue;
 typedef string GString;
 typedef vector<GValue> GArray;
-typedef map<GString, GValue> GDict;
+typedef unordered_map<GString, GValue> GDict;
 
 enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T};
 
@@ -34,7 +34,7 @@ class GValue {
         float f;
         double d;
         GString* s;
-        //GString s = "";  // ±ØĞëÏÔÊ¾³õÊ¼»¯£¬·ñÔòÊÇinvalid string
+        //GString s = "";  // å¿…é¡»æ˜¾ç¤ºåˆå§‹åŒ–ï¼Œå¦åˆ™æ˜¯invalid string
         GArray* array;
         GDict* dict;
     };

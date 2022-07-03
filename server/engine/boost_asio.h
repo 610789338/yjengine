@@ -86,7 +86,7 @@ public:
 
 private:
     shared_mutex m_mutex;
-    map<GString, shared_ptr<Session>> m_sessions;
+    unordered_map<GString, shared_ptr<Session>> m_sessions;
 };
 
 

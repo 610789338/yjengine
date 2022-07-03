@@ -17,13 +17,19 @@ class Entity;
 
 #define GENERATE_ENTITY_INNER(TCLASS) \
 public: \
+    static EntityPropertyManager<TCLASS> property_manager; \
     static EntityRpcManager<TCLASS> rpc_manager; \
     EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
     RPC_CALL_DEFINE
 
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
-EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { return new TCLASS();});
+EntityPropertyManager<TCLASS> TCLASS::property_manager; \
+EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
+    auto entity = new TCLASS(); \
+    entity->propertys = TCLASS::property_manager.propertys; \
+    return entity; \
+});
 
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
@@ -41,6 +47,27 @@ enum EntityType {
     EntityType_None
 };
 
+enum PropType {
+    BASE,
+    BASE_AND_CLIENT,
+    CELL_PRIVATE,
+    CELL_PUBLIC,
+    CELL_AND_CLIENT,
+    ALL_CLIENT,
+    OTHER_CLIENT
+};
+
+class EntityProperty {
+public:
+    EntityProperty() : v(GValue(int8_t(0))) {}
+    EntityProperty(const PropType& t, const GValue& _v) : type(t), v(_v) {}
+    ~EntityProperty() {}
+
+    PropType type = PropType::BASE;
+    GValue v;
+    bool dirty = false;
+};
+
 
 class Entity {
 public:
@@ -55,9 +82,12 @@ public:
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
+    const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
 
     GString uuid = "";
     GString class_name = "";
+
+    unordered_map<GString, EntityProperty> propertys;
 };
 
 

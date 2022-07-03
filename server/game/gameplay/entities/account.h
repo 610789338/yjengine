@@ -32,11 +32,12 @@ GENERATE_ENTITY_OUT(BaseAccount)
 
 void BaseAccount::rpc_method_define() {
     ENTITY_RPC_REGIST(RpcType::SERVER_ONLY, msg_from_cell, GString());
-    ENTITY_RPC_REGIST(RpcType::CLIENT, msg_from_client, GString());
+    ENTITY_RPC_REGIST(RpcType::EXPOSED, msg_from_client, GString());
 }
 
 void BaseAccount::property_define() {
-
+    PROPERTY(PropType::BASE_AND_CLIENT, "id", 1001);
+    PROPERTY(PropType::BASE_AND_CLIENT, "name", "youjun");
 }
 
 class CellAccount : public CellEntityWithClient {
@@ -63,7 +64,7 @@ public:
 
 void CellAccount::rpc_method_define() {
     ENTITY_RPC_REGIST(RpcType::SERVER_ONLY, msg_from_base, GString());
-    ENTITY_RPC_REGIST(RpcType::CLIENT, msg_from_client, GString());
+    ENTITY_RPC_REGIST(RpcType::EXPOSED, msg_from_client, GString());
 }
 
 void CellAccount::property_define() {

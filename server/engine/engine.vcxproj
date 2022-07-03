@@ -23,6 +23,7 @@
     <ClInclude Include="decode.h" />
     <ClInclude Include="encode.h" />
     <ClInclude Include="entity.h" />
+    <ClInclude Include="entity_property_manager.h" />
     <ClInclude Include="entity_rpc_manager.h" />
     <ClInclude Include="gvalue.h" />
     <ClInclude Include="ini.h" />

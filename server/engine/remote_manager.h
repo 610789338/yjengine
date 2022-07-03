@@ -4,7 +4,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <map>
 
 #include "boost/asio.hpp"
 #include "boost/core/ignore_unused.hpp"
@@ -90,7 +89,7 @@ public:
 
 private:
     shared_mutex m_mutex;
-    map<GString, shared_ptr<Remote>> m_remotes;
+    unordered_map<GString, shared_ptr<Remote>> m_remotes;
 };
 
 extern RemoteManager g_remote_mgr;
