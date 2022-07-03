@@ -55,6 +55,7 @@ public:
     GValue(uint64_t v) : m_t(GType::UINT64_T) { m_v.ui64 = v; }
     GValue(float v) : m_t(GType::FLOAT_T) { m_v.f = v; }
     GValue(double v) : m_t(GType::DOUBLE_T) { m_v.d = v; }
+    GValue(const char* v) : m_t(GType::STRING_T) { m_v.s = new GString(v); }
     GValue(const GString& v) : m_t(GType::STRING_T) { m_v.s = new GString(v); }
     GValue(const GArray& v) : m_t(GType::ARRAY_T) { m_v.array = new GArray(v); }
     GValue(const GDict& v) : m_t(GType::DICT_T) { m_v.dict = new GDict(v); }

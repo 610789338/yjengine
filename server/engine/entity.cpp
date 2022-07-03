@@ -97,7 +97,7 @@ void ClientEntity::on_create(const GDict& create_data) {
     base.call("on_client_create", uuid);
 }
 
-unordered_map<GString, Entity*> g_entities;
+unordered_map<GString, Entity*> g_entities; // uuid -> entity
 typedef unordered_map<GString, function<Entity*()>> CreatorMap;
 //shared_ptr<CreatorMap> g_entity_creator(nullptr);
 CreatorMap* g_entity_creator = nullptr;

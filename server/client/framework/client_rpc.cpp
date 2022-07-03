@@ -51,7 +51,7 @@ void call_client_entity(const GValue& entity_uuid, const GValue& rpc_name, const
         return;
     }
 
-    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
+    iter->second->rpc_call(false, rpc_name.as_string(), rpc_params.as_array());
 }
 
 

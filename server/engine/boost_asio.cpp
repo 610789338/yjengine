@@ -162,8 +162,7 @@ void Server::do_accept() {
             ERROR_LOG("accept %s", ec.message().c_str());
         }
 
-        // 不用重复accept
-        //do_accept();
+        do_accept();
     });
 }
 
@@ -189,16 +188,14 @@ void boost_asio_init() {
 
         // 先run，do_accpet之后run会阻塞
         io_context.run();
+        server->do_accept();
+
         INFO_LOG("boost asio listen@%s\n", IPPORT_STRING(listen_ip, listen_port).c_str());
     }
 }
 
 // boost_asio_tick是asio的主tick函数，可以放在主线程也可以在子线程
 void boost_asio_tick() {
-
-    if (server != nullptr) {
-        server->do_accept();
-    }
 
     io_context.run();
 

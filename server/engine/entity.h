@@ -9,77 +9,21 @@
 #include "boost_asio.h"
 
 #include "mailbox.h"
-#include "entity_rpc_manager.h"
 
 using namespace std;
 
 class Entity;
 
-#define RPC_CALL_DEFINE \
-void rpc_call(const GString& rpc_name, const GArray& params) { \
-    switch (params.size()) { \
-    case 0: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name); \
-        break; \
-    case 1: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0]); \
-        break; \
-    case 2: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1]); \
-        break; \
-    case 3: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2]); \
-        break; \
-    case 4: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3]); \
-        break; \
-    case 5: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4]); \
-        break; \
-    case 6: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]); \
-        break; \
-    case 7: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]); \
-        break; \
-    case 8: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]); \
-        break; \
-    case 9: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]); \
-        break; \
-    case 10: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]); \
-        break; \
-    case 11: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]); \
-        break; \
-    case 12: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]); \
-        break; \
-    case 13: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]); \
-        break; \
-    case 14: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]); \
-        break; \
-    case 15: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]); \
-        break; \
-    default: \
-        break; \
-    } \
-}
 
-#define GENERATE_ENTITY_INNER() \
+#define GENERATE_ENTITY_INNER(TCLASS) \
 public: \
-    static EntityRpcManager rpc_manager; \
-    EntityRpcManager* get_rpc_mgr() { return &rpc_manager; } \
+    static EntityRpcManager<TCLASS> rpc_manager; \
+    EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
     RPC_CALL_DEFINE
 
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
-EntityRpcManager TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { return new TCLASS();});
+EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { return new TCLASS();});
 
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
@@ -97,7 +41,6 @@ enum EntityType {
     EntityType_None
 };
 
-class EntityRpcManager;
 
 class Entity {
 public:
@@ -111,9 +54,7 @@ public:
 
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
-    virtual void rpc_call(const GString& rpc_name, const GArray& params) = 0;
-
-    virtual EntityRpcManager* get_rpc_mgr() { return nullptr; }
+    virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
     GString uuid = "";
     GString class_name = "";

@@ -48,7 +48,7 @@ void create_cell_entity(const GValue& entity_class_name, const GValue&  base_ent
     create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
 }
 
-void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+void call_base_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
 
     INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
@@ -58,10 +58,10 @@ void call_base_entity(const GValue& entity_uuid, const GValue& rpc_name, const G
         return;
     }
 
-    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
+    iter->second->rpc_call(from_client.as_bool(), rpc_name.as_string(), rpc_params.as_array());
 }
 
-void call_cell_entity(const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
 
     INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
@@ -71,7 +71,7 @@ void call_cell_entity(const GValue& entity_uuid, const GValue& rpc_name, const G
         return;
     }
 
-    iter->second->rpc_call(rpc_name.as_string(), rpc_params.as_array());
+    iter->second->rpc_call(from_client.as_bool(), rpc_name.as_string(), rpc_params.as_array());
 }
 
 void rpc_handle_regist() {
@@ -83,6 +83,6 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_base_entity, GString(), GString(), GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
 
-    RPC_REGISTER(call_base_entity, GString(), GString(), GArray());
-    RPC_REGISTER(call_cell_entity, GString(), GString(), GArray());
+    RPC_REGISTER(call_base_entity, bool(), GString(), GString(), GArray());
+    RPC_REGISTER(call_cell_entity, bool(), GString(), GString(), GArray());
 }

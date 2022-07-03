@@ -104,8 +104,8 @@ void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const 
 
     INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
-    auto session = g_cur_imp->get_session();
-    REMOTE_RPC_CALL(remote, "call_base_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+    bool from_client = g_cur_imp->get_session() != nullptr;
+    REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
 }
 
 void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
@@ -116,8 +116,8 @@ void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const 
 
     INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
-    auto session = g_cur_imp->get_session();
-    REMOTE_RPC_CALL(remote, "call_cell_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+    bool from_client = g_cur_imp->get_session() != nullptr;
+    REMOTE_RPC_CALL(remote, "call_cell_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
 }
 
 void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {

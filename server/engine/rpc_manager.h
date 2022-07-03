@@ -40,6 +40,13 @@ private:
     shared_ptr<Remote> m_remote = nullptr;
 };
 
+
+enum RpcType {
+    SERVER_ONLY,
+    EXPOSED,
+    CLIENT
+};
+
 // rpc method imp
 struct RpcMethodBase {
 
@@ -56,7 +63,8 @@ struct RpcMethodBase {
     void rpc_real_params_parse() {
     }
 
-    vector<GString> m_params_t; 
+    vector<GString> m_params_t;
+    RpcType type = RpcType::SERVER_ONLY;
 };
 
 template<class... T>
@@ -145,14 +153,18 @@ public:
 
     template<class... T>
     void rpc_call(const GString& rpc_name, T... args) {
-        auto iter = find_rpc_method(rpc_name);
-
-        if (sizeof...(args) != iter->m_params_t.size()) {
-            ERROR_LOG("rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), iter->m_params_t.size());
+        auto method = find_rpc_method(rpc_name);
+        if (!method) {
+            ERROR_LOG("rpc.%s not exist", rpc_name.c_str());
             return;
         }
 
-        ((RpcMethod<T...>*)iter)->cb(args...);
+        if (sizeof...(args) != method->m_params_t.size()) {
+            ERROR_LOG("rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), method->m_params_t.size());
+            return;
+        }
+
+        ((RpcMethod<T...>*)method)->cb(args...);
     }
 
     uint16_t rpc_imp_generate(const char* buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote);
