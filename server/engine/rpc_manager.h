@@ -94,7 +94,7 @@ public:
     RpcManagerBase() {}
     virtual ~RpcManagerBase() {}
 
-    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    virtual shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len) { return nullptr; }
     void rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& m_params_t);
 
     template<class ...T>
@@ -128,6 +128,8 @@ private:
 // rpc manager
 class RpcManager : public RpcManagerBase {
 public:
+    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+
     // T(GValue list) != T2
     template<class... T, class... T2>
     void rpc_regist(const GString& rpc_name, void(*cb)(T...), T2... args) {

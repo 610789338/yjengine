@@ -29,6 +29,7 @@ EntityPropertyManager<TCLASS> TCLASS::property_manager; \
 EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
     auto entity = new TCLASS(); \
     entity->propertys = TCLASS::property_manager.propertys; \
+    entity->rpc_mgr = &TCLASS::rpc_manager; \
     return entity; \
 });
 
@@ -90,6 +91,8 @@ public:
     GString class_name = "";
 
     unordered_map<GString, EntityProperty> propertys;
+
+    RpcManagerBase* rpc_mgr;
 };
 
 

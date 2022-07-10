@@ -69,6 +69,25 @@ public:
         add_rpc_method(rpc_name, method);
     }
 
+    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len) {
+        Decoder decoder(buf, pkg_len);
+        GString rpc_name = decoder.read_string();
+
+        auto iter = find_rpc_method(rpc_name);
+        ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
+
+        // 根据模板把参数反序列化出来
+        vector<GValue> params;
+        rpc_params_decode(decoder, params, iter->m_params_t);
+
+        if (decoder.get_offset() < decoder.get_max_offset()) {
+            auto remain_len = decoder.get_max_offset() - decoder.get_offset();
+            WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
+        }
+
+        return make_shared<RpcImp>(rpc_name, params);
+    }
+
     template<class TEntity, class... T>
     void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T...)) {
         EntityRpcMethod<TEntity, T...>* method = new EntityRpcMethod<TEntity, T...>;

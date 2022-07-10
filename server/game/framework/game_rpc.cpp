@@ -47,9 +47,7 @@ void create_cell_entity(const GValue& entity_class_name, const GValue&  base_ent
     create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
 }
 
-void call_base_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
-
-    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+void call_base_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& inner_rpc) {
 
     auto iter = g_entities.find(entity_uuid.as_string());
     if (iter == g_entities.end()) {
@@ -57,19 +55,15 @@ void call_base_entity(const GValue& from_client, const GValue& entity_uuid, cons
         return;
     }
 
-    Decoder decoder(rpc_params.as_bin().buf, rpc_params.as_bin().size);
-    decoder.read_uint16();
+    Decoder decoder(inner_rpc.as_bin().buf, inner_rpc.as_bin().size);
+    auto const pkg_len = decoder.read_uint16();
+    auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
 
-    vector<GValue> params;
-    auto const method = iter->second->find_rpc_method(rpc_name.as_string());
-    g_rpc_manager.rpc_params_decode(decoder, params, method->m_params_t);
-
-    iter->second->rpc_call(from_client.as_bool(), rpc_name.as_string(), params);
+    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
+    iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 
-void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
-
-    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& inner_rpc) {
 
     auto iter = g_entities.find(entity_uuid.as_string());
     if (iter == g_entities.end()) {
@@ -77,14 +71,12 @@ void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, cons
         return;
     }
 
-    Decoder decoder(rpc_params.as_bin().buf, rpc_params.as_bin().size);
-    decoder.read_uint16();
+    Decoder decoder(inner_rpc.as_bin().buf, inner_rpc.as_bin().size);
+    auto const pkg_len = decoder.read_uint16();
+    auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
 
-    vector<GValue> params;
-    auto const method = iter->second->find_rpc_method(rpc_name.as_string());
-    g_rpc_manager.rpc_params_decode(decoder, params, method->m_params_t);
-
-    iter->second->rpc_call(from_client.as_bool(), rpc_name.as_string(), params);
+    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
+    iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 
 void rpc_handle_regist() {
@@ -96,6 +88,6 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_base_entity, GString(), GString(), GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
 
-    RPC_REGISTER(call_base_entity, bool(), GString(), GString(), GBin());
-    RPC_REGISTER(call_cell_entity, bool(), GString(), GString(), GBin());
+    RPC_REGISTER(call_base_entity, bool(), GString(), GBin());
+    RPC_REGISTER(call_cell_entity, bool(), GString(), GBin());
 }
