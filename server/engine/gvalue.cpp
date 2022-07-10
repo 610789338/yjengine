@@ -14,6 +14,10 @@ void GValue::release() {
         delete m_v.dict;
         m_v.dict = nullptr;
     }
+    else if (GType::BIN_T == m_t && m_v.bin != nullptr) {
+        delete m_v.bin;
+        m_v.bin = nullptr;
+    }
 }
 
 GValue::GValue(const GValue& rs) {
@@ -22,13 +26,16 @@ GValue::GValue(const GValue& rs) {
     switch (rs.m_t)
     {
     case STRING_T:
-        m_v.s = new GString(std::move(rs.as_string()));
+        m_v.s = new GString(rs.as_string());
         break;
     case ARRAY_T:
         m_v.array = new GArray(std::move(rs.as_array()));
         break;
     case DICT_T:
         m_v.dict = new GDict(std::move(rs.as_dict()));
+        break;
+    case BIN_T:
+        m_v.bin = new GBin(rs.as_bin());
         break;
     default:
         memmove(this, &rs, sizeof(GValue));
@@ -44,13 +51,16 @@ GValue& GValue::operator=(const GValue& rs) {
     switch (rs.m_t)
     {
     case STRING_T:
-        m_v.s = new GString(std::move(rs.as_string()));
+        m_v.s = new GString(rs.as_string());
         break;
     case ARRAY_T:
-        m_v.array = new GArray(std::move(rs.as_array()));
+        m_v.array = new GArray(rs.as_array());
         break;
     case DICT_T:
-        m_v.dict = new GDict(std::move(rs.as_dict()));
+        m_v.dict = new GDict(rs.as_dict());
+        break;
+    case BIN_T:
+        m_v.bin = new GBin(rs.as_bin());
         break;
     default:
         memmove(this, &rs, sizeof(GValue));
@@ -78,6 +88,10 @@ GValue::GValue(GValue&& rs) {
         m_v.dict = rs.m_v.dict;
         rs.m_v.dict = nullptr;
         break;
+    case BIN_T:
+        m_v.bin = rs.m_v.bin;
+        rs.m_v.bin = nullptr;
+        break;
     default:
         memmove(this, &rs, sizeof(GValue));
         break;
@@ -101,6 +115,10 @@ GValue& GValue::operator=(GValue&& rs) {
     case DICT_T:
         m_v.dict = rs.m_v.dict;
         rs.m_v.dict = nullptr;
+        break;
+    case BIN_T:
+        m_v.bin = rs.m_v.bin;
+        rs.m_v.bin = nullptr;
         break;
     default:
         memmove(this, &rs, sizeof(GValue));

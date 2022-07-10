@@ -27,8 +27,8 @@ public:
 };
 
 void ClientAccount::rpc_method_define() {
-    ENTITY_RPC_REGIST(RpcType::CLIENT, msg_from_base, GString());
-    ENTITY_RPC_REGIST(RpcType::CLIENT, msg_from_cell, GString());
+    RPC_METHOD(RpcType::CLIENT, msg_from_base, GString());
+    RPC_METHOD(RpcType::CLIENT, msg_from_cell, GString());
 }
 
 void ClientAccount::property_define() {

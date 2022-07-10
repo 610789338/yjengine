@@ -14,7 +14,42 @@ typedef string GString;
 typedef vector<GValue> GArray;
 typedef unordered_map<GString, GValue> GDict;
 
-enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T};
+struct GBin {
+public:
+    GBin() = default;
+    GBin(const char* _buf, int16_t _size) : buf(new char[size]), size(_size) { 
+        memmove(buf, _buf, size);
+    }
+    GBin(const GBin& other) : buf(new char[other.size]), size(other.size) {
+        memmove(buf, other.buf, size);
+    }
+    GBin(GBin&& other) : buf(other.buf), size(other.size) {
+        other.buf = nullptr;
+        other.size = 0;
+    }
+
+    GBin& operator=(const GBin& other) {
+        buf = new char[other.size];
+        size = other.size;
+        memmove(buf, other.buf, size);
+        return *this;
+    }
+
+    GBin& operator=(GBin&& other) {
+        buf = other.buf;
+        size = other.size;
+        other.buf = nullptr;
+        other.size = 0;
+        return *this;
+    }
+
+    ~GBin() { if (buf != nullptr) delete []buf; }
+
+    char* buf = nullptr;
+    uint16_t size = 0;
+};
+
+enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T, BIN_T};
 
 class GValue {
 
@@ -37,6 +72,7 @@ class GValue {
         //GString s = "";  // 必须显示初始化，否则是invalid string
         GArray* array;
         GDict* dict;
+        GBin* bin;
     };
 
 public:
@@ -59,13 +95,13 @@ public:
     GValue(const GString& v) : m_t(GType::STRING_T) { m_v.s = new GString(v); }
     GValue(const GArray& v) : m_t(GType::ARRAY_T) { m_v.array = new GArray(v); }
     GValue(const GDict& v) : m_t(GType::DICT_T) { m_v.dict = new GDict(v); }
-    
+    GValue(GBin&& v) : m_t(GType::BIN_T) { m_v.bin = new GBin(v); }
+
     GValue(const GValue& rs);
     GValue& operator=(const GValue& rs);
 
     GValue(GValue&& rs);
     GValue& operator=(GValue&& rs);
-
     
     bool as_bool() const { ASSERT(m_t == GType::BOOL_T); return m_v.b; }
     int8_t as_int8() const { ASSERT(m_t == GType::INT8_T); return m_v.i8; }
@@ -81,6 +117,7 @@ public:
     GString& as_string() const { ASSERT(m_t == GType::STRING_T); return *(m_v.s); }
     GArray& as_array() const { ASSERT(m_t == GType::ARRAY_T); return *(m_v.array); }
     GDict& as_dict() const { ASSERT(m_t == GType::DICT_T); return *(m_v.dict); }
+    GBin& as_bin() const { ASSERT(m_t == GType::BIN_T); return *(m_v.bin); }
 
     GType type() const { return m_t; }
 private:

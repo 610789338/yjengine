@@ -125,6 +125,15 @@ GDict Decoder::read_dict() {
     return dict;
 }
 
+GBin Decoder::read_bin() {
+    uint16_t size = read_uint16();
+
+    GBin bin(m_buf + m_offset, size);
+    m_offset += bin.size;
+    return bin;
+}
+
+
 GValue Decoder::read_gvalue() {
     uint8_t t = read_uint8();
 
@@ -156,6 +165,8 @@ GValue Decoder::read_gvalue() {
         return GValue(read_array());
     case GType::DICT_T:
         return GValue(read_dict());
+    case GType::BIN_T:
+        return GValue(read_bin());
     default:
         ERROR_LOG("error type.%d\n", t);
         ASSERT(false);

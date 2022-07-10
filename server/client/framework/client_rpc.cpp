@@ -50,7 +50,14 @@ void call_client_entity(const GValue& entity_uuid, const GValue& rpc_name, const
         return;
     }
 
-    iter->second->rpc_call(false, rpc_name.as_string(), rpc_params.as_array());
+    Decoder decoder(rpc_params.as_bin().buf, rpc_params.as_bin().size);
+    decoder.read_uint16();
+
+    vector<GValue> params;
+    auto const method = iter->second->find_rpc_method(rpc_name.as_string());
+    g_rpc_manager.rpc_params_decode(decoder, params, method->m_params_t);
+
+    iter->second->rpc_call(false, rpc_name.as_string(), params);
 }
 
 
@@ -59,5 +66,5 @@ void rpc_handle_regist() {
     RPC_REGISTER(on_remote_disconnected, GString());
     RPC_REGISTER(regist_ack_from_gate, GString(), bool());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString());
-    RPC_REGISTER(call_client_entity, GString(), GString(), GArray());
+    RPC_REGISTER(call_client_entity, GString(), GString(), GBin());
 }

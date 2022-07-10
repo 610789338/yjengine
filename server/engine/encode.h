@@ -32,6 +32,7 @@ public:
     template<class T> void write(const char* v) { write_string(GString(v)); }
     template<class T> void write(const GArray& v) { write_array(v); }
     template<class T> void write(const GDict& v) { write_dict(v); }
+    template<class T> void write(const GBin& v) { write_bin(v); }
     template<class T> void write(const GValue& v) { ASSERT_LOG(false, "can not use GValuetype\n"); }
 
     void write_bool(bool v);
@@ -51,6 +52,7 @@ public:
     void write_string(const GString& v);
     void write_array(const GArray& v);
     void write_dict(const GDict& v);
+    void write_bin(const GBin& v);
     void write_end();
 
     char* get_buf() { return m_buf; }

@@ -31,8 +31,8 @@ GENERATE_ENTITY_OUT(BaseAccount)
 
 
 void BaseAccount::rpc_method_define() {
-    ENTITY_RPC_REGIST(RpcType::SERVER_ONLY, msg_from_cell, GString());
-    ENTITY_RPC_REGIST(RpcType::EXPOSED, msg_from_client, GString());
+    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell, GString());
+    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
 }
 
 void BaseAccount::property_define() {
@@ -63,8 +63,8 @@ public:
 };
 
 void CellAccount::rpc_method_define() {
-    ENTITY_RPC_REGIST(RpcType::SERVER_ONLY, msg_from_base, GString());
-    ENTITY_RPC_REGIST(RpcType::EXPOSED, msg_from_client, GString());
+    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base, GString());
+    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
 }
 
 void CellAccount::property_define() {

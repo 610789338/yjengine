@@ -100,6 +100,15 @@ void Encoder::write_dict(const GDict& v) {
     }
 }
 
+void Encoder::write_bin(const GBin& v) {
+    OFFSET_CHECK(m_offset, v.size);
+
+    write_uint16(uint16_t(v.size));
+
+    memmove(m_buf + m_offset, v.buf, v.size);
+    m_offset += uint16_t(v.size);
+}
+
 void Encoder::write_gvalue(const GValue& v) {
     write_uint8(v.type());
 
@@ -143,6 +152,9 @@ void Encoder::write_gvalue(const GValue& v) {
         break;
     case GType::DICT_T:
         write_dict(v.as_dict());
+        break;
+    case GType::BIN_T:
+        write_bin(v.as_bin());
         break;
     default:
         ERROR_LOG("error type.%d\n", v.type());

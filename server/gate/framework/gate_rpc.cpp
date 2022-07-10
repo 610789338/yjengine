@@ -104,7 +104,7 @@ void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const 
     INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     bool from_client = g_cur_imp->get_session() != nullptr;
-    REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+    REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
 }
 
 void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
@@ -116,7 +116,7 @@ void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const 
     INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
     bool from_client = g_cur_imp->get_session() != nullptr;
-    REMOTE_RPC_CALL(remote, "call_cell_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+    REMOTE_RPC_CALL(remote, "call_cell_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
 }
 
 void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
@@ -127,7 +127,7 @@ void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, co
 
     INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
 
-    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_array());
+    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
 }
 
 void rpc_handle_regist() {
@@ -144,7 +144,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString(), GString());
 
-    RPC_REGISTER(call_base_entity, GString(), GString(), GString(), GArray());
-    RPC_REGISTER(call_cell_entity, GString(), GString(), GString(), GArray());
-    RPC_REGISTER(call_client_entity, GString(), GString(), GString(), GArray());
+    RPC_REGISTER(call_base_entity, GString(), GString(), GString(), GBin());
+    RPC_REGISTER(call_cell_entity, GString(), GString(), GString(), GBin());
+    RPC_REGISTER(call_client_entity, GString(), GString(), GString(), GBin());
 }

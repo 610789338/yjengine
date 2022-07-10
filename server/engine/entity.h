@@ -20,6 +20,7 @@ public: \
     static EntityPropertyManager<TCLASS> property_manager; \
     static EntityRpcManager<TCLASS> rpc_manager; \
     EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
+    RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
     RPC_CALL_DEFINE
 
 
@@ -83,6 +84,7 @@ public:
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
     const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
+    virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
 
     GString uuid = "";
     GString class_name = "";
@@ -115,7 +117,9 @@ public:
 
 public:
     BaseEntityWithCell() = delete;
-    BaseEntityWithCell(const GString& cell_class) : cell_class_name(cell_class) {}
+    BaseEntityWithCell(const GString& cell_class) : cell_class_name(cell_class) {
+        cell.set_owner(this);
+    }
     virtual ~BaseEntityWithCell() {}
 
     virtual void on_create(const GDict& create_data);
@@ -136,7 +140,9 @@ public:
 
 public:
     BaseEntityWithClient() = delete;
-    BaseEntityWithClient(const GString& client_class) : client_class_name(client_class) {}
+    BaseEntityWithClient(const GString& client_class) : client_class_name(client_class) {
+        client.set_owner(this);
+    }
     virtual ~BaseEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
@@ -177,7 +183,9 @@ public:
     };
 
 public:
-    CellEntity() {}
+    CellEntity() {
+        base.set_owner(this);
+    }
     virtual ~CellEntity() {}
 
     virtual void on_create(const GDict& create_data) {}
@@ -194,7 +202,9 @@ public:
     };
 
 public:
-    CellEntityWithClient() {}
+    CellEntityWithClient() {
+        client.set_owner(this);
+    }
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
@@ -217,7 +227,10 @@ public:
 public:
     ClientEntity() {
         base.set_side("client");
+        base.set_owner(this);
+
         cell.set_side("client");
+        cell.set_owner(this);
     }
     virtual ~ClientEntity() {}
 

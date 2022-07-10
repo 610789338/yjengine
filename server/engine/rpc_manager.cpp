@@ -68,6 +68,9 @@ void RpcManagerBase::rpc_params_decode(Decoder& decoder, vector<GValue>& params,
         else if (*iter == typeid(GDict).name()) {
             params.push_back(GValue(std::move(decoder.read_dict())));
         }
+        else if (*iter == typeid(GBin).name()) {
+            params.push_back(GValue(std::move(decoder.read_bin())));
+        }
 
         if (decoder.is_finish()) {
             break;
@@ -149,7 +152,7 @@ void rpc_imp_input_tick() {
 
     g_cur_imp = imp;
 
-    auto params = imp->get_rpc_params();
+    auto const &params = imp->get_rpc_params();
     switch (params.size())
     {
     case 0:

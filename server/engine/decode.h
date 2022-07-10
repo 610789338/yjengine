@@ -34,6 +34,7 @@ public:
     GString read_string();
     GArray read_array();
     GDict read_dict();
+    GBin read_bin();
 
     uint16_t get_max_offset() { return m_max_offset; }
     uint16_t get_offset() { return m_offset; }
