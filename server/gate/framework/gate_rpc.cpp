@@ -25,10 +25,15 @@ void on_remote_disconnected(const GValue& remote_addr) {
     INFO_LOG("on_game_disconnected %s\n", remote_addr.as_string().c_str());
 }
 
-void regist_ack_from_game(const GValue& game_addr, const GValue& result) {
+GArray g_game_entity_rpc_names;
+GArray g_client_entity_rpc_names;
+
+void regist_ack_from_game(const GValue& game_addr, const GValue& result, const GValue& game_entity_rpc_names) {
     if (result.as_bool()) {
         INFO_LOG("regist ack from game@%s\n", game_addr.as_string().c_str());
     }
+
+    g_game_entity_rpc_names = game_entity_rpc_names.as_array();
 }
 
 
@@ -45,7 +50,7 @@ void disconnect_from_client(const GValue& session_addr) {
     INFO_LOG("on_disconnect_from_client %s\n", session_addr.as_string().c_str());
 }
 
-void regist_from_client(const GValue& identity) {
+void regist_from_client(const GValue& identity, const GValue& client_entity_rpc_names) {
 
     auto session = g_cur_imp->get_session();
     auto local_identity = g_ini.get_string("Identity", "md5");
@@ -59,6 +64,26 @@ void regist_from_client(const GValue& identity) {
     INFO_LOG("regist from client@%s\n", session->get_remote_addr().c_str());
 
     REMOTE_RPC_CALL(session, "regist_ack_from_gate", session->get_local_addr(), true);
+
+    g_client_entity_rpc_names = client_entity_rpc_names.as_array();
+}
+
+void get_client_entity_rpc_names_from_game(const GValue& game_addr) {
+    auto remote = g_remote_mgr.get_remote(game_addr.as_string());
+    if (nullptr == remote) {
+        return;
+    }
+
+    REMOTE_RPC_CALL(remote, "get_client_entity_rpc_names_ack", g_client_entity_rpc_names);
+}
+
+void get_game_entity_rpc_names_from_client(const GValue& client_addr) {
+    auto session = g_session_mgr.get_session(client_addr.as_string());
+    if (nullptr == session) {
+        return;
+    }
+
+    REMOTE_RPC_CALL(session, "get_game_entity_rpc_names_ack", g_game_entity_rpc_names);
 }
 
 void create_base_entity(const GValue& entity_class_name) {
@@ -137,8 +162,11 @@ void rpc_handle_regist() {
     RPC_REGISTER(connect_from_client);
     RPC_REGISTER(disconnect_from_client, GString());
 
-    RPC_REGISTER(regist_ack_from_game, GString(), bool());
-    RPC_REGISTER(regist_from_client, GString());
+    RPC_REGISTER(regist_ack_from_game, GString(), bool(), GArray());
+    RPC_REGISTER(regist_from_client, GString(), GArray());
+
+    RPC_REGISTER(get_client_entity_rpc_names_from_game, GString());
+    RPC_REGISTER(get_game_entity_rpc_names_from_client, GString());
 
     RPC_REGISTER(create_base_entity, GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());

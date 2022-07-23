@@ -21,6 +21,10 @@ struct EntityRpcMethod : public RpcMethodBase {
     CBType cb;
 };
 
+extern GArray* g_local_entity_rpc_names;
+extern unordered_map<GString, uint16_t> g_entity_rpc_name_l2s;
+extern unordered_map<uint16_t, GString> g_entity_rpc_name_s2l;
+
 // entity rpc manager
 template<class EntityClassType>
 class EntityRpcManager : public RpcManagerBase {
@@ -65,8 +69,13 @@ public:
         method->rpc_real_params_parse(args...);
 
         RpcFormalParamsCheck<T...>();
-
         add_rpc_method(rpc_name, method);
+
+        // g_local_entity_rpc_names如果是全局变量，那么构造函数调用的时机可能在这之后
+        // 会导致push_back之后构造函数又clear的情况，所以要用new确保在push_back之前构造
+        if (g_local_entity_rpc_names == nullptr)
+            g_local_entity_rpc_names = new GArray;
+        g_local_entity_rpc_names->push_back(rpc_name);
     }
 
     template<class TEntity, class... T>
@@ -75,14 +84,23 @@ public:
         method->cb = cb;
         method->type = entity_rpc_type;
         add_rpc_method(rpc_name, method);
-    }
 
-    void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {
-        encoder.write_string(rpc_name);
+        if (g_local_entity_rpc_names == nullptr)
+            g_local_entity_rpc_names = new GArray;
+        g_local_entity_rpc_names->push_back(rpc_name);
     }
 
     GString rpc_name_decode(Decoder& decoder) {
-        return decoder.read_string();
+        uint8_t rpc_name_s = decoder.read_uint16();
+        auto iter = g_entity_rpc_name_s2l.find(rpc_name_s);
+        ASSERT_LOG(iter != g_entity_rpc_name_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+        return iter->second;
+    }
+
+    void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {
+        auto iter = g_entity_rpc_name_l2s.find(rpc_name);
+        ASSERT_LOG(iter != g_entity_rpc_name_l2s.end(), "rpc.%s can not compress\n", rpc_name.c_str());
+        encoder.write_uint16(iter->second);
     }
 
     template<class TEntity, class... T>

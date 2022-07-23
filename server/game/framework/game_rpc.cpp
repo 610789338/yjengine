@@ -25,8 +25,35 @@ void regist_from_gate() {
     auto session = g_cur_imp->get_session();
     session->set_verify(true);
     INFO_LOG("regist from gate@%s\n", session->get_remote_addr().c_str());
-    
-    REMOTE_RPC_CALL(session, "regist_ack_from_game", session->get_local_addr(), true);
+
+    REMOTE_RPC_CALL(session, "regist_ack_from_game", session->get_local_addr(), true, *g_local_entity_rpc_names);
+
+    REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
+}
+
+void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
+
+    if (client_rpc_names.as_array().empty()) {
+        auto session = g_session_mgr.get_rand_session();
+        REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
+        return;
+    }
+
+    g_entity_rpc_name_l2s.clear();
+    g_entity_rpc_name_s2l.clear();
+
+    for (size_t i = 0; i < g_local_entity_rpc_names->size(); ++i) {
+        g_entity_rpc_name_l2s.insert(make_pair((*g_local_entity_rpc_names)[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
+    }
+
+    auto& client_rpc_name_array = client_rpc_names.as_array();
+    for (size_t i = 0; i < client_rpc_name_array.size(); ++i) {
+        g_entity_rpc_name_l2s.insert(make_pair(client_rpc_name_array[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
+    }
+
+    for (auto iter = g_entity_rpc_name_l2s.begin(); iter != g_entity_rpc_name_l2s.end(); ++iter) {
+        g_entity_rpc_name_s2l.insert(make_pair(iter->second, iter->first));
+    }
 }
 
 void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
@@ -84,6 +111,8 @@ void rpc_handle_regist() {
     RPC_REGISTER(connect_from_client);
     RPC_REGISTER(disconnect_from_client, GString());
     RPC_REGISTER(regist_from_gate);
+
+    RPC_REGISTER(get_client_entity_rpc_names_ack, GArray());
 
     RPC_REGISTER(create_base_entity, GString(), GString(), GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());

@@ -183,9 +183,6 @@ public:
     shared_ptr<RpcImp> imp_queue_pop();
 	bool imp_queue_empty();
 
-    uint8_t rpc_name_l2s(const GString& rpc_name_l);
-    GString rpc_name_s2l(uint8_t rpc_name_s);
-
 private:
     queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
     shared_mutex m_mutex;

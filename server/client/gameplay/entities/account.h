@@ -15,8 +15,8 @@ public:
     static void rpc_method_define();
     static void property_define();
 
-    void msg_from_base(const GValue& msg) { INFO_LOG("msg.%s from base\n", msg.as_string().c_str()); }
-    void msg_from_cell(const GValue& msg) { INFO_LOG("msg.%s from cell\n", msg.as_string().c_str()); }
+    void msg_from_base(const GValue& msg) { INFO_LOG("[client] msg.%s from base\n", msg.as_string().c_str()); }
+    void msg_from_cell(const GValue& msg) { INFO_LOG("[client] msg.%s from cell\n", msg.as_string().c_str()); }
 
     void on_ready() {
         INFO_LOG("ClientAccount on_ready\n");

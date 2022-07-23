@@ -99,6 +99,7 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("connect_from_client", idx++));
     m_l2s.insert(make_pair("disconnect_from_client", idx++));
     m_l2s.insert(make_pair("regist_from_gate", idx++));
+    m_l2s.insert(make_pair("get_client_entity_rpc_names_ack", idx++));
     m_l2s.insert(make_pair("create_base_entity", idx++));
     m_l2s.insert(make_pair("create_cell_entity", idx++));
     m_l2s.insert(make_pair("call_base_entity", idx++));
@@ -109,11 +110,14 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("on_remote_disconnected", idx++));
     m_l2s.insert(make_pair("regist_ack_from_game", idx++));
     m_l2s.insert(make_pair("regist_from_client", idx++));
+    m_l2s.insert(make_pair("get_client_entity_rpc_names_from_game", idx++));
+    m_l2s.insert(make_pair("get_game_entity_rpc_names_from_client", idx++));
     m_l2s.insert(make_pair("create_client_entity", idx++));
     m_l2s.insert(make_pair("call_client_entity", idx++));
 
     // client
     m_l2s.insert(make_pair("regist_ack_from_gate", idx++));
+    m_l2s.insert(make_pair("get_game_entity_rpc_names_ack", idx++));
 
     for (auto iter = m_l2s.begin(); iter != m_l2s.end(); ++iter) {
         m_s2l.insert(make_pair(iter->second, iter->first));
@@ -122,12 +126,15 @@ RpcManager::RpcManager() {
 
 GString RpcManager::rpc_name_decode(Decoder& decoder) {
     uint8_t rpc_name_s = decoder.read_uint8();
-    return rpc_name_s2l(rpc_name_s);
+    auto iter = m_s2l.find(rpc_name_s);
+    ASSERT_LOG(iter != m_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+    return iter->second;
 }
 
 void RpcManager::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
-    uint8_t rpc_name = rpc_name_l2s(rpc_name_l);
-    encoder.write_uint8(rpc_name);
+    auto iter = m_l2s.find(rpc_name_l);
+    ASSERT_LOG(iter != m_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
+    encoder.write_uint8(iter->second);
 }
 
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
@@ -175,18 +182,6 @@ shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
 bool RpcManager::imp_queue_empty() {
     shared_lock<shared_mutex> lock(m_mutex);
     return m_rpc_imp_queue.empty();
-}
-
-uint8_t RpcManager::rpc_name_l2s(const GString& rpc_name_l) {
-    auto iter = m_l2s.find(rpc_name_l);
-    ASSERT_LOG(iter != m_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
-    return iter->second;
-}
-
-GString RpcManager::rpc_name_s2l(uint8_t rpc_name_s) {
-    auto iter = m_s2l.find(rpc_name_s);
-    ASSERT_LOG(iter != m_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
-    return iter->second;
 }
 
 void args2array(vector<GValue>& rpc_params) {}

@@ -14,8 +14,6 @@ using namespace std;
 
 class Entity;
 
-//RpcManagerBase
-//EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
 
 #define GENERATE_ENTITY_INNER(TCLASS) \
 public: \

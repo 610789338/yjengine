@@ -19,12 +19,12 @@ public:
     void on_ready() {
         INFO_LOG("BaseAccount on_ready\n");
 
-        cell.call("msg_from_base", "hello, i am client");
-        client.call("msg_from_base", "hello, i am client");
+        cell.call("msg_from_base", "hello, i am base");
+        client.call("msg_from_base", "hello, i am base");
     }
 
-    void msg_from_cell(const GValue& msg) { INFO_LOG("msg.%s from cell\n", msg.as_string().c_str()); }
-    void msg_from_client(const GValue& msg) { INFO_LOG("msg.%s from client\n", msg.as_string().c_str()); }
+    void msg_from_cell(const GValue& msg) { INFO_LOG("[base] msg.%s from cell\n", msg.as_string().c_str()); }
+    void msg_from_client(const GValue& msg) { INFO_LOG("[base] msg.%s from client\n", msg.as_string().c_str()); }
 };
 
 GENERATE_ENTITY_OUT(BaseAccount)
@@ -51,14 +51,14 @@ public:
     static void rpc_method_define();
     static void property_define();
 
-    void msg_from_base(const GValue& msg) { INFO_LOG("msg.%s from base\n", msg.as_string().c_str()); }
-    void msg_from_client(const GValue& msg) { INFO_LOG("msg.%s from client\n", msg.as_string().c_str()); }
+    void msg_from_base(const GValue& msg) { INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str()); }
+    void msg_from_client(const GValue& msg) { INFO_LOG("[cell] msg.%s from client\n", msg.as_string().c_str()); }
 
     void on_ready() {
         INFO_LOG("CellAccount on_ready\n");
 
-        base.call("msg_from_cell", "hello, i am client");
-        client.call("msg_from_cell", "hello, i am client");
+        base.call("msg_from_cell", "hello, i am cell");
+        client.call("msg_from_cell", "hello, i am cell");
     }
 };
 
