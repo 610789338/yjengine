@@ -55,8 +55,8 @@ public:
     void write_bin(const GBin& v);
     void write_end();
 
-    char* get_buf() { return m_buf; }
-    uint16_t get_offset() { return m_offset; }
+    const char* get_buf() const { return m_buf; }
+    uint16_t get_offset() const { return m_offset; }
 
 private:
     void write_gvalue(const GValue& v);

@@ -5,6 +5,25 @@
 
 using namespace std;
 
+shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len) {
+    Decoder decoder(buf, pkg_len);
+    const GString& rpc_name = rpc_name_decode(decoder);
+
+    auto iter = find_rpc_method(rpc_name);
+    ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
+
+    // 根据模板把参数反序列化出来
+    vector<GValue> params;
+    rpc_params_decode(decoder, params, iter->m_params_t);
+
+    if (decoder.get_offset() < decoder.get_max_offset()) {
+        auto remain_len = decoder.get_max_offset() - decoder.get_offset();
+        WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
+    }
+
+    return make_shared<RpcImp>(rpc_name, params);
+}
+
 void RpcManagerBase::rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& params_t) {
     for (auto iter = params_t.begin(); iter != params_t.end(); ++iter) {
         if (*iter == typeid(bool).name()) {
@@ -73,23 +92,42 @@ RpcMethodBase* RpcManagerBase::find_rpc_method(const GString& rpc_name) {
 
 RpcManager g_rpc_manager;
 
-shared_ptr<RpcImp> RpcManager::rpc_decode(const char* buf, uint16_t pkg_len) {
-    Decoder decoder(buf, pkg_len);
-    GString rpc_name = decoder.read_string();
+RpcManager::RpcManager() {
+    uint8_t idx = 0;
 
-    auto iter = find_rpc_method(rpc_name);
-    ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
+    // game
+    m_l2s.insert(make_pair("connect_from_client", idx++));
+    m_l2s.insert(make_pair("disconnect_from_client", idx++));
+    m_l2s.insert(make_pair("regist_from_gate", idx++));
+    m_l2s.insert(make_pair("create_base_entity", idx++));
+    m_l2s.insert(make_pair("create_cell_entity", idx++));
+    m_l2s.insert(make_pair("call_base_entity", idx++));
+    m_l2s.insert(make_pair("call_cell_entity", idx++));
 
-    // 根据模板把参数反序列化出来
-    vector<GValue> params;
-    rpc_params_decode(decoder, params, iter->m_params_t);
+    // gate
+    m_l2s.insert(make_pair("on_remote_connected", idx++));
+    m_l2s.insert(make_pair("on_remote_disconnected", idx++));
+    m_l2s.insert(make_pair("regist_ack_from_game", idx++));
+    m_l2s.insert(make_pair("regist_from_client", idx++));
+    m_l2s.insert(make_pair("create_client_entity", idx++));
+    m_l2s.insert(make_pair("call_client_entity", idx++));
 
-    if (decoder.get_offset() < decoder.get_max_offset()) {
-        auto remain_len = decoder.get_max_offset() - decoder.get_offset();
-        WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
+    // client
+    m_l2s.insert(make_pair("regist_ack_from_gate", idx++));
+
+    for (auto iter = m_l2s.begin(); iter != m_l2s.end(); ++iter) {
+        m_s2l.insert(make_pair(iter->second, iter->first));
     }
+}
 
-    return make_shared<RpcImp>(rpc_name, params);
+GString RpcManager::rpc_name_decode(Decoder& decoder) {
+    uint8_t rpc_name_s = decoder.read_uint8();
+    return rpc_name_s2l(rpc_name_s);
+}
+
+void RpcManager::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
+    uint8_t rpc_name = rpc_name_l2s(rpc_name_l);
+    encoder.write_uint8(rpc_name);
 }
 
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
@@ -137,6 +175,18 @@ shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
 bool RpcManager::imp_queue_empty() {
     shared_lock<shared_mutex> lock(m_mutex);
     return m_rpc_imp_queue.empty();
+}
+
+uint8_t RpcManager::rpc_name_l2s(const GString& rpc_name_l) {
+    auto iter = m_l2s.find(rpc_name_l);
+    ASSERT_LOG(iter != m_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
+    return iter->second;
+}
+
+GString RpcManager::rpc_name_s2l(uint8_t rpc_name_s) {
+    auto iter = m_s2l.find(rpc_name_s);
+    ASSERT_LOG(iter != m_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+    return iter->second;
 }
 
 void args2array(vector<GValue>& rpc_params) {}

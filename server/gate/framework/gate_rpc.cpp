@@ -95,39 +95,39 @@ void create_client_entity(const GValue& client_addr, const GValue& entity_class_
     REMOTE_RPC_CALL(session, "create_client_entity", entity_class_name.as_string(), base_entity_uuid.as_string(), base_addr.as_string(), cell_entity_uuid.as_string(), cell_addr.as_string());
 }
 
-void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const GValue& inner_rpc) {
     auto remote = g_remote_mgr.get_remote(base_addr.as_string());
     if (nullptr == remote) {
         return;
     }
 
-    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+    //INFO_LOG("call_base_entity %s\n", entity_uuid.as_string().c_str());
 
     bool from_client = g_cur_imp->get_session() != nullptr;
-    REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
+    REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid.as_string(), inner_rpc.as_bin());
 }
 
-void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+void call_cell_entity(const GValue& cell_addr, const GValue& entity_uuid, const GValue& inner_rpc) {
     auto remote = g_remote_mgr.get_remote(cell_addr.as_string());
     if (nullptr == remote) {
         return;
     }
 
-    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+    //INFO_LOG("call_cell_entity %s\n", entity_uuid.as_string().c_str());
 
     bool from_client = g_cur_imp->get_session() != nullptr;
-    REMOTE_RPC_CALL(remote, "call_cell_entity", from_client, entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
+    REMOTE_RPC_CALL(remote, "call_cell_entity", from_client, entity_uuid.as_string(), inner_rpc.as_bin());
 }
 
-void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, const GValue& rpc_name, const GValue& rpc_params) {
+void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, const GValue& inner_rpc) {
     auto session = g_session_mgr.get_session(client_addr.as_string());
     if (nullptr == session) {
         return;
     }
 
-    INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_name.as_string().c_str());
+    //INFO_LOG("call_client_entity %s\n", entity_uuid.as_string().c_str());
 
-    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), rpc_name.as_string(), rpc_params.as_bin());
+    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), inner_rpc.as_bin());
 }
 
 void rpc_handle_regist() {
@@ -144,7 +144,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString(), GString());
 
-    RPC_REGISTER(call_base_entity, GString(), GString(), GString(), GBin());
-    RPC_REGISTER(call_cell_entity, GString(), GString(), GString(), GBin());
-    RPC_REGISTER(call_client_entity, GString(), GString(), GString(), GBin());
+    RPC_REGISTER(call_base_entity, GString(), GString(), GBin());
+    RPC_REGISTER(call_cell_entity, GString(), GString(), GBin());
+    RPC_REGISTER(call_client_entity, GString(), GString(), GBin());
 }

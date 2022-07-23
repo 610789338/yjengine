@@ -69,31 +69,20 @@ public:
         add_rpc_method(rpc_name, method);
     }
 
-    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len) {
-        Decoder decoder(buf, pkg_len);
-        GString rpc_name = decoder.read_string();
-
-        auto iter = find_rpc_method(rpc_name);
-        ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
-
-        // 根据模板把参数反序列化出来
-        vector<GValue> params;
-        rpc_params_decode(decoder, params, iter->m_params_t);
-
-        if (decoder.get_offset() < decoder.get_max_offset()) {
-            auto remain_len = decoder.get_max_offset() - decoder.get_offset();
-            WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
-        }
-
-        return make_shared<RpcImp>(rpc_name, params);
-    }
-
     template<class TEntity, class... T>
     void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T...)) {
         EntityRpcMethod<TEntity, T...>* method = new EntityRpcMethod<TEntity, T...>;
         method->cb = cb;
         method->type = entity_rpc_type;
         add_rpc_method(rpc_name, method);
+    }
+
+    void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {
+        encoder.write_string(rpc_name);
+    }
+
+    GString rpc_name_decode(Decoder& decoder) {
+        return decoder.read_string();
     }
 
     template<class TEntity, class... T>
@@ -112,7 +101,7 @@ public:
     EntityClassType tclass;
 };
 
-#define RPC_CALL_DEFINE \
+#define RPC_CALL_DEFINE(TCLASS) \
 void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) { \
 \
     auto method = get_rpc_mgr()->find_rpc_method(rpc_name); \
@@ -126,54 +115,40 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
         return; \
     } \
  \
+    auto rpc_mgr = (EntityRpcManager<TCLASS>*)get_rpc_mgr(); \
     switch (params.size()) { \
     case 0: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name); \
+        rpc_mgr->entity_rpc_call(this, rpc_name); \
         break; \
     case 1: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0]); \
         break; \
     case 2: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1]); \
         break; \
     case 3: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2]); \
         break; \
     case 4: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3]); \
         break; \
     case 5: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4]); \
         break; \
     case 6: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5]); \
         break; \
     case 7: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6]); \
         break; \
     case 8: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]); \
         break; \
     case 9: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]); \
         break; \
     case 10: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]); \
-        break; \
-    case 11: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]); \
-        break; \
-    case 12: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]); \
-        break; \
-    case 13: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]); \
-        break; \
-    case 14: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]); \
-        break; \
-    case 15: \
-        get_rpc_mgr()->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]); \
+        rpc_mgr->entity_rpc_call(this, rpc_name, params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]); \
         break; \
     default: \
         break; \

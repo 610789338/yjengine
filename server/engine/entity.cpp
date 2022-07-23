@@ -136,3 +136,7 @@ Entity* create_entity(const GString& entity_class_name, const GString& entity_uu
 
     return entity;
 }
+
+RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
+    return entity->get_rpc_mgr();
+}

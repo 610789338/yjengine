@@ -14,14 +14,16 @@ using namespace std;
 
 class Entity;
 
+//RpcManagerBase
+//EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
 
 #define GENERATE_ENTITY_INNER(TCLASS) \
 public: \
     static EntityPropertyManager<TCLASS> property_manager; \
     static EntityRpcManager<TCLASS> rpc_manager; \
-    EntityRpcManager<TCLASS>* get_rpc_mgr() { return &rpc_manager; } \
+    RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
-    RPC_CALL_DEFINE
+    RPC_CALL_DEFINE(TCLASS)
 
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
@@ -86,6 +88,8 @@ public:
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
     const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
     virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
+
+    virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
 
     GString uuid = "";
     GString class_name = "";
@@ -244,3 +248,4 @@ public:
     BaseMailBox base;
     CellMailBox cell;
 };
+

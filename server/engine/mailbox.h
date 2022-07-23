@@ -10,6 +10,8 @@
 
 class Entity;
 
+extern RpcManagerBase* get_entity_rpc_mgr(Entity* entity);
+
 class MailBox {
 
 public:
@@ -42,7 +44,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
         GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
@@ -76,7 +78,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
         GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
@@ -110,7 +112,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
         GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
 
         auto gate = g_session_mgr.get_session(m_gate_addr);

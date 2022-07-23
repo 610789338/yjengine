@@ -18,8 +18,8 @@ class Remote;
 class RpcImp {
 public:
     RpcImp() = delete;
-    RpcImp(GString& rpc_name) : m_rpc_name(std::move(rpc_name)) {}
-    RpcImp(GString& rpc_name, vector<GValue>& rpc_params) 
+    RpcImp(const GString& rpc_name) : m_rpc_name(std::move(rpc_name)) {}
+    RpcImp(const GString& rpc_name, vector<GValue>& rpc_params) 
         : m_rpc_name(std::move(rpc_name)), m_rpc_params(std::move(rpc_params)) {}
     
     ~RpcImp() {}
@@ -94,18 +94,22 @@ public:
     RpcManagerBase() {}
     virtual ~RpcManagerBase() {}
 
-    virtual shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len) { return nullptr; }
+    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    virtual GString rpc_name_decode(Decoder& decoder) = 0;
     void rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& m_params_t);
+
 
     template<class ...T>
     Encoder rpc_encode(const GString& rpc_name, const T&... args) {
         Encoder encoder;
-        encoder.write_string(rpc_name);
+        rpc_name_encode(encoder, rpc_name);
         rpc_params_encode(encoder, args...);
         encoder.write_end();
-
         return encoder;
     }
+
+    virtual void rpc_name_encode(Encoder& encoder, const GString& rpc_name) = 0;
+
     template<class T, class ...T2>
     void rpc_params_encode(Encoder& encoder, const T& arg, const T2&... args) {
         encoder.write<T>(arg);
@@ -128,7 +132,11 @@ private:
 // rpc manager
 class RpcManager : public RpcManagerBase {
 public:
-    shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
+    RpcManager();
+    ~RpcManager() {}
+
+    GString rpc_name_decode(Decoder& decoder);
+    void rpc_name_encode(Encoder& encoder, const GString& rpc_name_l);
 
     // T(GValue list) != T2
     template<class... T, class... T2>
@@ -175,9 +183,15 @@ public:
     shared_ptr<RpcImp> imp_queue_pop();
 	bool imp_queue_empty();
 
+    uint8_t rpc_name_l2s(const GString& rpc_name_l);
+    GString rpc_name_s2l(uint8_t rpc_name_s);
+
 private:
     queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
     shared_mutex m_mutex;
+
+    unordered_map<GString, uint8_t> m_l2s;
+    unordered_map<uint8_t, GString> m_s2l;
 };
 
 extern RpcManager g_rpc_manager;

@@ -29,18 +29,20 @@ public:
     GString get_remote_addr();
 
     template<class ...T>
-    void remote_rpc_call(GString rpc_name, const T&... args) {
-        Encoder encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
-
+    void remote_rpc_call(const GString& rpc_name, const T&... args) {
+        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
         auto self(shared_from_this());
-        boost::asio::async_write(m_socket, boost::asio::buffer(encoder.get_buf(), encoder.get_offset()),
+
+        boost::asio::async_write(
+            m_socket, 
+            boost::asio::buffer(encoder.get_buf(), encoder.get_offset()),
             [this, self](boost::system::error_code ec, std::size_t length) {
             on_write(ec, length);
         });
     }
 
     template<class... T>
-    void local_rpc_call(GString rpc_name, T ...args) {
+    void local_rpc_call(const GString& rpc_name, const T&... args) {
         GArray rpc_params;
         args2array(rpc_params, args...);
         auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
