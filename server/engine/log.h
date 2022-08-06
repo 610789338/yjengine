@@ -7,7 +7,6 @@
 // #include "gvalue.h"  // can not include this because circular include
 
 using namespace std;
-namespace pt = boost::posix_time;
 
 extern string get_proc_name();
 extern string now_format();

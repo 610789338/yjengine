@@ -7,8 +7,8 @@
 #include "log.h"
 #include "rpc_manager.h"
 #include "boost_asio.h"
-
 #include "mailbox.h"
+#include "timer.h"
 
 using namespace std;
 
@@ -21,7 +21,8 @@ public: \
     static EntityRpcManager<TCLASS> rpc_manager; \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
-    RPC_CALL_DEFINE(TCLASS)
+    RPC_CALL_DEFINE(TCLASS) \
+    static TimerManager<TCLASS> timer_manager;
 
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
@@ -30,8 +31,8 @@ EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #T
     auto entity = new TCLASS(); \
     entity->propertys = TCLASS::property_manager.propertys; \
     entity->rpc_mgr = &TCLASS::rpc_manager; \
-    return entity; \
-});
+    return entity; }); \
+TimerManager<TCLASS> TCLASS::timer_manager;
 
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);

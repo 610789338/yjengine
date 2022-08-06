@@ -21,10 +21,19 @@ public:
 
         cell.call("msg_from_base", "hello, i am base");
         client.call("msg_from_base", "hello, i am base");
+
+        RETIST_TIMER(5.0, 0.5, false, &BaseAccount::account_timer_test, "5 seconds", 1.1f);
+        test_timer = RETIST_TIMER(6.0, 0.5, false, &BaseAccount::account_timer_test, "6 seconds", 1.1f);
     }
 
     void msg_from_cell(const GValue& msg) { INFO_LOG("[base] msg.%s from cell\n", msg.as_string().c_str()); }
     void msg_from_client(const GValue& msg) { INFO_LOG("[base] msg.%s from client\n", msg.as_string().c_str()); }
+    void account_timer_test(const GValue& arg1, const GValue& arg2) { 
+        INFO_LOG("this is timer test arg1.%s arg2.%f\n", arg1.as_string().c_str(), arg2.as_float()); 
+        CANCELL_TIMER(test_timer);
+    }
+
+    TimerID test_timer;
 };
 
 GENERATE_ENTITY_OUT(BaseAccount)

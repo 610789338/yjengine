@@ -21,3 +21,6 @@ extern string gen_uuid();
 
 extern string get_proc_name();
 extern string now_format();
+
+extern int64_t now_timestamp();
+extern int64_t nowms_timestamp();

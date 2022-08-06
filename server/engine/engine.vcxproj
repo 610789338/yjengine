@@ -31,6 +31,7 @@
     <ClInclude Include="mailbox.h" />
     <ClInclude Include="remote_manager.h" />
     <ClInclude Include="rpc_manager.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="engine.h" />
   </ItemGroup>
@@ -46,6 +47,7 @@
     <ClCompile Include="mailbox.cpp" />
     <ClCompile Include="remote_manager.cpp" />
     <ClCompile Include="rpc_manager.cpp" />
+    <ClCompile Include="timer.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

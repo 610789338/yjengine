@@ -2,6 +2,7 @@
 
 #include "boost_asio.h"
 #include "rpc_manager.h"
+#include "timer.h"
 
 void engine_init() {
 
@@ -12,5 +13,6 @@ void engine_init() {
 
 void engine_tick() {
     rpc_imp_input_tick();
+    timer_tick();
 }
 
