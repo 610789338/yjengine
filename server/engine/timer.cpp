@@ -20,18 +20,18 @@ void TimerManagerBase::tick() {
 
     auto now = nowms_timestamp();
 
-    vector<TimerBase*> timer_fires;
+    vector<TimerBase*> timer_fired;
     for (auto iter = m_timers.begin(); iter != m_timers.end();) {
         const auto& timer = *iter;
         if (timer->m_expiration < now) {
             timer_callback(timer);
-            timer_fires.push_back(timer);
+            timer_fired.push_back(timer);
         }
 
         break;
     }
 
-    for (auto iter = timer_fires.begin(); iter != timer_fires.end(); ++iter) {
+    for (auto iter = timer_fired.begin(); iter != timer_fired.end(); ++iter) {
         const auto& timer = *iter;
      
         _remove(timer);

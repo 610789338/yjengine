@@ -12,6 +12,7 @@ void engine_init() {
 }
 
 void engine_tick() {
+    // update_time_now_cache();
     rpc_imp_input_tick();
     timer_tick();
 }

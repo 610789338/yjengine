@@ -7,6 +7,7 @@
 #include <memory>  // shared_ptr need include memory, omg~~~
 
 #include "gvalue.h"
+#include "log.h"
 
 using namespace std;
 
@@ -87,7 +88,6 @@ protected:
     void _remove(TimerBase* timer);
 
     set<TimerBase*, TimerCompare> m_timers;
-    //set<TimerBase*> m_timers;
     unordered_map<TimerID, TimerBase*> m_timer_ids;
 };
 
@@ -113,6 +113,7 @@ public:
     TimerID regist_timer(TEntity* entity, float start, float interval, bool repeat, void(TEntity::*cb)(T...), T2... args) {
 
         int64_t expiration = nowms_timestamp() + int64_t(start * 1000);
+        DEBUG_LOG("regist_timer expiration.%lld\n", expiration);
 
         TimerID time_id = ++g_time_id;
         auto timer = new Timer<TEntity, T...>(entity, time_id, interval, repeat, expiration);
@@ -131,14 +132,17 @@ public:
         case 0: {
             Timer<TEntity>* _timer = (Timer<TEntity>*)timer;
             _timer->_callback();
+            break;
             }
         case 1: {
             Timer<TEntity, GValue>* _timer = (Timer<TEntity, GValue>*)timer;
             _timer->_callback(prs[0]);
+            break;
             }
         case 2: {
             Timer<TEntity, GValue, GValue>* _timer = (Timer<TEntity, GValue, GValue>*)timer;
             _timer->_callback(prs[0], prs[1]);
+            break;
             }
         }
     }

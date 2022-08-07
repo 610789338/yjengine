@@ -5,6 +5,7 @@
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/uuid_generators.hpp"
 #include "boost/uuid/uuid_io.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 #include "utils.h"
 #include "ini.h"
@@ -29,11 +30,21 @@ string get_proc_name() {
     return g_ini.get_string("Common", "name");
 }
 
-string now_format() {
+static const boost::posix_time::ptime timestamp0 = boost::posix_time::time_from_string("1970-01-01 08:00:00");
+static boost::posix_time::ptime now_cache = boost::posix_time::microsec_clock::local_time();;
 
-    boost::posix_time::ptime current_date_microseconds = boost::posix_time::microsec_clock::local_time();
+void update_time_now_cache() {
+    now_cache = boost::posix_time::microsec_clock::local_time();
+}
 
-    string t = boost::posix_time::to_iso_string(current_date_microseconds);
+// window下debug模式调用一次平均耗时200 micro second = 0.2 ms
+string now_format(bool use_cache) {
+
+    string t = boost::posix_time::to_iso_string(now_cache);
+    if (!use_cache) {
+        t = boost::posix_time::to_iso_string(boost::posix_time::microsec_clock::local_time());
+    }
+
     t.replace(4, 0, string("-"));
     t.replace(7, 0, string("-"));
     size_t pos = t.find("T");
@@ -44,18 +55,39 @@ string now_format() {
     return t;
 }
 
-const boost::posix_time::ptime time_begin = boost::posix_time::time_from_string("1970-01-01 08:00:00");
+/*
+ * linux下debug模式调用一次平均耗时0.8 micro second
+ * windows下debug模式调用一次平均耗时5.8 micro second
+ */
+int64_t now_timestamp(bool use_cache) {
+    
+    boost::posix_time::ptime now = now_cache;
+    if (!use_cache) {
+        now = boost::posix_time::microsec_clock::local_time();
+    }
 
-int64_t now_timestamp() {
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    const boost::posix_time::time_duration time_duration{ now - time_begin };
-
+    const boost::posix_time::time_duration time_duration{ now - timestamp0 };
     return (int64_t)time_duration.total_seconds();
 }
 
-int64_t nowms_timestamp() {
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    const boost::posix_time::time_duration time_duration{ now - time_begin };
+int64_t nowms_timestamp(bool use_cache) {
 
+    boost::posix_time::ptime now = now_cache;
+    if (!use_cache) {
+        now = boost::posix_time::microsec_clock::local_time();
+    }
+
+    const boost::posix_time::time_duration time_duration{ now - timestamp0 };
     return (int64_t)time_duration.total_microseconds()/1000;
+}
+
+int64_t nowmicro_timestamp(bool use_cache) {
+
+    boost::posix_time::ptime now = now_cache;
+    if (!use_cache) {
+        now = boost::posix_time::microsec_clock::local_time();
+    }
+
+    const boost::posix_time::time_duration time_duration{ now - timestamp0 };
+    return (int64_t)time_duration.total_microseconds();
 }

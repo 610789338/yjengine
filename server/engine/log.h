@@ -2,15 +2,13 @@
 
 #include <stdio.h>
 
-#include "boost/date_time/posix_time/posix_time.hpp"
+#include "utils.h"
 
 // #include "gvalue.h"  // can not include this because circular include
 
 using namespace std;
 
-extern string get_proc_name();
-extern string now_format();
-
+// window debug模式下打印一条日志的平均耗时是300 micro second = 0.3 ms
 template<class... T>
 void LOG(const char* level, T... args) {
 

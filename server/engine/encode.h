@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "gvalue.h"
+#include "log.h"
 
 using namespace std;
 
