@@ -22,8 +22,9 @@ public: \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
     RPC_CALL_DEFINE(TCLASS) \
+    static EntityComponentManager<TCLASS> component_manager; \
+    RpcManagerBase* get_comp_mgr() { return &component_manager; } \
     static TimerManager<TCLASS> timer_manager;
-
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
@@ -31,8 +32,11 @@ EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #T
     auto entity = new TCLASS(); \
     entity->propertys = TCLASS::property_manager.propertys; \
     entity->rpc_mgr = &TCLASS::rpc_manager; \
+    component_manager.generate_entity_components(entity); \
     return entity; }); \
+EntityComponentManager<TCLASS> TCLASS::component_manager; \
 TimerManager<TCLASS> TCLASS::timer_manager;
+
 
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
@@ -71,6 +75,7 @@ public:
     bool dirty = false;
 };
 
+class EntityComponentBase;
 
 class Entity {
 public:
@@ -85,19 +90,22 @@ public:
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
-    const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
-    virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
 
+    virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
+    virtual RpcManagerBase* get_comp_mgr() { return nullptr; }
+
+    const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
+    EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
 
     GString uuid = "";
     GString class_name = "";
 
     unordered_map<GString, EntityProperty> propertys;
+    unordered_map<GString, EntityComponentBase*> components;
 
     RpcManagerBase* rpc_mgr;
 };
-
 
 // ------------------------------- base ------------------------------- //
 class BaseEntity : public Entity {

@@ -2,6 +2,7 @@
 
 #include "engine/engine.h"
 
+#include "components/create_avatar_component.h"
 
 
 class BaseAccount : public BaseEntityWithCellAndClient {
@@ -12,8 +13,19 @@ public:
     BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {}
     ~BaseAccount() {}
 
-    static void rpc_method_define();
-    static void property_define();
+    static void regist_components() {
+        REGIST_COMPONENT(BaseAccount, CreateAvatarComponent);
+    }
+
+    static void rpc_method_define() {
+        RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell, GString());
+        RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+    }
+
+    static void property_define() {
+        PROPERTY(PropType::BASE_AND_CLIENT, "id", 1001);
+        PROPERTY(PropType::BASE_AND_CLIENT, "name", "youjun");
+    }
 
     // called by engine
     void on_ready() {
@@ -36,17 +48,6 @@ public:
 
 GENERATE_ENTITY_OUT(BaseAccount)
 
-
-void BaseAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell, GString());
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
-}
-
-void BaseAccount::property_define() {
-    PROPERTY(PropType::BASE_AND_CLIENT, "id", 1001);
-    PROPERTY(PropType::BASE_AND_CLIENT, "name", "youjun");
-}
-
 class CellAccount : public CellEntityWithClient {
 
     GENERATE_ENTITY_INNER(CellAccount)
@@ -55,8 +56,12 @@ public:
     CellAccount() {}
     ~CellAccount() {}
 
-    static void rpc_method_define();
-    static void property_define();
+    static void regist_components() {}
+    static void rpc_method_define() {
+        RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base, GString());
+        RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+    }
+    static void property_define() {}
 
     void msg_from_base(const GValue& msg) { INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str()); }
     void msg_from_client(const GValue& msg) { INFO_LOG("[cell] msg.%s from client\n", msg.as_string().c_str()); }
@@ -68,14 +73,5 @@ public:
         client.call("msg_from_cell", "hello, i am cell");
     }
 };
-
-void CellAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base, GString());
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
-}
-
-void CellAccount::property_define() {
-
-}
 
 GENERATE_ENTITY_OUT(CellAccount)

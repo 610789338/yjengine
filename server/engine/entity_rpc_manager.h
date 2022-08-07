@@ -112,7 +112,8 @@ public:
             return;
         }
 
-        auto _cb = ((EntityRpcMethod<TEntity, T...>*)method)->cb;
+        EntityRpcMethod<TEntity, T...>* entity_method = (EntityRpcMethod<TEntity, T...>*)method;
+        auto _cb = entity_method->cb;
         (_this->*_cb)(args...);
     }
 
@@ -124,7 +125,7 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
 \
     auto method = get_rpc_mgr()->find_rpc_method(rpc_name); \
     if (!method) { \
-        ERROR_LOG("entity rpc.%s not exist\n", rpc_name.c_str()); \
+        get_comp_mgr()->rpc_call(from_client, rpc_name, params); \
         return; \
     } \
 \

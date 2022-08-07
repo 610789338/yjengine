@@ -56,6 +56,9 @@
     <ClInclude Include="timer.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="entity_component_manager.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp">
@@ -95,6 +98,9 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="timer.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="entity_component_manager.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>

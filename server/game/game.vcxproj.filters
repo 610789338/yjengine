@@ -10,6 +10,9 @@
     <Filter Include="gameplay\entities">
       <UniqueIdentifier>{0c647cf2-a265-46e8-9389-1ffaecfdf484}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gameplay\components">
+      <UniqueIdentifier>{4daba879-75ad-4d2d-9fdc-bc892ea3f013}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.ini" />
@@ -19,6 +22,9 @@
     <ClCompile Include="framework\game_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\components\create_avatar_component.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -26,6 +32,9 @@
     </ClInclude>
     <ClInclude Include="gameplay\entities\account.h">
       <Filter>gameplay\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\create_avatar_component.h">
+      <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

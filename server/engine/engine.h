@@ -11,6 +11,7 @@
 #include "entity_rpc_manager.h"
 #include "entity_property_manager.h"
 #include "time.h"
+#include "entity_component_manager.h"
 
 extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();

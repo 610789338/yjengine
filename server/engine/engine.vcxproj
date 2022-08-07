@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost_asio.h" />
+    <ClInclude Include="entity_component_manager.h" />
     <ClInclude Include="decode.h" />
     <ClInclude Include="encode.h" />
     <ClInclude Include="entity.h" />
@@ -37,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp" />
+    <ClCompile Include="entity_component_manager.cpp" />
     <ClCompile Include="decode.cpp" />
     <ClCompile Include="encode.cpp" />
     <ClCompile Include="engine.cpp" />
