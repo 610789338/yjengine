@@ -23,7 +23,7 @@ public: \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
     RPC_CALL_DEFINE(TCLASS) \
     static EntityComponentManager<TCLASS> component_manager; \
-    RpcManagerBase* get_comp_mgr() { return &component_manager; } \
+    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
     static TimerManager<TCLASS> timer_manager;
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
@@ -75,6 +75,7 @@ public:
     bool dirty = false;
 };
 
+class ComponentManagerBase;
 class EntityComponentBase;
 
 class Entity {
@@ -93,7 +94,7 @@ public:
 
     virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
-    virtual RpcManagerBase* get_comp_mgr() { return nullptr; }
+    virtual ComponentManagerBase* get_comp_mgr() { return nullptr; }
 
     const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }

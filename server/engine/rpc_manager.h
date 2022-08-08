@@ -63,7 +63,8 @@ struct RpcMethodBase {
     void rpc_real_params_parse() {
     }
 
-    virtual GString get_comp_name() { return ""; }
+    GString get_comp_name() { return component_name; }
+    GString component_name = "";
 
     vector<GString> m_params_t;
     RpcType type = RpcType::SERVER_ONLY;

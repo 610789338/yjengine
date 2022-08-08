@@ -20,23 +20,32 @@ private:
     Entity* owner;
 };
 
+
+
 template<class TEntityComp, class... T>
 struct EntityCompRpcMethod : public RpcMethodBase {
     typedef void(TEntityComp::*CBType)(T... args);
     CBType cb;
+};
 
-    GString get_comp_name() { return component_name; }
-    GString component_name = "";
+class ComponentManagerBase {
+public:
+    virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, const GArray& params) = 0;
 };
 
 // entity component manager
 template<class EntityClassType>
-class EntityComponentManager : public RpcManagerBase {
+class EntityComponentManager : public ComponentManagerBase {
 
 public:
     EntityComponentManager() {
+        rpc_mgr = &(EntityClassType::rpc_manager);
         EntityClassType::regist_components();
     }
+
+    GString rpc_name_decode(Decoder& decoder) { return ""; }
+    void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {}
+
 
     void component_regist(EntityComponentBase* component) {
 
@@ -66,7 +75,7 @@ public:
         method->rpc_real_params_parse(args...);
 
         RpcFormalParamsCheck<T...>();
-        add_rpc_method(rpc_name, method);
+        rpc_mgr->add_rpc_method(rpc_name, method);
 
         if (g_local_entity_rpc_names == nullptr)
             g_local_entity_rpc_names = new GArray;
@@ -79,20 +88,20 @@ public:
         method->component_name = TEntityComp::get_name();
         method->cb = cb;
         method->type = entity_rpc_type;
-        add_rpc_method(rpc_name, method);
+        rpc_mgr->add_rpc_method(rpc_name, method);
 
         if (g_local_entity_rpc_names == nullptr)
             g_local_entity_rpc_names = new GArray;
         g_local_entity_rpc_names->push_back(rpc_name);
     }
 
-    void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
+    void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, const GArray& params) {
 
-        RpcMethodBase* method = find_rpc_method(rpc_name);
+        RpcMethodBase* method = rpc_mgr->find_rpc_method(rpc_name);
         const auto& comp_name = method->get_comp_name();
 
-        auto iter = components.find(comp_name);
-        if (iter == components.end()) {
+        auto iter = entity->components.find(comp_name);
+        if (iter == entity->components.end()) {
             return;
         }
 
@@ -102,7 +111,7 @@ public:
     template<class TEntityComp, class... T>
     void entity_comp_rpc_call(TEntityComp* comp, const GString& rpc_name, T... args) {
 
-        RpcMethodBase* method = find_rpc_method(rpc_name);
+        RpcMethodBase* method = rpc_mgr->find_rpc_method(rpc_name);
         if (sizeof...(args) != method->m_params_t.size()) {
             ERROR_LOG("entity comp rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), method->m_params_t.size());
             return;
@@ -114,12 +123,13 @@ public:
     }
 
     unordered_map<GString, EntityComponentBase*> components;
+    RpcManagerBase* rpc_mgr;
 };
 
 #define COMP_RPC_CALL_DEFINE(TCLASS) \
 void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) { \
 \
-    auto method = get_owner()->get_comp_mgr()->find_rpc_method(rpc_name); \
+    auto method = get_owner()->rpc_mgr->find_rpc_method(rpc_name); \
     if (!method) { \
         ERROR_LOG("comp entity rpc.%s not exist\n", rpc_name.c_str()); \
         return; \
@@ -130,7 +140,7 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
         return; \
     } \
  \
-    auto comp_mgr = (EntityComponentManager<TCLASS>*)get_comp_mgr(); \
+    auto comp_mgr = (EntityComponentManager<TCLASS>*)get_owner()->get_comp_mgr(); \
     switch (params.size()) { \
     case 0: \
         comp_mgr->entity_comp_rpc_call(this, rpc_name); \
@@ -170,10 +180,10 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
     } \
 }
 
-#define COMP_RPC_METHOD(rpc_type, rpc_name, ...) TEntity::component_manager.regist_entity_comp_rpc(rpc_type, #rpc_name, &TEntityComp::rpc_name, __VA_ARGS__)
+#define COMP_RPC_METHOD(rpc_type, rpc_name, ...) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &TEntityComp::rpc_name, __VA_ARGS__)
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
-    component_manager.regist_component(new TEntityComp(TEntityComp::get_name(), nullptr)); \
+    component_manager.component_regist(new TEntityComp(TEntityComp::get_name(), nullptr)); \
     TEntityComp::rpc_method_define<TEntity, TEntityComp>(); \
     TEntityComp::property_define<TEntity, TEntityComp>();
 

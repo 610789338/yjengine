@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 
-class Entity;
 
 class CreateAvatarComponent : public EntityComponentBase {
 
@@ -12,7 +11,9 @@ public:
     CreateAvatarComponent(GString component_name, Entity* _owner) : EntityComponentBase(component_name, _owner) {}
     ~CreateAvatarComponent() {}
 
-    void component_rpc_test(const GValue& msg) { INFO_LOG("[base] component_rpc_test.%s\n", msg.as_string().c_str()); }
+    void component_rpc_test(const GValue& msg) { 
+        INFO_LOG("[base] component_rpc_test.%s\n", msg.as_string().c_str()); 
+    }
 };
 
 template<class TEntity, class TEntityComp>

@@ -125,7 +125,12 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
 \
     auto method = get_rpc_mgr()->find_rpc_method(rpc_name); \
     if (!method) { \
-        get_comp_mgr()->rpc_call(from_client, rpc_name, params); \
+        ERROR_LOG("entity rpc.%s not exist\n", rpc_name.c_str()); \
+        return; \
+    } \
+\
+    if (!method->component_name.empty()) { \
+        get_comp_mgr()->rpc_call(this, from_client, rpc_name, params); \
         return; \
     } \
 \

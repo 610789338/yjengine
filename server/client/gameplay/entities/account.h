@@ -27,6 +27,8 @@ public:
 
         base.call("msg_from_client", "hello, i am client");
         cell.call("msg_from_client", "hello, i am client");
+
+        base.call("component_rpc_test", "hello, my cute component");
     }
 };
 
