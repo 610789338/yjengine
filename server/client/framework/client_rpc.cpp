@@ -13,7 +13,7 @@ void on_remote_connected() {
     g_remote_mgr.on_remote_connected(remote);
     INFO_LOG("on_gate_connected %s\n", remote->get_remote_addr().c_str());
 
-    REMOTE_RPC_CALL(remote, "regist_from_client", g_ini.get_string("Identity", "md5"), *g_local_entity_rpc_names);
+    REMOTE_RPC_CALL(remote, "regist_from_client", ini_get_string("Identity", "md5"), *g_local_entity_rpc_names);
 }
 
 void on_remote_disconnected(const GValue& remote_addr) {

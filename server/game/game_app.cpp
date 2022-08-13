@@ -4,13 +4,12 @@
 
 using namespace std;
 
+const char* ini_file = "game.ini";
+
 void init(int argc, char* args[]) {
 
-    const char* ini_file = "game.ini";
-    g_ini.parser_ini(ini_file);
-
-    auto ip = g_ini.get_string("Listen", "ip");
-    auto port = g_ini.get_int("Listen", "port");
+    auto ip = ini_get_string("Listen", "ip");
+    auto port = ini_get_int("Listen", "port");
     set_engine_listen_ipport(ip, port);
 
     engine_init();

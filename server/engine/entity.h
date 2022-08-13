@@ -86,7 +86,7 @@ public:
 
 public:
     Entity() {}
-    virtual ~Entity() {}
+    virtual ~Entity() { release_component(); }
 
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
@@ -98,6 +98,8 @@ public:
 
     const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
+
+    void release_component();
 
     GString uuid = "";
     GString class_name = "";

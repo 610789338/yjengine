@@ -53,7 +53,7 @@ void disconnect_from_client(const GValue& session_addr) {
 void regist_from_client(const GValue& identity, const GValue& client_entity_rpc_names) {
 
     auto session = g_cur_imp->get_session();
-    auto local_identity = g_ini.get_string("Identity", "md5");
+    auto local_identity = ini_get_string("Identity", "md5");
     if (identity.as_string() != local_identity) {
         ERROR_LOG("client identity(%s) != %s\n", identity.as_string().c_str(), local_identity.c_str());
         session->close();

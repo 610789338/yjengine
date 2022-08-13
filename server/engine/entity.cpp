@@ -1,6 +1,13 @@
 #include <vector>
 
 #include "entity.h"
+#include "entity_component_manager.h"
+
+void Entity::release_component() {
+    for (auto iter = components.begin(); iter != components.end(); ++iter) {
+        delete iter->second;
+    }
+}
 
 void BaseEntity::on_create(const GDict& create_data) {
     on_ready();

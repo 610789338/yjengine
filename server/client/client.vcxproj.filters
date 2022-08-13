@@ -17,6 +17,9 @@
     <ClCompile Include="framework\client_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\account.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />

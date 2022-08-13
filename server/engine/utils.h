@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string>
+#include <functional>
 
 // #include "gvalue.h"  // can not include this because circular include
 
@@ -13,6 +14,13 @@ using namespace std;
 #define ASSERT_LOG(expr, ...) { if (!(expr)) { ERROR_LOG(__VA_ARGS__); assert(false);} }
 
 #define IPPORT_STRING(ip, port) ((ip) + ":" + std::to_string(port))
+
+class ConstructGuarantee {
+public:
+    ConstructGuarantee() = delete;
+    ConstructGuarantee(function<void()> cb) { cb(); }
+    ~ConstructGuarantee() {}
+};
 
 extern void byte_print(char* buf, uint16_t length);
 extern string gen_uuid();

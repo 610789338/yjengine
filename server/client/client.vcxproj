@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClCompile Include="client.cpp" />
     <ClCompile Include="framework\client_rpc.cpp" />
+    <ClCompile Include="gameplay\entities\account.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />

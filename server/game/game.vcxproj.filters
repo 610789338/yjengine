@@ -25,6 +25,9 @@
     <ClCompile Include="gameplay\components\create_avatar_component.cpp">
       <Filter>gameplay\components</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\account.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">

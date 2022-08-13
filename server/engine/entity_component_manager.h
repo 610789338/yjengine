@@ -7,12 +7,16 @@ class Entity;
 
 class EntityComponentBase {
 public:
-    EntityComponentBase() = delete;
-    EntityComponentBase(GString component_name, Entity* _owner) : name(component_name), owner(_owner) {}
+    EntityComponentBase() {}
     virtual ~EntityComponentBase();
     virtual EntityComponentBase* create_self(Entity* owner) = 0;
+
+    void set_name(GString _name) { name = _name; }
     GString& get_name() { return name; }
+
+    void set_owner(Entity* _owner) { owner = _owner; }
     Entity* get_owner() { return owner; }
+
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
 private:
@@ -181,19 +185,23 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
 }
 
 #define COMP_RPC_METHOD(rpc_type, rpc_name, ...) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &TEntityComp::rpc_name, __VA_ARGS__)
+#define COMP_PROPERTY(type, property_name, _default) TEntity::property_manager.regist_property(type, property_name, _default)
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
-    component_manager.component_regist(new TEntityComp(TEntityComp::get_name(), nullptr)); \
+    TEntityComp* component = new TEntityComp; \
+    component->set_name(TEntityComp::get_name()); \
+    component->set_owner(nullptr); \
+    component_manager.component_regist(component); \
     TEntityComp::rpc_method_define<TEntity, TEntityComp>(); \
-    TEntityComp::property_define<TEntity, TEntityComp>();
+    TEntityComp::property_define<TEntity>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \
-    TEntityComp() = delete; \
     static GString get_name() { return #TEntityComp; } \
-    template<class TEntity, class TEntityComp> \
-    static void rpc_method_define(); \
-    template<class TEntity, class TEntityComp> \
-    static void property_define(); \
-    EntityComponentBase* create_self(Entity* owner) { return new TEntityComp(TEntityComp::get_name(), owner); } \
+    EntityComponentBase* create_self(Entity* owner) { \
+        TEntityComp* component = new TEntityComp; \
+        component->set_name(TEntityComp::get_name()); \
+        component->set_owner(owner); \
+        return component; \
+    } \
     COMP_RPC_CALL_DEFINE(TEntityComp)
