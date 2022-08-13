@@ -18,7 +18,7 @@ public:
     
     template<class TEntity>
     static void property_define() {
-        COMP_PROPERTY(PropType::BASE_AND_CLIENT, "char_type", 1001);
+        COMP_PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, char_type, int16_t, 1001);
     }
 
     void component_rpc_test(const GValue& msg);

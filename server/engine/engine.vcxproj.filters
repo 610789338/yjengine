@@ -103,5 +103,8 @@
     <ClCompile Include="entity_component_manager.cpp">
       <Filter>engine</Filter>
     </ClCompile>
+    <ClCompile Include="entity_property_manager.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
+    <ClInclude Include="gameplay\entities\account_prop_def.h" />
     <ClInclude Include="gameplay\game_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -185,7 +185,12 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
 }
 
 #define COMP_RPC_METHOD(rpc_type, rpc_name, ...) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &TEntityComp::rpc_name, __VA_ARGS__)
-#define COMP_PROPERTY(type, property_name, _default) TEntity::property_manager.regist_property(type, property_name, _default)
+
+#define COMP_PROPERTY_SIMPLE(prop_type, property_name, prop_class, default_value) TEntity::property_manager.regist_simple_property<prop_class>(prop_type, #property_name, default_value)
+#define COMP_PROPERTY_COMPLEX(prop_type, property_name, prop_class) TEntity::property_manager.regist_complex_property<prop_class>(prop_type, #property_name)
+#define COMP_PROPERTY_ARRAY(prop_type, property_name, prop_class) TEntity::property_manager.regist_complex_property<EntityPropertyArray<prop_class>>(prop_type, #property_name)
+#define COMP_PROPERTY_MAP(prop_type, property_name, prop_class) TEntity::property_manager.regist_complex_property<EntityPropertyMap<prop_class>>(prop_type, #property_name)
+
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
     TEntityComp* component = new TEntityComp; \

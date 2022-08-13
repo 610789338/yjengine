@@ -43,6 +43,7 @@
     <ClCompile Include="encode.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="entity.cpp" />
+    <ClCompile Include="entity_property_manager.cpp" />
     <ClCompile Include="entity_rpc_manager.cpp" />
     <ClCompile Include="gvalue.cpp" />
     <ClCompile Include="ini.cpp" />

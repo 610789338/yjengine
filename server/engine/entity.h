@@ -6,6 +6,7 @@
 #include "gvalue.h"
 #include "log.h"
 #include "rpc_manager.h"
+#include "entity_property_manager.h"
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
@@ -13,34 +14,6 @@
 using namespace std;
 
 class Entity;
-
-
-#define GENERATE_ENTITY_INNER(TCLASS) \
-public: \
-    static EntityPropertyManager<TCLASS> property_manager; \
-    static EntityRpcManager<TCLASS> rpc_manager; \
-    RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
-    RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
-    RPC_CALL_DEFINE(TCLASS) \
-    static EntityComponentManager<TCLASS> component_manager; \
-    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
-    static TimerManager<TCLASS> timer_manager;
-
-#define GENERATE_ENTITY_OUT(TCLASS) \
-EntityPropertyManager<TCLASS> TCLASS::property_manager; \
-EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
-    auto entity = new TCLASS(); \
-    entity->propertys = TCLASS::property_manager.propertys; \
-    entity->rpc_mgr = &TCLASS::rpc_manager; \
-    component_manager.generate_entity_components(entity); \
-    return entity; }); \
-EntityComponentManager<TCLASS> TCLASS::component_manager; \
-TimerManager<TCLASS> TCLASS::timer_manager;
-
-
-extern unordered_map<GString, Entity*> g_entities;
-extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
-extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
 
 enum EntityType {
     EntityType_Base,
@@ -52,27 +25,6 @@ enum EntityType {
     EntityType_Client,
 
     EntityType_None
-};
-
-enum PropType {
-    BASE,
-    BASE_AND_CLIENT,
-    CELL_PRIVATE,
-    CELL_PUBLIC,
-    CELL_AND_CLIENT,
-    ALL_CLIENT,
-    OTHER_CLIENT
-};
-
-class EntityProperty {
-public:
-    EntityProperty() : v(GValue(int8_t(0))) {}
-    EntityProperty(const PropType& t, const GValue& _v) : type(t), v(_v) {}
-    ~EntityProperty() {}
-
-    PropType type = PropType::BASE;
-    GValue v;
-    bool dirty = false;
 };
 
 class ComponentManagerBase;
@@ -96,7 +48,7 @@ public:
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
     virtual ComponentManagerBase* get_comp_mgr() { return nullptr; }
 
-    const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
+    //const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
 
     void release_component();
@@ -104,7 +56,7 @@ public:
     GString uuid = "";
     GString class_name = "";
 
-    unordered_map<GString, EntityProperty> propertys;
+    unordered_map<GString, EntityPropertyBase*> propertys;
     unordered_map<GString, EntityComponentBase*> components;
 
     RpcManagerBase* rpc_mgr;
@@ -259,3 +211,33 @@ public:
     CellMailBox cell;
 };
 
+
+// ------------------------------- definition ------------------------------- //
+
+
+#define GENERATE_ENTITY_INNER(TCLASS) \
+public: \
+    static EntityPropertyManager<TCLASS> property_manager; \
+    static EntityRpcManager<TCLASS> rpc_manager; \
+    RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
+    RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
+    RPC_CALL_DEFINE(TCLASS) \
+    static EntityComponentManager<TCLASS> component_manager; \
+    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
+    static TimerManager<TCLASS> timer_manager;
+
+#define GENERATE_ENTITY_OUT(TCLASS) \
+EntityPropertyManager<TCLASS> TCLASS::property_manager; \
+EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
+    auto entity = new TCLASS(); \
+    entity->propertys = TCLASS::property_manager.propertys; \
+    entity->rpc_mgr = &TCLASS::rpc_manager; \
+    component_manager.generate_entity_components(entity); \
+    return entity; }); \
+EntityComponentManager<TCLASS> TCLASS::component_manager; \
+TimerManager<TCLASS> TCLASS::timer_manager;
+
+
+extern unordered_map<GString, Entity*> g_entities;
+extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
+extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
