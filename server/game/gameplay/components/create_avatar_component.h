@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/engine.h"
+#include "../entities/account_prop_def.h"
 
 
 class CreateAvatarComponent : public EntityComponentBase {
@@ -18,8 +19,9 @@ public:
     
     template<class TEntity>
     static void property_define() {
-        COMP_PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, char_type, int16_t, 1001);
+        COMP_PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, avatar_datas, AvatarDatas);
     }
 
     void component_rpc_test(const GValue& msg);
+    void property_test();
 };

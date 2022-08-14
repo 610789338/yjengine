@@ -20,14 +20,22 @@ enum PropType {
     NONE
 };
 
+static GValue yj(true);
 
 struct EntityPropertyBase {
 
     EntityPropertyBase() = delete;
     EntityPropertyBase(const PropType& t) : type(t) {}
-    ~EntityPropertyBase() {}
+    virtual ~EntityPropertyBase() {}
 
     void link_node(EntityPropertyBase* pre_node, GString self_name);
+
+    virtual EntityPropertyBase* get(const GString& prop_name) const { return nullptr; }
+    virtual EntityPropertyBase* get(const int32_t idx) const { return nullptr; }
+    virtual GValue& get() { return yj; }
+
+    template<class T>
+    void push_back(T v);
 
     virtual void encode() {}
     virtual void decode() {}
@@ -42,16 +50,20 @@ template<class T>
 struct EntityPropertySimple : public EntityPropertyBase {
 
     EntityPropertySimple() = delete;
+    EntityPropertySimple(T _v) : EntityPropertyBase(PropType::NONE), v(_v) {}
     EntityPropertySimple(const TCallBack& cb, const PropType& t, T _v) : EntityPropertyBase(t), v(_v) { cb(this); }
+
+    GValue& get() { return v; }
 
     GValue v;
 };
 
 struct EntityPropertyComplex : public EntityPropertyBase {
 
-    EntityPropertyComplex() : EntityPropertyBase(PropType::NONE) {}
-    //EntityPropertyComplex(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
-    void excute(const TCallBack& cb, const PropType& t) { type = t; cb(this); }
+    EntityPropertyComplex() = delete;
+    EntityPropertyComplex(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
+    
+    EntityPropertyBase* get(const GString& prop_name) const { return propertys.at(prop_name); }
 
     unordered_map<GString, EntityPropertyBase*> propertys;
 };
@@ -62,8 +74,44 @@ struct EntityPropertyArray : public EntityPropertyBase {
     EntityPropertyArray() = delete;
     EntityPropertyArray(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
 
-    vector<TValue*> propertys;
+    EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; }
+    void push_back(TValue v) { propertys.push_back(v); }
+
+    vector<TValue> propertys;
 };
+
+#define ENTITY_PROPERTY_ARRAY_PARTIAL(T) \
+template<> \
+struct EntityPropertyArray<T> : public EntityPropertyBase { \
+\
+    EntityPropertyArray<T>() = delete; \
+    EntityPropertyArray<T>(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); } \
+\
+    EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; } \
+    void push_back(T v) { propertys.push_back(EntityPropertySimple<T>(v)); } \
+\
+    vector<EntityPropertySimple<T>> propertys; \
+};
+
+ENTITY_PROPERTY_ARRAY_PARTIAL(bool)
+ENTITY_PROPERTY_ARRAY_PARTIAL(int8_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(int16_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(int32_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(int64_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(uint8_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(uint16_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(uint32_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(uint64_t)
+ENTITY_PROPERTY_ARRAY_PARTIAL(float)
+ENTITY_PROPERTY_ARRAY_PARTIAL(double)
+ENTITY_PROPERTY_ARRAY_PARTIAL(GBin)
+
+template<class T>
+void EntityPropertyBase::push_back(T v) {
+
+    EntityPropertyArray<T>* child = dynamic_cast<EntityPropertyArray<T>*>(this);
+    child->push_back(v);
+}
 
 template<class TValue>
 struct EntityPropertyMap : public EntityPropertyBase {
@@ -71,8 +119,35 @@ struct EntityPropertyMap : public EntityPropertyBase {
     EntityPropertyMap() = delete;
     EntityPropertyMap(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
 
+    EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)propertys.at(prop_name); }
+
     unordered_map<GString, TValue*> propertys;
 };
+
+#define ENTITY_PROPERTY_MAP_PARTIAL(T) \
+template<> \
+struct EntityPropertyMap<T> : public EntityPropertyBase { \
+\
+    EntityPropertyMap<T>() = delete; \
+    EntityPropertyMap<T>(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); } \
+\
+    EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)propertys.at(prop_name); } \
+\
+    unordered_map<GString, EntityPropertySimple<T>*> propertys; \
+};
+
+ENTITY_PROPERTY_MAP_PARTIAL(bool)
+ENTITY_PROPERTY_MAP_PARTIAL(int8_t)
+ENTITY_PROPERTY_MAP_PARTIAL(int16_t)
+ENTITY_PROPERTY_MAP_PARTIAL(int32_t)
+ENTITY_PROPERTY_MAP_PARTIAL(int64_t)
+ENTITY_PROPERTY_MAP_PARTIAL(uint8_t)
+ENTITY_PROPERTY_MAP_PARTIAL(uint16_t)
+ENTITY_PROPERTY_MAP_PARTIAL(uint32_t)
+ENTITY_PROPERTY_MAP_PARTIAL(uint64_t)
+ENTITY_PROPERTY_MAP_PARTIAL(float)
+ENTITY_PROPERTY_MAP_PARTIAL(double)
+ENTITY_PROPERTY_MAP_PARTIAL(GBin)
 
 
 // entity property manager
@@ -93,9 +168,7 @@ public:
     template<class T>
     void regist_complex_property(enum PropType type, const GString& property_name) {
         ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        EntityPropertyComplex* v = new T();
-        v->excute([](EntityPropertyBase* mem) {}, type);
-        propertys[property_name] = v;
+        propertys[property_name] = new T([](EntityPropertyBase* mem) {}, type);
     }
 
     unordered_map<GString, EntityPropertyBase*> propertys;
@@ -119,3 +192,7 @@ public:
     EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::BASE)
 #define MEM_PROPERTY_MAP(property_name, prop_class) \
     EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
+
+
+#define MEM_BEGIN(TComplex) \
+    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) {}

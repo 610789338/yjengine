@@ -19,7 +19,7 @@ public:
 
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
-private:
+protected:
     GString name;
     Entity* owner;
 };

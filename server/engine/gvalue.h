@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "utils.h"
+#include "log.h"
 
 using namespace std;
 
@@ -79,6 +80,9 @@ public:
     GValue() = delete;
     ~GValue() { release(); };
     void release();
+
+    template<class T>
+    GValue(T v) {ASSERT_LOG(false, "error type %s\n", typeid(v).name())}
 
     GValue(bool v) : m_t(GType::BOOL_T) { m_v.b = v; }
     GValue(int8_t v) : m_t(GType::INT8_T) { m_v.i8 = v;}

@@ -1,5 +1,4 @@
 #include "account.h"
-#include "account_prop_def.h"
 
 #include "../components/create_avatar_component.h"
 
@@ -18,7 +17,6 @@ void BaseAccount::rpc_method_define() {
 void BaseAccount::property_define() {
     PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, id, int32_t, 1001);
     PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, name, GString, "youjun");
-    PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, avatar_datas, AvatarDatas);
 }
 
 void BaseAccount::on_ready() {

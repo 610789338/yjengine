@@ -48,7 +48,7 @@ public:
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
     virtual ComponentManagerBase* get_comp_mgr() { return nullptr; }
 
-    //const GValue& get_prop(const GString& prop_name) const { return propertys.at(prop_name).v; }
+    EntityPropertyBase* get_prop(const GString& prop_name) const { return propertys.at(prop_name); }
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
 
     void release_component();
