@@ -15,8 +15,7 @@ void BaseAccount::rpc_method_define() {
 }
 
 void BaseAccount::property_define() {
-    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, id, int32_t, 1001);
-    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, name, GString, "youjun");
+    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, account_id, int32_t, 1001);
 }
 
 void BaseAccount::on_ready() {

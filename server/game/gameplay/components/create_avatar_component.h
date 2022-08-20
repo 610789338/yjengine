@@ -19,9 +19,14 @@ public:
     
     template<class TEntity>
     static void property_define() {
-        COMP_PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, avatar_datas, AvatarDatas);
+        COMP_PROPERTY_MAP(PropType::BASE_AND_CLIENT, avatar_datas, AvatarData);
     }
 
     void component_rpc_test(const GValue& msg);
-    void property_test();
+
+    //void property_test();
+    //void property_create();
+    //void property_read();
+    //void property_delete();
+    //void property_update();
 };

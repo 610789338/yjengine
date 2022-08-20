@@ -4,6 +4,7 @@
 #include "rpc_manager.h"
 
 class Entity;
+struct EntityPropertyBase;
 
 class EntityComponentBase {
 public:
@@ -18,6 +19,7 @@ public:
     Entity* get_owner() { return owner; }
 
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
+    EntityPropertyBase* get_prop(const GString& prop_name) const;
 
 protected:
     GString name;
