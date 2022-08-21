@@ -24,9 +24,9 @@ public:
 
     void component_rpc_test(const GValue& msg);
 
-    //void property_test();
-    //void property_create();
-    //void property_read();
-    //void property_delete();
-    //void property_update();
+    void property_test();
+    void property_create();
+    void property_read();
+    void property_delete();
+    void property_update();
 };

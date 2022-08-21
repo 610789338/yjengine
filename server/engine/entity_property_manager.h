@@ -30,32 +30,44 @@ struct EntityPropertyBase {
     virtual ~EntityPropertyBase() {}
 
     // get container value type string
-    virtual GString get_v_tstring() { return ""; }
+    virtual GString get_v_tstring() { ASSERT(false); return ""; }
 
     void link_node(EntityPropertyBase* pre_node, GString self_name);
 
-    virtual GValue* get() { return &yj; }
+    // simple property
+    virtual bool as_bool() const { ASSERT(false); return bool(); }
+    virtual int8_t as_int8() const { ASSERT(false); return int8_t(); }
+    virtual int16_t as_int16() const { ASSERT(false); return int16_t(); }
+    virtual int32_t as_int32() const { ASSERT(false); return int32_t(); }
+    virtual int64_t as_int64() const { ASSERT(false); return int64_t(); }
+    virtual uint8_t as_uint8() const { ASSERT(false); return uint8_t(); }
+    virtual uint16_t as_uint16() const { ASSERT(false); return uint16_t(); }
+    virtual uint32_t as_uint32() const { ASSERT(false); return uint32_t(); }
+    virtual uint64_t as_uint64() const { ASSERT(false); return uint64_t(); }
+    virtual float as_float() const { ASSERT(false); return float(); }
+    virtual double as_double() const { ASSERT(false); return double(); }
+    virtual GString& as_string() const { ASSERT(false); static GString ret; return ret; }
 
     template<class T>
     void update(T v);
     void update(const char* v);
 
-    // array crud
+    // array property - crud
     template<class T>
     void push_back(T v);
     void push_back(char* v);
     void push_back(const char* v);
 
-    virtual void pop_back() {}
+    virtual void pop_back() { ASSERT(false); }
 
     template<class T>
     void update(const int32_t idx, T v);
     void update(const int32_t idx, char* v);
     void update(const int32_t idx, const char* v);
 
-    virtual EntityPropertyBase* get(const int32_t idx) const { return nullptr; }
+    virtual EntityPropertyBase* get(const int32_t idx) const { ASSERT(false); return nullptr; }
 
-    // map crud
+    // map property - crud
     template<class T>
     void insert(GString k, T v);
     void insert(GString k, char* v);
@@ -68,10 +80,10 @@ struct EntityPropertyBase {
     void update(GString k, char* v);
     void update(GString k, const char* v);
 
-    virtual EntityPropertyBase* get(const GString& prop_name) const { return nullptr; }
-    virtual vector<GString> keys() { return vector<GString>(); }
+    virtual EntityPropertyBase* get(const GString& prop_name) const { ASSERT(false); return nullptr; }
+    virtual vector<GString> keys() { ASSERT(false); return vector<GString>(); }
 
-    virtual int32_t size() { return 0; }
+    virtual int32_t size() { ASSERT(false); return 0; }
 
     virtual void encode() {}
     virtual void decode() {}
@@ -95,7 +107,18 @@ struct EntityPropertySimple : public EntityPropertyBase {
     GString get_v_tstring() { return typeid(T).name(); }
     void update(T _v) { v = _v; }
 
-    GValue* get() { return &v; }
+    bool as_bool() const { return v.as_bool(); }
+    int8_t as_int8() const { return v.as_int8(); }
+    int16_t as_int16() const { return v.as_int16(); }
+    int32_t as_int32() const { return v.as_int32(); }
+    int64_t as_int64() const { return v.as_int64(); }
+    uint8_t as_uint8() const { return v.as_uint8(); }
+    uint16_t as_uint16() const { return v.as_uint16(); }
+    uint32_t as_uint32() const { return v.as_uint32(); }
+    uint64_t as_uint64() const { return v.as_uint64(); }
+    float as_float() const { return v.as_float(); }
+    double as_double() const { return v.as_double(); }
+    GString& as_string() const { return v.as_string(); }
 
     GValue v;
 };
@@ -330,7 +353,8 @@ public:
 #define MEM_PROP_BEGIN_Five_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5) MEM_PROP_BEGIN(TComplex, 5) COPY_CONSTRUCT_5(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5)
 #define MEM_PROP_BEGIN_Six_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6) MEM_PROP_BEGIN(TComplex, 6) COPY_CONSTRUCT_6(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6)
 #define MEM_PROP_BEGIN_Seven_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7) MEM_PROP_BEGIN(TComplex, 7) COPY_CONSTRUCT_7(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7)
-
+#define MEM_PROP_BEGIN_Eight_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) MEM_PROP_BEGIN(TComplex, 8) COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8)
+#define MEM_PROP_BEGIN_Nine_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) MEM_PROP_BEGIN(TComplex, 9) COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9)
 
 #define MEM_PROP_BEGIN(TComplex, Num) \
     TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { num_check(Num); } \
@@ -446,5 +470,53 @@ public:
         Mem5 = other.Mem5; \
         Mem6 = other.Mem6; \
         Mem7 = other.Mem7; \
+        return *this; \
+    } 
+
+#define COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) \
+    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+        Mem1 = other.Mem1; \
+        Mem2 = other.Mem2; \
+        Mem3 = other.Mem3; \
+        Mem4 = other.Mem4; \
+        Mem5 = other.Mem5; \
+        Mem6 = other.Mem6; \
+        Mem7 = other.Mem7; \
+        Mem8 = other.Mem8; \
+    } \
+    TComplex& operator=(const TComplex& other) { \
+        Mem1 = other.Mem1; \
+        Mem2 = other.Mem2; \
+        Mem3 = other.Mem3; \
+        Mem4 = other.Mem4; \
+        Mem5 = other.Mem5; \
+        Mem6 = other.Mem6; \
+        Mem7 = other.Mem7; \
+        Mem8 = other.Mem8; \
+        return *this; \
+    } 
+
+#define COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) \
+    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+        Mem1 = other.Mem1; \
+        Mem2 = other.Mem2; \
+        Mem3 = other.Mem3; \
+        Mem4 = other.Mem4; \
+        Mem5 = other.Mem5; \
+        Mem6 = other.Mem6; \
+        Mem7 = other.Mem7; \
+        Mem8 = other.Mem8; \
+        Mem9 = other.Mem9; \
+    } \
+    TComplex& operator=(const TComplex& other) { \
+        Mem1 = other.Mem1; \
+        Mem2 = other.Mem2; \
+        Mem3 = other.Mem3; \
+        Mem4 = other.Mem4; \
+        Mem5 = other.Mem5; \
+        Mem6 = other.Mem6; \
+        Mem7 = other.Mem7; \
+        Mem8 = other.Mem8; \
+        Mem9 = other.Mem9; \
         return *this; \
     } 

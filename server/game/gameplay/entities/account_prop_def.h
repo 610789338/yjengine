@@ -24,7 +24,7 @@ struct AvatarData : public EntityPropertyComplex {
         avatar_horses, 
         avatar_fashion_shows);
 
-    MEM_PROPERTY_SIMPLE(avatar_id, GString, "");
+    MEM_PROPERTY_SIMPLE(avatar_id, int32_t, 0);
     MEM_PROPERTY_SIMPLE(avatar_name, GString, "");
     MEM_PROPERTY_SIMPLE(avatar_level, int32_t, 0);
     MEM_PROPERTY_ARRAY(avatar_title_ids, int32_t);
