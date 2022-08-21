@@ -9,27 +9,28 @@
 
 using namespace std;
 
-enum PropType {
-    BASE,
-    BASE_AND_CLIENT,
-    CELL_PRIVATE,
-    CELL_PUBLIC,
-    CELL_AND_CLIENT,
-    ALL_CLIENT,
-    OTHER_CLIENT,
+enum PropType : int8_t {
+    BASE = 0x01,
+    BASE_AND_CLIENT = 0x02,
+    CELL_PRIVATE = 0x03,
+    CELL_PUBLIC = 0x04,
+    CELL_AND_CLIENT = 0x05,
+    ALL_CLIENT = 0x06,
+    OTHER_CLIENT = 0x07,
 
-    NONE
+    NONE = 0x01 << 4
 };
-
-static GValue yj(true);
 
 struct EntityPropertyBase {
 
     EntityPropertyBase() = delete;
-    EntityPropertyBase(const PropType& t) : type(t) {}
+    EntityPropertyBase(int8_t _flag) { flag = _flag; }
+    EntityPropertyBase(const PropType& t) { flag = (int8_t)t; }
     virtual ~EntityPropertyBase() {}
 
-    // get container value type string
+    virtual GString get_pclass_name() { ASSERT(false); return ""; } \
+
+    // get value type string
     virtual GString get_v_tstring() { ASSERT(false); return ""; }
 
     void link_node(EntityPropertyBase* pre_node, GString self_name);
@@ -85,11 +86,14 @@ struct EntityPropertyBase {
 
     virtual int32_t size() { ASSERT(false); return 0; }
 
-    virtual void encode() {}
-    virtual void decode() {}
+    virtual void encode() { ASSERT(false); }
+    virtual void decode() { ASSERT(false); }
 
-    PropType type = PropType::BASE;
-    bool dirty = false;
+    void set_dirty() { flag |= 0x80; }
+    void clean_dirty() { flag &= 0x7F; }
+    bool is_dirty() { return bool(flag & 0x80); }
+
+    int8_t flag = 0x00;  // bit [0, 3] means PropType, bit [4, 6] reserved, bit 7 means dirty
 };
 
 typedef function<void(EntityPropertyBase* mem)> TCallBack;
@@ -98,14 +102,14 @@ template<class T>
 struct EntityPropertySimple : public EntityPropertyBase {
 
     EntityPropertySimple() : EntityPropertyBase(PropType::NONE), v(T()) {}
-    EntityPropertySimple(const EntityPropertySimple& other) : EntityPropertyBase(other.type), v(other.v) {};
+    EntityPropertySimple(const EntityPropertySimple& other) : EntityPropertyBase(other.flag), v(other.v) {};
     EntityPropertySimple(T _v) : EntityPropertyBase(PropType::NONE), v(_v) {}
     EntityPropertySimple(const TCallBack& cb, const PropType& t, T _v) : EntityPropertyBase(t), v(_v) { cb(this); }
 
-    EntityPropertySimple& operator=(T _v) { type = PropType::NONE; v = _v; return *this; }
+    EntityPropertySimple& operator=(T _v) { flag = (int8_t)PropType::NONE; v = _v; return *this; }
 
     GString get_v_tstring() { return typeid(T).name(); }
-    void update(T _v) { v = _v; }
+    void update(T _v) { set_dirty(); v = _v; }
 
     bool as_bool() const { return v.as_bool(); }
     int8_t as_int8() const { return v.as_int8(); }
@@ -137,10 +141,10 @@ struct EntityPropertyComplex : public EntityPropertyBase {
 
     EntityPropertyComplex() = delete;
     EntityPropertyComplex(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
-    
-    EntityPropertyBase* get(const GString& prop_name) const { return propertys.at(prop_name); }
 
-    unordered_map<GString, EntityPropertyBase*> propertys;
+    virtual EntityPropertyBase** get_propertys() = 0;
+    virtual int8_t get_propertys_len() = 0;
+    virtual void gen_prop_idxs() = 0;
 };
 
 template<class TValue>
@@ -152,9 +156,9 @@ struct EntityPropertyArray : public EntityPropertyBase {
     GString get_v_tstring() { return typeid(TValue).name(); }
 
     // crud
-    void push_back(TValue v) { propertys.push_back(v); }
-    void pop_back() { propertys.pop_back(); }
-    void update(const int32_t idx, TValue v) { propertys[idx] = v; }
+    void push_back(TValue v) { set_dirty(); propertys.push_back(v); }
+    void pop_back() { set_dirty(); propertys.pop_back(); }
+    void update(const int32_t idx, TValue v) { set_dirty(); propertys[idx] = v; }
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; }
 
     int32_t size() { return (int32_t)propertys.size(); }
@@ -172,10 +176,10 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
     GString get_v_tstring() { return typeid(T).name(); } \
 \
     /* crud */ \
-    void push_back(T v) { propertys.push_back(EntityPropertySimple<T>(v)); } \
-    void pop_back() { propertys.pop_back(); } \
+    void push_back(T v) { set_dirty(); propertys.push_back(EntityPropertySimple<T>(v)); } \
+    void pop_back() { set_dirty(); propertys.pop_back(); } \
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; } \
-    void update(const int32_t idx, T v) { propertys[idx] = EntityPropertySimple<T>(v); } \
+    void update(const int32_t idx, T v) { set_dirty(); propertys[idx] = EntityPropertySimple<T>(v); } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
 \
@@ -225,9 +229,9 @@ struct EntityPropertyMap : public EntityPropertyBase {
     GString get_v_tstring() { return typeid(TValue).name(); }
 
     // crud
-    void insert(GString k, TValue v) { propertys.insert(make_pair(k, v)); }
-    void erase(GString k) { propertys.erase(k); }
-    void update(GString k, TValue v) { propertys[k] = v; }
+    void insert(GString k, TValue v) { set_dirty(); propertys.insert(make_pair(k, v)); }
+    void erase(GString k) { set_dirty(); propertys.erase(k); }
+    void update(GString k, TValue v) { set_dirty(); propertys[k] = v; }
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); }
 
     int32_t size() { return (int32_t)propertys.size(); }
@@ -251,9 +255,9 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     GString get_v_tstring() { return typeid(T).name(); } \
 \
     /* crud */ \
-    void insert(GString k, T v) { propertys.insert(make_pair(k, EntityPropertySimple<T>(v))); } \
-    void erase(GString k) { propertys.erase(k); } \
-    void update(GString k, T v) { propertys[k] = EntityPropertySimple<T>(v); } \
+    void insert(GString k, T v) { set_dirty(); propertys.insert(make_pair(k, EntityPropertySimple<T>(v))); } \
+    void erase(GString k) { set_dirty(); propertys.erase(k); } \
+    void update(GString k, T v) { set_dirty(); propertys[k] = EntityPropertySimple<T>(v); } \
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
@@ -345,7 +349,6 @@ public:
 #define MEM_PROPERTY_MAP(property_name, prop_class) \
     EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
 
-#define MEM_PROP_BEGIN_Zero_MEM(TComplex) MEM_PROP_BEGIN(TComplex, 0) COPY_CONSTRUCT_0(TComplex)
 #define MEM_PROP_BEGIN_One_MEM(TComplex, Mem1) MEM_PROP_BEGIN(TComplex, 1) COPY_CONSTRUCT_1(TComplex, Mem1)
 #define MEM_PROP_BEGIN_Two_MEM(TComplex, Mem1, Mem2) MEM_PROP_BEGIN(TComplex, 2) COPY_CONSTRUCT_2(TComplex, Mem1, Mem2)
 #define MEM_PROP_BEGIN_Three_MEM(TComplex, Mem1, Mem2, Mem3) MEM_PROP_BEGIN(TComplex, 3) COPY_CONSTRUCT_3(TComplex, Mem1, Mem2, Mem3)
@@ -356,17 +359,22 @@ public:
 #define MEM_PROP_BEGIN_Eight_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) MEM_PROP_BEGIN(TComplex, 8) COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8)
 #define MEM_PROP_BEGIN_Nine_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) MEM_PROP_BEGIN(TComplex, 9) COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9)
 
-#define MEM_PROP_BEGIN(TComplex, Num) \
-    TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { num_check(Num); } \
-    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) { num_check(Num); } \
-    void num_check(size_t num) { ASSERT_LOG(propertys.size() == num, "error macro def - %s Mem num is %ld\n", #TComplex, propertys.size()); }
 
-#define COPY_CONSTRUCT_0(TComplex) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+extern unordered_map<GString, unordered_map<GString, uint8_t> > g_all_prop_idxs;
+
+#define MEM_PROP_BEGIN(TComplex, Num) \
+    TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { gen_prop_idxs(); num_check(); } \
+    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) { gen_prop_idxs(); num_check(); } \
+    void num_check() { \
+        ASSERT_LOG(g_all_prop_idxs[#TComplex].size() == (size_t)get_propertys_len(), \
+            "error macro def - %s Mem num is %ld\n", #TComplex, g_all_prop_idxs[#TComplex].size()); \
     } \
-    TComplex& operator=(const TComplex& other) { \
-        return *this; \
-    } 
+    GString get_pclass_name() { return #TComplex; } \
+    virtual uint8_t get_prop_idx(const GString& prop_name) const { return g_all_prop_idxs.at(#TComplex).at(prop_name); } \
+    EntityPropertyBase* get(const GString& prop_name) const { auto idx = get_prop_idx(prop_name); return propertys[idx]; } \
+    EntityPropertyBase** get_propertys() { return propertys; } \
+    int8_t get_propertys_len() { return Num; } \
+    EntityPropertyBase* propertys[Num] = {0};
 
 #define COPY_CONSTRUCT_1(TComplex, Mem1) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -375,7 +383,13 @@ public:
     TComplex& operator=(const TComplex& other) { \
         Mem1 = other.Mem1; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_2(TComplex, Mem1, Mem2) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -386,7 +400,14 @@ public:
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_3(TComplex, Mem1, Mem2, Mem3) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -399,7 +420,15 @@ public:
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_4(TComplex, Mem1, Mem2, Mem3, Mem4) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -414,7 +443,16 @@ public:
         Mem3 = other.Mem3; \
         Mem4 = other.Mem4; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_5(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -431,7 +469,17 @@ public:
         Mem4 = other.Mem4; \
         Mem5 = other.Mem5; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem5, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_6(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -450,7 +498,18 @@ public:
         Mem5 = other.Mem5; \
         Mem6 = other.Mem6; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem5, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem6, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_7(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -471,7 +530,19 @@ public:
         Mem6 = other.Mem6; \
         Mem7 = other.Mem7; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem5, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem6, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem7, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -494,7 +565,20 @@ public:
         Mem7 = other.Mem7; \
         Mem8 = other.Mem8; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem5, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem6, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem7, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem8, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
 
 #define COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) \
     TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
@@ -519,4 +603,18 @@ public:
         Mem8 = other.Mem8; \
         Mem9 = other.Mem9; \
         return *this; \
-    } 
+    } \
+    void gen_prop_idxs() { \
+        if (g_all_prop_idxs.find(#TComplex) != g_all_prop_idxs.end()) \
+            return; \
+        g_all_prop_idxs.insert(make_pair(#TComplex, unordered_map<GString, uint8_t>())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem1, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem2, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem3, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem4, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem5, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem6, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem7, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem8, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+        g_all_prop_idxs[#TComplex].insert(make_pair(#Mem9, (uint8_t)g_all_prop_idxs[#TComplex].size())); \
+    }
