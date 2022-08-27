@@ -23,9 +23,14 @@ void CreateAvatarComponent::property_create() {
     avatar_data.avatar_id = 101;
     avatar_data.avatar_name = "youjun";
     avatar_data.avatar_level = 666;
-    avatar_data.avatar_title_ids.push_back(int32_t(1));
-    avatar_data.avatar_title_ids.push_back(int32_t(2));
-    avatar_data.avatar_title_ids.push_back(int32_t(3));
+
+    avatar_data.avatar_extra_data.last_login_time = 0;
+    avatar_data.avatar_extra_data.last_logout_time = 0;
+    avatar_data.avatar_extra_data.last_dungeon_id = 0;
+
+    avatar_data.avatar_title_ids.push_back(1);
+    avatar_data.avatar_title_ids.push_back(2);
+    avatar_data.avatar_title_ids.push_back(3);
 
     AvatarEquip avatar_equip;
     avatar_equip.equip_id = 1001;
@@ -40,9 +45,9 @@ void CreateAvatarComponent::property_create() {
     avatar_equip.equip_level = 1;
     avatar_data.avatar_equips.push_back(avatar_equip);
 
-    avatar_data.avatar_fashion_shows.insert("fashion_shows_1", int32_t(60));
-    avatar_data.avatar_fashion_shows.insert("fashion_shows_2", int32_t(70));
-    avatar_data.avatar_fashion_shows.insert("fashion_shows_3", int32_t(80));
+    avatar_data.avatar_fashion_shows.insert("fashion_shows_1", 60);
+    avatar_data.avatar_fashion_shows.insert("fashion_shows_2", 70);
+    avatar_data.avatar_fashion_shows.insert("fashion_shows_3", 80);
 
     AvatarHorse avatar_horse;
     avatar_horse.horse_level = 100;
@@ -79,6 +84,12 @@ void CreateAvatarComponent::property_read() {
             avatar_data->get("avatar_id")->as_int32(),
             avatar_data->get("avatar_name")->as_string().c_str(),
             avatar_data->get("avatar_level")->as_int32()
+        );
+
+        INFO_LOG("last_login_time(%lld) last_logout_time(%lld) last_dungeon_id(%lld)\n",
+            avatar_data->get("avatar_extra_data")->get("last_login_time")->as_int64(),
+            avatar_data->get("avatar_extra_data")->get("last_logout_time")->as_int64(),
+            avatar_data->get("avatar_extra_data")->get("last_dungeon_id")->as_int64()
         );
 
         auto avatar_title_ids = avatar_data->get("avatar_title_ids");
@@ -127,21 +138,26 @@ void CreateAvatarComponent::property_delete() {
 }
 
 void CreateAvatarComponent::property_update() {
-    get_prop("avatar_datas")->get("101")->get("avatar_level")->update(int32_t(996));
+
+    get_prop("avatar_datas")->get("101")->get("avatar_level")->update(996);
     get_prop("avatar_datas")->get("101")->get("avatar_name")->update("johnyou");
-    get_prop("avatar_datas")->get("101")->get("avatar_title_ids")->update(0, int32_t(10));
+    get_prop("avatar_datas")->get("101")->get("avatar_title_ids")->update(0, 10);
+
+    get_prop("avatar_datas")->get("101")->get("avatar_extra_data")->get("last_login_time")->update(1);
+    get_prop("avatar_datas")->get("101")->get("avatar_extra_data")->get("last_logout_time")->update(1);
+    get_prop("avatar_datas")->get("101")->get("avatar_extra_data")->get("last_dungeon_id")->update(1);
 
     AvatarEquip avatar_equip;
     avatar_equip.equip_id = 1004;
     avatar_equip.equip_level = 10;
     get_prop("avatar_datas")->get("101")->get("avatar_equips")->update(2, avatar_equip);
-    get_prop("avatar_datas")->get("101")->get("avatar_equips")->get(2)->get("equip_level")->update(int16_t(20));
+    get_prop("avatar_datas")->get("101")->get("avatar_equips")->get(2)->get("equip_level")->update(20);
 
-    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_1")->update(int32_t(100));
-    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_2")->update(int32_t(100));
-    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_3")->update(int32_t(100));
+    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_1")->update(100);
+    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_2")->update(100);
+    get_prop("avatar_datas")->get("102")->get("avatar_fashion_shows")->get("fashion_shows_3")->update(100);
 
-    get_prop("avatar_datas")->get("101")->get("avatar_horses")->get("horse_1")->get("horse_level")->update(int32_t(110));
+    get_prop("avatar_datas")->get("101")->get("avatar_horses")->get("horse_1")->get("horse_level")->update(110);
     get_prop("avatar_datas")->get("101")->get("avatar_horses")->get("horse_2")->get("horse_name")->update("hell_dragon");
 
     AvatarHorse avatar_horse;

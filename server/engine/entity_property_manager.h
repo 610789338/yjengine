@@ -51,35 +51,101 @@ struct EntityPropertyBase {
 
     template<class T>
     void update(T v);
-    void update(const char* v);
+    void update(int8_t v) { update_int(v); }
+    void update(int16_t v) { update_int(v); }
+    void update(int32_t v) { update_int(v); }
+    void update(int64_t v) { update_int(v); }
+    void update(uint8_t v) { update_int(v); }
+    void update(uint16_t v) { update_int(v); }
+    void update(uint32_t v) { update_int(v); }
+    void update(uint64_t v) { update_int(v); }
+    void update(float v) { update_float(v); }
+    void update(double v) { update_float(v); }
+    void update(const char* v) { update_cstr(v); }
+
+    void update_int(uint64_t v);
+    void update_float(double v);
+    void update_cstr(const char*  v);
 
     // array property - crud
     template<class T>
     void push_back(T v);
-    void push_back(char* v);
-    void push_back(const char* v);
+    void push_back(int8_t v) { push_back_int(v); }
+    void push_back(int16_t v) { push_back_int(v); }
+    void push_back(int32_t v) { push_back_int(v); }
+    void push_back(int64_t v) { push_back_int(v); }
+    void push_back(uint8_t v) { push_back_int(v); }
+    void push_back(uint16_t v) { push_back_int(v); }
+    void push_back(uint32_t v) { push_back_int(v); }
+    void push_back(uint64_t v) { push_back_int(v); }
+    void push_back(float v) { push_back_float(v); }
+    void push_back(double v) { push_back_float(v); }
+    void push_back(const char* v) { push_back_cstr(v); }
+
+    void push_back_int(uint64_t v);
+    void push_back_float(double v);
+    void push_back_cstr(const char*  v);
 
     virtual void pop_back() { ASSERT(false); }
 
     template<class T>
-    void update(const int32_t idx, T v);
-    void update(const int32_t idx, char* v);
-    void update(const int32_t idx, const char* v);
+    void update(int32_t idx, T v);
+    void update(int32_t idx, int8_t v) { update_int(idx, v); }
+    void update(int32_t idx, int16_t v) { update_int(idx, v); }
+    void update(int32_t idx, int32_t v) { update_int(idx, v); }
+    void update(int32_t idx, int64_t v) { update_int(idx, v); }
+    void update(int32_t idx, uint8_t v) { update_int(idx, v); }
+    void update(int32_t idx, uint16_t v) { update_int(idx, v); }
+    void update(int32_t idx, uint32_t v) { update_int(idx, v); }
+    void update(int32_t idx, uint64_t v) { update_int(idx, v); }
+    void update(int32_t idx, float v) { update_float(idx, v); }
+    void update(int32_t idx, double v) { update_float(idx, v); }
+    void update(int32_t idx, const char* v) { update_cstr(idx, v); }
+
+    void update_int(int32_t idx, uint64_t v);
+    void update_float(int32_t idx, double v);
+    void update_cstr(int32_t idx, const char*  v);
 
     virtual EntityPropertyBase* get(const int32_t idx) const { ASSERT(false); return nullptr; }
 
     // map property - crud
     template<class T>
     void insert(GString k, T v);
-    void insert(GString k, char* v);
-    void insert(GString k, const char* v);
+    void insert(GString k, int8_t v) { insert_int(k, v); }
+    void insert(GString k, int16_t v) { insert_int(k, v); }
+    void insert(GString k, int32_t v) { insert_int(k, v); }
+    void insert(GString k, int64_t v) { insert_int(k, v); }
+    void insert(GString k, uint8_t v) { insert_int(k, v); }
+    void insert(GString k, uint16_t v) { insert_int(k, v); }
+    void insert(GString k, uint32_t v) { insert_int(k, v); }
+    void insert(GString k, uint64_t v) { insert_int(k, v); }
+    void insert(GString k, float v) { insert_float(k, v); }
+    void insert(GString k, double v) { insert_float(k, v); }
+    void insert(GString k, const char* v) { insert_cstr(k, v); }
+
+    void insert_int(GString k, uint64_t v);
+    void insert_float(GString k, double v);
+    void insert_cstr(GString k, const char*  v);
 
     virtual void erase(GString k) {}
 
     template<class T>
     void update(GString k, T v);
-    void update(GString k, char* v);
-    void update(GString k, const char* v);
+    void update(GString k, int8_t v) { update_int(k, v); }
+    void update(GString k, int16_t v) { update_int(k, v); }
+    void update(GString k, int32_t v) { update_int(k, v); }
+    void update(GString k, int64_t v) { update_int(k, v); }
+    void update(GString k, uint8_t v) { update_int(k, v); }
+    void update(GString k, uint16_t v) { update_int(k, v); }
+    void update(GString k, uint32_t v) { update_int(k, v); }
+    void update(GString k, uint64_t v) { update_int(k, v); }
+    void update(GString k, float v) { update_float(k, v); }
+    void update(GString k, double v) { update_float(k, v); }
+    void update(GString k, const char* v) { update_cstr(k, v); }
+
+    void update_int(GString k, uint64_t v);
+    void update_float(GString k, double v);
+    void update_cstr(GString k, const char*  v);
 
     virtual EntityPropertyBase* get(const GString& prop_name) const { ASSERT(false); return nullptr; }
     virtual vector<GString> keys() { ASSERT(false); return vector<GString>(); }
@@ -203,7 +269,7 @@ ENTITY_PROPERTY_ARRAY_PARTIAL(GBin)
 template<class T>
 void EntityPropertyBase::push_back(T v) {
 
-    ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(), 
+    ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "push_back type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());
 
     EntityPropertyArray<T>* child = dynamic_cast<EntityPropertyArray<T>*>(this);
