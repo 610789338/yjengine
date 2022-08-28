@@ -25,6 +25,7 @@
     <ClInclude Include="encode.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="entity_property_manager.h" />
+    <ClInclude Include="entity_property_tree.h" />
     <ClInclude Include="entity_rpc_manager.h" />
     <ClInclude Include="gvalue.h" />
     <ClInclude Include="ini.h" />
@@ -44,6 +45,7 @@
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="entity.cpp" />
     <ClCompile Include="entity_property_manager.cpp" />
+    <ClCompile Include="entity_property_tree.cpp" />
     <ClCompile Include="entity_rpc_manager.cpp" />
     <ClCompile Include="gvalue.cpp" />
     <ClCompile Include="ini.cpp" />

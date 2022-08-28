@@ -10,6 +10,7 @@
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
+#include "entity_property_tree.h"
 
 using namespace std;
 
@@ -222,20 +223,23 @@ public: \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
     RPC_CALL_DEFINE(TCLASS) \
-    static EntityComponentManager<TCLASS> component_manager; \
     ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
-    static TimerManager<TCLASS> timer_manager;
+    static EntityComponentManager<TCLASS> component_manager; \
+    static TimerManager<TCLASS> timer_manager; \
+    static PropertyTree property_tree; \
+    static void generate_property_tree();
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
 EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
     auto entity = new TCLASS(); \
-    entity->propertys = TCLASS::property_manager.propertys; \
-    entity->rpc_mgr = &TCLASS::rpc_manager; \
+    property_manager.give_propertys(entity->propertys); \
     component_manager.generate_entity_components(entity); \
+    entity->rpc_mgr = &TCLASS::rpc_manager; \
     return entity; }); \
 EntityComponentManager<TCLASS> TCLASS::component_manager; \
-TimerManager<TCLASS> TCLASS::timer_manager;
+TimerManager<TCLASS> TCLASS::timer_manager; \
+PropertyTree TCLASS::property_tree(property_manager.propertys);
 
 
 extern unordered_map<GString, Entity*> g_entities;

@@ -1,17 +1,26 @@
 #include "entity_property_manager.h"
 
 
-unordered_map<GString, unordered_map<GString, uint8_t> > g_all_prop_idxs;
+PropIdxType* g_all_prop_idxs = nullptr;
+
+PropIdxType& get_all_prop_idxs() {
+    if (g_all_prop_idxs == nullptr) {
+        g_all_prop_idxs = new PropIdxType;
+    }
+
+    return *g_all_prop_idxs;
+}
 
 void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, GString self_name) {
     if (pre_node != nullptr) {
         EntityPropertyComplex* pre = (EntityPropertyComplex*)pre_node;
         auto pclass_name = pre->get_pclass_name();
-        if (g_all_prop_idxs.find(pclass_name) == g_all_prop_idxs.end()) {
+        PropIdxType& all_prop_idxs = get_all_prop_idxs();
+        if (all_prop_idxs.find(pclass_name) == all_prop_idxs.end()) {
             pre->gen_prop_idxs();
         }
 
-        auto prop_idxs = g_all_prop_idxs.at(pclass_name);
+        auto prop_idxs = all_prop_idxs.at(pclass_name);
         EntityPropertyBase** propertys = pre->get_propertys();
         propertys[prop_idxs[self_name]] = this;
     }
