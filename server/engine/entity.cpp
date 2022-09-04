@@ -3,10 +3,31 @@
 #include "entity.h"
 #include "entity_component_manager.h"
 
+
+void Entity::tick() {
+    prop_sync();
+    on_tick();
+}
+
+void Entity::prop_sync() {
+    Encoder encoder;
+    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+        //encoder.write_uint16();
+    }
+}
+
 void Entity::release_component() {
     for (auto iter = components.begin(); iter != components.end(); ++iter) {
         delete iter->second;
     }
+    components.clear();
+}
+
+void Entity::release_property() {
+    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+        delete iter->second;
+    }
+    propertys.clear();
 }
 
 void BaseEntity::on_create(const GDict& create_data) {
@@ -146,4 +167,10 @@ Entity* create_entity(const GString& entity_class_name, const GString& entity_uu
 
 RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
     return entity->get_rpc_mgr();
+}
+
+void entity_tick() {
+    for (auto iter = g_entities.begin(); iter != g_entities.end(); ++iter) {
+        iter->second->tick();
+    }
 }

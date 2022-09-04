@@ -41,6 +41,9 @@ public:
     Entity() {}
     virtual ~Entity() { release_component(); }
 
+    void tick();
+    virtual void on_tick() {}
+
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
@@ -53,6 +56,9 @@ public:
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
 
     void release_component();
+    void release_property();
+
+    void prop_sync(); //  Ù–‘Õ¨≤Ω
 
     GString uuid = "";
     GString class_name = "";
@@ -245,3 +251,4 @@ PropertyTree TCLASS::property_tree(property_manager.propertys);
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
 extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
+extern void entity_tick();
