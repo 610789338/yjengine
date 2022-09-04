@@ -1,4 +1,7 @@
-#include "engine/entity_property_manager.h"
+#pragma once
+
+#include "engine/engine.h"
+
 
 struct AvatarEquip : public EntityPropertyComplex {
     MEM_PROP_BEGIN_Two_MEM(AvatarEquip, equip_id, equip_level);
@@ -23,14 +26,14 @@ struct AvatarExtraData : public EntityPropertyComplex {
 };
 
 struct AvatarData : public EntityPropertyComplex {
-    MEM_PROP_BEGIN_Eight_MEM(AvatarData, 
-        avatar_id, 
-        avatar_name, 
-        avatar_level, 
-        avatar_extra_data, 
-        avatar_title_ids, 
-        avatar_equips, 
-        avatar_horses, 
+    MEM_PROP_BEGIN_Eight_MEM(AvatarData,
+        avatar_id,
+        avatar_name,
+        avatar_level,
+        avatar_extra_data,
+        avatar_title_ids,
+        avatar_equips,
+        avatar_horses,
         avatar_fashion_shows);
 
     MEM_PROPERTY_SIMPLE(avatar_id, int32_t, 0);
@@ -42,3 +45,8 @@ struct AvatarData : public EntityPropertyComplex {
     MEM_PROPERTY_MAP(avatar_fashion_shows, int32_t);
     MEM_PROPERTY_MAP(avatar_horses, AvatarHorse);
 };
+
+template<class TEntity>
+void create_avatar_property_define() {
+    PROPERTY_MAP(PropType::BASE_AND_CLIENT, avatar_datas, AvatarData);
+}

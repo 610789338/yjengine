@@ -14,12 +14,10 @@ PropIdxType& get_all_prop_idxs() {
 void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, GString self_name) {
     if (pre_node != nullptr) {
         EntityPropertyComplex* pre = (EntityPropertyComplex*)pre_node;
-        auto pclass_name = pre->get_pclass_name();
-        PropIdxType& all_prop_idxs = get_all_prop_idxs();
-        if (all_prop_idxs.find(pclass_name) == all_prop_idxs.end()) {
-            pre->gen_prop_idxs();
-        }
+        pre->gen_prop_idxs();
 
+        PropIdxType& all_prop_idxs = get_all_prop_idxs();
+        auto pclass_name = pre->get_pclass_name();
         auto prop_idxs = all_prop_idxs.at(pclass_name);
         EntityPropertyBase** propertys = pre->get_propertys();
         propertys[prop_idxs[self_name]] = this;

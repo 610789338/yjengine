@@ -10,13 +10,14 @@
 using namespace std;
 
 enum PropType : int8_t {
-    BASE = 0x01,
-    BASE_AND_CLIENT = 0x02,
-    CELL_PRIVATE = 0x03,
-    CELL_PUBLIC = 0x04,
-    CELL_AND_CLIENT = 0x05,
-    ALL_CLIENT = 0x06,
-    OTHER_CLIENT = 0x07,
+    BASE_PRIVATE = 0x00,
+    BASE_AND_CLIENT = 0x01,
+    CELL_PRIVATE = 0x02,
+    CELL_PUBLIC = 0x03,  // TODO
+    CELL_AND_CLIENT = 0x04,
+    ALL_CLIENT = 0x05,  // TODO
+    OTHER_CLIENT = 0x06,  // TODO
+    ALL = 0x07,
 
     NONE = 0x01 << 4
 };
@@ -404,24 +405,95 @@ void EntityPropertyBase::update(GString k, T v) {
 }
 
 // entity property manager
-template<class EntityClassType>
+template<class TEntity>
 class EntityPropertyManager {
 
 public:
     EntityPropertyManager() {
-        EntityClassType::property_define();
+        TEntity::property_define();
     }
 
-    template<class T>
-    void regist_simple_property(enum PropType type, const GString& property_name, T _default) {
+    template<class TProp>
+    void regist_simple_property(enum PropType type, const GString& property_name, TProp _default) {
+        if (!regist_check<TEntity>(type)) {
+            return;
+        }
+
         ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new EntityPropertySimple<T>([](EntityPropertyBase* mem) {}, type, _default);
+        propertys[property_name] = new EntityPropertySimple<TProp>([](EntityPropertyBase* mem) {}, type, _default);
     }
 
-    template<class T>
+    template<class TProp>
     void regist_complex_property(enum PropType type, const GString& property_name) {
+        if (!regist_check<TEntity>(type)) {
+            return;
+        }
+
         ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new T([](EntityPropertyBase* mem) {}, type);
+        propertys[property_name] = new TProp([](EntityPropertyBase* mem) {}, type);
+    }
+
+    template<class TProp>
+    void regist_array_property(enum PropType type, const GString& property_name) {
+        if (!regist_check<TEntity>(type)) {
+            return;
+        }
+
+        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
+        propertys[property_name] = new EntityPropertyArray<TProp>([](EntityPropertyBase* mem) {}, type);
+    }
+
+    template<class TProp>
+    void regist_map_property(enum PropType type, const GString& property_name) {
+        if (!regist_check<TEntity>(type)) {
+            return;
+        }
+
+        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
+        propertys[property_name] = new EntityPropertyMap<TProp>([](EntityPropertyBase* mem) {}, type);
+    }
+
+    template<class TEntity>
+    bool regist_check(enum PropType type) {
+        switch (TEntity::ENTITY_TYPE) {
+            case EntityType::EntityType_Base:
+            case EntityType::EntityType_BaseWithCell:
+            case EntityType::EntityType_BaseWithClient:
+            case EntityType::EntityType_BaseWithCellAndClient: {
+                if (type == PropType::ALL || 
+                    type == PropType::BASE_PRIVATE ||
+                    type == PropType::BASE_AND_CLIENT) {
+                    return true;
+                }
+
+                break;
+            }
+
+            case EntityType::EntityType_Cell:
+            case EntityType::EntityType_CellWithClient: {
+                if (type == PropType::ALL || 
+                    type == PropType::CELL_PRIVATE ||
+                    type == PropType::CELL_PUBLIC || 
+                    type == PropType::CELL_AND_CLIENT) {
+                    return true;
+                }
+
+                break;
+            }
+
+            case EntityType::EntityType_Client: {
+                if (type == PropType::ALL || 
+                    type == PropType::BASE_AND_CLIENT ||
+                    type == PropType::CELL_AND_CLIENT ||
+                    type == PropType::ALL_CLIENT) {
+                    return true;
+                }
+
+                break;
+            }
+        }
+
+        return false;
     }
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& other_propertys) {
@@ -435,25 +507,13 @@ public:
 };
 
 #define PROPERTY_SIMPLE(prop_type, property_name, prop_class, default_value) \
-    property_manager.regist_simple_property<prop_class>(prop_type, #property_name, default_value)
+    TEntity::property_manager.regist_simple_property<prop_class>(prop_type, #property_name, default_value)
 #define PROPERTY_COMPLEX(prop_type, property_name, prop_class) \
-    property_manager.regist_complex_property<prop_class>(prop_type, #property_name)
+    TEntity::property_manager.regist_complex_property<prop_class>(prop_type, #property_name)
 #define PROPERTY_ARRAY(prop_type, property_name, prop_class) \
-    property_manager.regist_complex_property<EntityPropertyArray<prop_class>>(prop_type, #property_name)
+    TEntity::property_manager.regist_array_property<prop_class>(prop_type, #property_name)
 #define PROPERTY_MAP(prop_type, property_name, prop_class) \
-    property_manager.regist_complex_property<EntityPropertyMap<prop_class>>(prop_type, #property_name)
-
-//#define PROPERTY_SIMPLE_ARRAY(prop_type, property_name, prop_class) \
-//    property_manager.regist_complex_property<EntityPropertyArray<prop_class>>(prop_type, #property_name)
-//#define PROPERTY_SIMPLE_MAP(prop_type, property_name, prop_class) \
-//    property_manager.regist_complex_property<EntityPropertyMap<prop_class>>(prop_type, #property_name)
-//
-//#define PROPERTY_COMPLEX_ARRAY(prop_type, property_name, prop_class) \
-//    static prop_class #prop_class([](EntityPropertyBase* mem) {}, PropType::NONE); \
-//    property_manager.regist_complex_property<EntityPropertyArray<prop_class>>(prop_type, #property_name)
-//#define PROPERTY_COMPLEX_MAP(prop_type, property_name, prop_class) \
-//    static prop_class #prop_class([](EntityPropertyBase* mem) {}, PropType::NONE); \
-//    property_manager.regist_complex_property<EntityPropertyMap<prop_class>>(prop_type, #property_name)
+    TEntity::property_manager.regist_map_property<prop_class>(prop_type, #property_name)
 
 
 #define MEM_PROPERTY_SIMPLE(property_name, prop_class, default_value) \
@@ -461,7 +521,7 @@ public:
 #define MEM_PROPERTY_COMPLEX(property_name, prop_class) \
     prop_class property_name = prop_class([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
 #define MEM_PROPERTY_ARRAY(property_name, prop_class) \
-    EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::BASE)
+    EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
 #define MEM_PROPERTY_MAP(property_name, prop_class) \
     EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
 
@@ -481,8 +541,8 @@ extern PropIdxType* g_all_prop_idxs;
 extern PropIdxType& get_all_prop_idxs();
 
 #define MEM_PROP_BEGIN(TComplex, Num) \
-    TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { gen_prop_idxs(); num_check(); } \
-    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) { gen_prop_idxs(); num_check(); } \
+    TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { num_check(); } \
+    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) { num_check(); } \
     void num_check() { \
         PropIdxType& all_prop_idxs = get_all_prop_idxs(); \
         ASSERT_LOG(all_prop_idxs[#TComplex].size() == (size_t)get_propertys_len(), \

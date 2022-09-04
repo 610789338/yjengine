@@ -1,4 +1,6 @@
 #include "account.h"
+#include "common/prop_def/account_prop_def.h"
+
 
 GENERATE_ENTITY_OUT(ClientAccount)
 
@@ -11,6 +13,7 @@ void ClientAccount::rpc_method_define() {
 }
 
 void ClientAccount::property_define() {
+    account_property_define<ClientAccount>();
 }
 
 void ClientAccount::msg_from_base(const GValue& msg) { 

@@ -39,8 +39,8 @@
     <ClInclude Include="gameplay\components\create_avatar_component.h">
       <Filter>gameplay\components</Filter>
     </ClInclude>
-    <ClInclude Include="gameplay\entities\account_prop_def.h">
-      <Filter>gameplay\entities</Filter>
+    <ClInclude Include="gameplay\components\create_avatar_prop_def.h">
+      <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

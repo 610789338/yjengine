@@ -10,7 +10,7 @@ void PropertyTree::generate_property_tree(unordered_map<GString, EntityPropertyB
 
 void PropertyTree::generate_node(EntityPropertyBase* property, PropertyTreeNode& tree_node) {
     if (property->is_complex()) {
-        PropIdxType& all_prop_idxs = get_all_prop_idxs(); \
+        PropIdxType& all_prop_idxs = get_all_prop_idxs();
         unordered_map<GString, uint8_t>& prop_idxs = all_prop_idxs.at(property->get_pclass_name());
         for (auto iter = prop_idxs.begin(); iter != prop_idxs.end(); ++iter) {
             tree_node.child_node.push_back(PropertyTreeNode(iter->first));

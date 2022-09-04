@@ -1,4 +1,5 @@
 #include "account.h"
+#include "common/prop_def/account_prop_def.h"
 
 #include "../components/create_avatar_component.h"
 
@@ -15,7 +16,7 @@ void BaseAccount::rpc_method_define() {
 }
 
 void BaseAccount::property_define() {
-    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, account_id, int32_t, 1001);
+    account_property_define<BaseAccount>();
 }
 
 void BaseAccount::on_ready() {
@@ -52,6 +53,7 @@ void CellAccount::rpc_method_define() {
 }
 
 void CellAccount::property_define() {
+    account_property_define<CellAccount>();
 }
 
 void CellAccount::msg_from_base(const GValue& msg) {

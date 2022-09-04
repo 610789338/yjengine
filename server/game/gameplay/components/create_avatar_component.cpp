@@ -1,6 +1,7 @@
 #include "engine/engine.h"
 
 #include "create_avatar_component.h"
+#include "create_avatar_prop_def.h"
 
 void CreateAvatarComponent::component_rpc_test(const GValue& msg) {
 
