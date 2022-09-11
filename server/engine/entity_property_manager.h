@@ -6,26 +6,27 @@
 
 #include "gvalue.h"
 #include "log.h"
+#include "encode.h"
+#include "decode.h"
 
 using namespace std;
 
 enum PropType : int8_t {
-    BASE_PRIVATE = 0x00,
-    BASE_AND_CLIENT = 0x01,
-    CELL_PRIVATE = 0x02,
-    CELL_PUBLIC = 0x03,  // TODO
-    CELL_AND_CLIENT = 0x04,
-    ALL_CLIENT = 0x05,  // TODO
-    OTHER_CLIENT = 0x06,  // TODO
-    ALL = 0x07,
+    NONE = 0x00,
 
-    NONE = 0x01 << 4
+    BASE_PRIVATE = 0x01,
+    BASE_AND_CLIENT = 0x02,
+    CELL_PRIVATE = 0x03,
+    CELL_PUBLIC = 0x04,  // TODO
+    CELL_AND_CLIENT = 0x05,
+    ALL_CLIENT = 0x06,  // TODO
+    OTHER_CLIENT = 0x07,  // TODO
+    ALL = 0x08,
 };
 
 struct EntityPropertyBase {
 
-    EntityPropertyBase() = delete;
-    EntityPropertyBase(const PropType& t) { flag = (int8_t)t; }
+    EntityPropertyBase() {}
     virtual ~EntityPropertyBase() {}
 
     virtual GString get_pclass_name() { ASSERT(false); return ""; }
@@ -159,25 +160,44 @@ struct EntityPropertyBase {
     virtual void encode() { ASSERT(false); }
     virtual void decode() { ASSERT(false); }
 
-    void set_dirty();
-    void clean_dirty() { flag &= 0x7F; }
-    bool is_dirty() { return bool(flag & 0x80); }
-
-    PropType get_prop_type() const { return PropType(flag & 0x0F); }
-
     // property tree
     virtual bool is_complex() { return false; }
     virtual bool is_array() { return false; }
     virtual bool is_map() { return false; }
     virtual bool is_value_complex() { return false; }
 
-    EntityPropertyBase& operator=(const EntityPropertyBase& other) { copy_from(other); return *this; }
-    void copy_from(const EntityPropertyBase& other) { flag = other.flag; }
-
     void set_parent(EntityPropertyBase* _parent) { parent = _parent; }
     EntityPropertyBase* parent = nullptr;
 
-    int8_t flag = 0x00;  // bit [0, 3] means PropType, bit [4, 6] reserved, bit 7 means dirty
+    bool need_sync2client();
+    virtual void serialize(Encoder& encoder) { ASSERT(false); }
+    virtual void serialize_all(Encoder& encoder) { ASSERT(false); }
+    virtual void serialize_dirty(Encoder& encoder) { ASSERT(false); }
+    virtual void unserialize(Decoder& decoder) { ASSERT(false); }
+
+    // flag
+    void set_prop_type(const PropType& t) { flag |= (t & 0x0F); }
+    PropType get_prop_type() const { return PropType(flag & 0x0F); }
+
+    void set_first_level() { flag |= 0x20; }
+    bool is_first_level() const { return bool(flag & 0x20); }
+
+    void set_all_dirty();
+    bool is_all_dirty() const { return bool(flag & 0x40); }
+
+    void set_dirty();
+    bool is_dirty() const { return bool(flag & 0x80); }
+
+    void clean_dirty() { flag &= 0x3F; }
+
+    // void copy_flag(int8_t _flag) { flag &= 0xF0; flag |= (_flag & 0x0F); }
+
+    // bit [0, 3] means PropType, only useful with first level property, immutable
+    // bit 4 reserved
+    // bit 5 means whether this is a first level property, immutable
+    // bit 6 means all dirty, mutable
+    // bit 7 means dirty, mutable
+    int8_t flag = 0x00;
 };
 
 typedef function<void(EntityPropertyBase* mem)> TCallBack;
@@ -185,13 +205,21 @@ typedef function<void(EntityPropertyBase* mem)> TCallBack;
 template<class T>
 struct EntityPropertySimple : public EntityPropertyBase {
 
-    EntityPropertySimple() : EntityPropertyBase(PropType::NONE), v(T()) {}
-    EntityPropertySimple(const EntityPropertySimple& other) : EntityPropertyBase(other.get_prop_type()), v(other.v) {};
-    EntityPropertySimple(T _v) : EntityPropertyBase(PropType::NONE), v(_v) {}
-    EntityPropertySimple(const TCallBack& cb, const PropType& t, T _v) : EntityPropertyBase(t), v(_v) { cb(this); }
+    EntityPropertySimple() : v(T()) {}
+    EntityPropertySimple(T _v) : v(_v) {}
+    EntityPropertySimple(const TCallBack& cb, T _v) : v(_v) { cb(this); }
+    EntityPropertySimple(const EntityPropertySimple& other) : v(other.v) {};
 
-    EntityPropertySimple<T>& operator=(const EntityPropertySimple<T>& other) { EntityPropertyBase::copy_from(other); v = other.v; return *this; }
-    EntityPropertySimple<T>& operator=(const T& _v) { flag = (int8_t)PropType::NONE; v = _v; return *this; }
+    EntityPropertySimple<T>& operator=(const EntityPropertySimple<T>& other) { 
+        v = other.v; 
+        set_dirty();
+        return *this;
+    }
+    EntityPropertySimple<T>& operator=(const T& _v) { 
+        v = _v; 
+        set_dirty(); 
+        return *this; 
+    }
 
     EntityPropertyBase* create_self() { return new EntityPropertySimple<T>(*this); }
 
@@ -211,6 +239,11 @@ struct EntityPropertySimple : public EntityPropertyBase {
     double as_double() const { return v.as_double(); }
     GString& as_string() const { return v.as_string(); }
 
+    void serialize(Encoder& encoder) { encoder.write_gvalue(v); }
+    void serialize_all(Encoder& encoder) { encoder.write_gvalue(v); }
+    void serialize_dirty(Encoder& encoder) { encoder.write_gvalue(v); }
+    void unserialize(Decoder& decoder) { v = decoder.read_gvalue(); }
+
     GValue v;
 };
 
@@ -226,30 +259,35 @@ void EntityPropertyBase::update(T v) {
 
 struct EntityPropertyComplex : public EntityPropertyBase {
 
-    EntityPropertyComplex() = delete;
-    EntityPropertyComplex(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
+    EntityPropertyComplex() = default;
+    EntityPropertyComplex(const TCallBack& cb) { cb(this); }
 
     virtual EntityPropertyBase* create_self() { ASSERT(false);  return nullptr; };
     virtual int8_t get_propertys_len() = 0;
     virtual void gen_prop_idxs() = 0;
+    virtual EntityPropertyBase** get_propertys() { return nullptr; }
 
     bool is_complex() { return true; }
+
+    void serialize(Encoder& encoder);
+    void serialize_all(Encoder& encoder);
+    void serialize_dirty(Encoder& encoder);
+    void unserialize(Decoder& decoder);
 };
 
 template<class TValue>
 struct EntityPropertyArray : public EntityPropertyBase {
 
-    EntityPropertyArray() = delete;
-    EntityPropertyArray(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
+    EntityPropertyArray() = default;
+    EntityPropertyArray(const TCallBack& cb) { cb(this); }
 
     GString get_v_tstring() { return typeid(TValue).name(); }
-    EntityPropertyBase* create_self() { return new EntityPropertyArray<TValue>([](EntityPropertyBase* mem) {}, get_prop_type()); }
+    EntityPropertyBase* create_self() { return new EntityPropertyArray<TValue>(); }
     EntityPropertyBase* create_array_value() { return new TValue(); }
 
     EntityPropertyArray<TValue>& operator=(const EntityPropertyArray<TValue>& other) {
-        EntityPropertyBase::copy_from(other);
         propertys = other.propertys;
-        set_dirty();
+        set_all_dirty();
         return *this;
     }
 
@@ -259,7 +297,7 @@ struct EntityPropertyArray : public EntityPropertyBase {
         propertys[propertys.size() - 1].set_parent(this);
         propertys[propertys.size() - 1].set_dirty();
     }
-    void pop_back() { propertys.pop_back(); set_dirty(); }
+    void pop_back() { propertys.pop_back(); set_all_dirty(); }
     void update(const int32_t idx, TValue v) { 
         propertys[idx] = v;
         propertys[idx].set_parent(this);
@@ -272,6 +310,67 @@ struct EntityPropertyArray : public EntityPropertyBase {
     bool is_array() { return true; }
     bool is_value_complex() { return true; }
 
+    void serialize(Encoder& encoder) { 
+        if (is_all_dirty()) 
+            serialize_all(encoder); 
+        else 
+            serialize_dirty(encoder); 
+    }
+
+    void serialize_all(Encoder& encoder) {
+        encoder.write_string("y");
+        encoder.write_int16((int16_t)propertys.size());
+        for (int16_t i = 0; i < propertys.size(); ++i) {
+            propertys[i].serialize_all(encoder);
+        }
+    }
+
+    void serialize_dirty(Encoder& encoder) {
+        encoder.write_string("j");
+        int16_t num = 0;
+        for (int16_t i = 0; i < propertys.size(); ++i) {
+            if (!propertys[i].is_dirty() && !propertys[i].is_all_dirty()) {
+                continue;
+            }
+            ++num;
+        }
+        encoder.write_int16(num);
+
+        for (int16_t i = 0; i < propertys.size(); ++i) {
+            if (!propertys[i].is_dirty() && !propertys[i].is_all_dirty()) {
+                continue;
+            }
+            encoder.write_int16(i);
+            propertys[i].serialize(encoder);
+        }
+    }
+
+    void unserialize(Decoder& decoder) {
+        bool is_unserialize_all = decoder.read_string() == "y";
+        int16_t num = decoder.read_int16();
+        if (is_unserialize_all) {
+            int16_t i = 0;
+            while (num > 0) {
+                if (i >= propertys.size()) {
+                    push_back(TValue());
+                }
+                propertys[i].unserialize(decoder);
+                --num;
+                ++i;
+            }
+        }
+        else {
+            while (num > 0) {
+                int16_t i = decoder.read_int16();
+                if (i >= propertys.size()) {
+                    push_back(TValue());
+                }
+                propertys[i].unserialize(decoder);
+                --num;
+            }
+        }
+    }
+
     vector<TValue> propertys;
 };
 
@@ -279,16 +378,15 @@ struct EntityPropertyArray : public EntityPropertyBase {
 template<> \
 struct EntityPropertyArray<T> : public EntityPropertyBase { \
 \
-    EntityPropertyArray<T>() = delete; \
-    EntityPropertyArray<T>(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); } \
+    EntityPropertyArray<T>() = default; \
+    EntityPropertyArray<T>(const TCallBack& cb) { cb(this); } \
 \
     GString get_v_tstring() { return typeid(T).name(); } \
-    EntityPropertyBase* create_self() { return new EntityPropertyArray<T>([](EntityPropertyBase* mem) {}, get_prop_type()); } \
+    EntityPropertyBase* create_self() { return new EntityPropertyArray<T>(); } \
 \
     EntityPropertyArray<T>& operator=(const EntityPropertyArray<T>& other) { \
-        EntityPropertyBase::copy_from(other); \
         propertys = other.propertys; \
-        set_dirty(); \
+        set_all_dirty(); \
         return *this; \
     } \
 \
@@ -298,7 +396,7 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
         propertys[propertys.size() - 1].set_parent(this); \
         propertys[propertys.size() - 1].set_dirty(); \
     } \
-    void pop_back() { propertys.pop_back(); set_dirty(); } \
+    void pop_back() { propertys.pop_back(); set_all_dirty(); } \
     void update(const int32_t idx, T _v) { \
         propertys[idx] = EntityPropertySimple<T>(_v); \
         propertys[idx].set_parent(this); \
@@ -308,6 +406,67 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
     bool is_array() { return true; } \
+\
+    void serialize(Encoder& encoder) { \
+        if (is_all_dirty()) \
+            serialize_all(encoder); \
+        else \
+            serialize_dirty(encoder); \
+    }\
+\
+    void serialize_all(Encoder& encoder) { \
+        encoder.write_string("y"); \
+        encoder.write_int16((int16_t)propertys.size()); \
+        for (int16_t i = 0; i < propertys.size(); ++i) { \
+            propertys[i].serialize_all(encoder); \
+        } \
+    } \
+\
+    void serialize_dirty(Encoder& encoder) { \
+        encoder.write_string("j"); \
+        int16_t num = 0; \
+        for (int16_t i = 0; i < propertys.size(); ++i) { \
+            if (!propertys[i].is_dirty() && !propertys[i].is_all_dirty()) { \
+                continue; \
+            } \
+            ++num; \
+        } \
+        encoder.write_int16(num); \
+\
+        for (int16_t i = 0; i < propertys.size(); ++i) { \
+            if (!propertys[i].is_dirty() && !propertys[i].is_all_dirty()) { \
+                continue; \
+            } \
+            encoder.write_int16(i); \
+            propertys[i].serialize(encoder); \
+        } \
+    } \
+\
+    void unserialize(Decoder& decoder) { \
+        bool is_unserialize_all = decoder.read_string() == "y"; \
+        int16_t num = decoder.read_int16(); \
+        if (is_unserialize_all) { \
+            int16_t i = 0; \
+            while (num > 0) { \
+                if (i >= propertys.size()) { \
+                    push_back(T()); \
+                } \
+                propertys[i].unserialize(decoder); \
+                --num; \
+                ++i; \
+            } \
+        } \
+        else { \
+            while (num > 0) { \
+                int16_t i = decoder.read_int16(); \
+                if (i >= propertys.size()) { \
+                    push_back(T()); \
+                } \
+                propertys[i].unserialize(decoder); \
+                --num; \
+            } \
+        } \
+    } \
 \
     vector<EntityPropertySimple<T>> propertys; \
 };
@@ -349,23 +508,22 @@ void EntityPropertyBase::update(const int32_t idx, T v) {
 template<class TValue>
 struct EntityPropertyMap : public EntityPropertyBase {
 
-    EntityPropertyMap() = delete;
-    EntityPropertyMap(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); }
+    EntityPropertyMap() = default;
+    EntityPropertyMap(const TCallBack& cb) { cb(this); }
 
     GString get_v_tstring() { return typeid(TValue).name(); }
-    EntityPropertyBase* create_self() { return new EntityPropertyMap<TValue>([](EntityPropertyBase* mem) {}, get_prop_type()); }
+    EntityPropertyBase* create_self() { return new EntityPropertyMap<TValue>(); }
     EntityPropertyBase* create_map_value() { return new TValue(); }
 
     EntityPropertyMap<TValue>& operator=(const EntityPropertyMap<TValue>& other) {
-        EntityPropertyBase::copy_from(other);
         propertys = other.propertys;
-        set_dirty();
+        set_all_dirty();
         return *this;
     }
 
     // crud
     void insert(GString k, TValue v) { propertys.insert(make_pair(k, v)); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); }
-    void erase(GString k) { propertys.erase(k); set_dirty(); }
+    void erase(GString k) { propertys.erase(k); set_all_dirty(); }
     void update(GString k, TValue v) { propertys[k] = v; propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); }
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); }
 
@@ -380,6 +538,53 @@ struct EntityPropertyMap : public EntityPropertyBase {
     bool is_map() { return true; }
     bool is_value_complex() { return true; }
 
+    void serialize(Encoder& encoder) {
+        if (is_all_dirty())
+            serialize_all(encoder);
+        else
+            serialize_dirty(encoder);
+    }
+
+    void serialize_all(Encoder& encoder) {
+        encoder.write_int16((int16_t)propertys.size());
+
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+            encoder.write_string(iter->first);
+            iter->second.serialize_all(encoder);
+        }
+    }
+
+    void serialize_dirty(Encoder& encoder) {
+        int16_t num = 0;
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+            if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) {
+                continue;
+            }
+            ++num;
+        }
+        encoder.write_int16(num);
+
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+            if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) {
+                continue;
+            }
+            encoder.write_string(iter->first);
+            iter->second.serialize(encoder);
+        }
+    }
+
+    void unserialize(Decoder& decoder) {
+        int16_t num = decoder.read_int16();
+        while (num > 0) {
+            const GString& prop_name = decoder.read_string();
+            if (propertys.find(prop_name) == propertys.end()) {
+                insert(prop_name, TValue());
+            }
+            propertys.at(prop_name).unserialize(decoder);
+            --num;
+        }
+    }
+
     unordered_map<GString, TValue> propertys;
 };
 
@@ -387,22 +592,21 @@ struct EntityPropertyMap : public EntityPropertyBase {
 template<> \
 struct EntityPropertyMap<T> : public EntityPropertyBase { \
 \
-    EntityPropertyMap<T>() = delete; \
-    EntityPropertyMap<T>(const TCallBack& cb, const PropType& t) : EntityPropertyBase(t) { cb(this); } \
+    EntityPropertyMap<T>() = default; \
+    EntityPropertyMap<T>(const TCallBack& cb) { cb(this); } \
 \
     GString get_v_tstring() { return typeid(T).name(); } \
-    EntityPropertyBase* create_self() { return new EntityPropertyMap<T>([](EntityPropertyBase* mem) {}, get_prop_type()); } \
+    EntityPropertyBase* create_self() { return new EntityPropertyMap<T>(); } \
 \
     EntityPropertyMap<T>& operator=(const EntityPropertyMap<T>& other) { \
-        EntityPropertyBase::copy_from(other); \
         propertys = other.propertys; \
-        set_dirty(); \
+        set_all_dirty(); \
         return *this; \
     } \
 \
     /* crud */ \
     void insert(GString k, T _v) { propertys.insert(make_pair(k, EntityPropertySimple<T>(_v))); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); } \
-    void erase(GString k) { propertys.erase(k); set_dirty(); } \
+    void erase(GString k) { propertys.erase(k); set_all_dirty(); } \
     void update(GString k, T _v) { propertys[k] = EntityPropertySimple<T>(_v); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); } \
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); } \
 \
@@ -415,6 +619,52 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     } \
 \
     bool is_map() { return true; } \
+\
+    void serialize(Encoder& encoder) { \
+        if (is_all_dirty()) \
+            serialize_all(encoder); \
+        else \
+            serialize_dirty(encoder); \
+    } \
+\
+    void serialize_all(Encoder& encoder) { \
+        encoder.write_int16((int16_t)propertys.size()); \
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
+            encoder.write_string(iter->first); \
+            iter->second.serialize_all(encoder); \
+        } \
+    } \
+\
+    void serialize_dirty(Encoder& encoder) { \
+        int16_t num = 0; \
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
+            if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) { \
+                continue; \
+            } \
+            ++num; \
+        } \
+        encoder.write_int16(num); \
+\
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
+            if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) { \
+                continue; \
+            } \
+            encoder.write_string(iter->first); \
+            iter->second.serialize(encoder); \
+        } \
+    } \
+\
+    void unserialize(Decoder& decoder) { \
+        int16_t num = decoder.read_int16(); \
+        while (num > 0) { \
+            const GString& prop_name = decoder.read_string(); \
+            if (propertys.find(prop_name) == propertys.end()) { \
+                insert(prop_name, T()); \
+            } \
+            propertys.at(prop_name).unserialize(decoder); \
+            --num; \
+        } \
+    } \
 \
     unordered_map<GString, EntityPropertySimple<T>> propertys; \
 };
@@ -454,6 +704,8 @@ void EntityPropertyBase::update(GString k, T v) {
     child->update(k, v);
 }
 
+extern bool prop_regist_check(int8_t t, enum PropType type);
+
 // entity property manager
 template<class TEntity>
 class EntityPropertyManager {
@@ -465,95 +717,63 @@ public:
 
     template<class TProp>
     void regist_simple_property(enum PropType type, const GString& property_name, TProp _default) {
-        if (!regist_check<TEntity>(type)) {
+        _gen_map(property_name);
+        if (!prop_regist_check(TEntity::ENTITY_TYPE, type)) {
             return;
         }
 
-        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new EntityPropertySimple<TProp>([](EntityPropertyBase* mem) {}, type, _default);
+        auto prop = new EntityPropertySimple<TProp>(_default);
+        prop->set_prop_type(type);
+        propertys[property_name] = prop;
     }
 
     template<class TProp>
     void regist_complex_property(enum PropType type, const GString& property_name) {
-        if (!regist_check<TEntity>(type)) {
+        _gen_map(property_name);
+        if (!prop_regist_check(TEntity::ENTITY_TYPE, type)) {
             return;
         }
 
-        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new TProp([](EntityPropertyBase* mem) {}, type);
+        auto prop = new TProp();
+        prop->set_prop_type(type);
+        propertys[property_name] = prop;
     }
 
     template<class TProp>
     void regist_array_property(enum PropType type, const GString& property_name) {
-        if (!regist_check<TEntity>(type)) {
+        _gen_map(property_name);
+        if (!prop_regist_check(TEntity::ENTITY_TYPE, type)) {
             return;
         }
 
-        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new EntityPropertyArray<TProp>([](EntityPropertyBase* mem) {}, type);
+        auto prop = new EntityPropertyArray<TProp>();
+        prop->set_prop_type(type);
+        propertys[property_name] = prop;
     }
 
     template<class TProp>
     void regist_map_property(enum PropType type, const GString& property_name) {
-        if (!regist_check<TEntity>(type)) {
+        _gen_map(property_name);
+        if (!prop_regist_check(TEntity::ENTITY_TYPE, type)) {
             return;
         }
 
-        ASSERT_LOG(propertys.find(property_name) == propertys.end(), "prop.%s exist\n", property_name.c_str());
-        propertys[property_name] = new EntityPropertyMap<TProp>([](EntityPropertyBase* mem) {}, type);
+        auto prop = new EntityPropertyMap<TProp>();
+        prop->set_prop_type(type);
+        propertys[property_name] = prop;
     }
 
-    template<class TEntity>
-    bool regist_check(enum PropType type) {
-        switch (TEntity::ENTITY_TYPE) {
-            case EntityType::EntityType_Base:
-            case EntityType::EntityType_BaseWithCell:
-            case EntityType::EntityType_BaseWithClient:
-            case EntityType::EntityType_BaseWithCellAndClient: {
-                if (type == PropType::ALL || 
-                    type == PropType::BASE_PRIVATE ||
-                    type == PropType::BASE_AND_CLIENT) {
-                    return true;
-                }
+    void _gen_map(const GString& property_name) {
+        ASSERT_LOG(s2i_map.find(property_name) == s2i_map.end(), "repeated property.%s", property_name.c_str());
 
-                break;
-            }
-
-            case EntityType::EntityType_Cell:
-            case EntityType::EntityType_CellWithClient: {
-                if (type == PropType::ALL || 
-                    type == PropType::CELL_PRIVATE ||
-                    type == PropType::CELL_PUBLIC || 
-                    type == PropType::CELL_AND_CLIENT) {
-                    return true;
-                }
-
-                break;
-            }
-
-            case EntityType::EntityType_Client: {
-                if (type == PropType::ALL || 
-                    type == PropType::BASE_AND_CLIENT ||
-                    type == PropType::CELL_AND_CLIENT ||
-                    type == PropType::ALL_CLIENT) {
-                    return true;
-                }
-
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    void give_propertys(unordered_map<GString, EntityPropertyBase*>& other_propertys) {
-        other_propertys.clear();
-        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
-            other_propertys[iter->first] = iter->second->create_self();
-        }
+        int16_t idx = (int16_t)s2i_map.size();
+        s2i_map.insert(make_pair(property_name, idx));
+        i2s_map.insert(make_pair(idx, property_name));
     }
 
     unordered_map<GString, EntityPropertyBase*> propertys;
+    unordered_map<GString, int16_t> s2i_map;
+    unordered_map<int16_t, GString> i2s_map;
 };
 
 #define PROPERTY_SIMPLE(prop_type, property_name, prop_class, default_value) \
@@ -567,13 +787,13 @@ public:
 
 
 #define MEM_PROPERTY_SIMPLE(property_name, prop_class, default_value) \
-    EntityPropertySimple<prop_class> property_name = EntityPropertySimple<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE, default_value)
+    EntityPropertySimple<prop_class> property_name = EntityPropertySimple<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, default_value)
 #define MEM_PROPERTY_COMPLEX(property_name, prop_class) \
-    prop_class property_name = prop_class([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
+    prop_class property_name = prop_class([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
 #define MEM_PROPERTY_ARRAY(property_name, prop_class) \
-    EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
+    EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
 #define MEM_PROPERTY_MAP(property_name, prop_class) \
-    EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, PropType::NONE)
+    EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
 
 #define MEM_PROP_BEGIN_One_MEM(TComplex, Mem1) MEM_PROP_BEGIN(TComplex, 1) COPY_CONSTRUCT_1(TComplex, Mem1)
 #define MEM_PROP_BEGIN_Two_MEM(TComplex, Mem1, Mem2) MEM_PROP_BEGIN(TComplex, 2) COPY_CONSTRUCT_2(TComplex, Mem1, Mem2)
@@ -591,8 +811,8 @@ extern PropIdxType* g_all_prop_idxs;
 extern PropIdxType& get_all_prop_idxs();
 
 #define MEM_PROP_BEGIN(TComplex, Num) \
-    TComplex() : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { num_check(); } \
-    TComplex(const TCallBack& cb, const PropType& t) : EntityPropertyComplex(cb, t) { num_check(); } \
+    TComplex() { num_check(); } \
+    TComplex(const TCallBack& cb) : EntityPropertyComplex(cb) { num_check(); } \
     void num_check() { \
         PropIdxType& all_prop_idxs = get_all_prop_idxs(); \
         ASSERT_LOG(all_prop_idxs[#TComplex].size() == (size_t)get_propertys_len(), \
@@ -610,12 +830,12 @@ extern PropIdxType& get_all_prop_idxs();
     EntityPropertyBase* create_self() { return new TComplex(); };
 
 #define COPY_CONSTRUCT_1(TComplex, Mem1) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -627,14 +847,14 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_2(TComplex, Mem1, Mem2) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -647,16 +867,16 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_3(TComplex, Mem1, Mem2, Mem3) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -670,18 +890,18 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_4(TComplex, Mem1, Mem2, Mem3, Mem4) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
         Mem4 = other.Mem4; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
         Mem4 = other.Mem4; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -696,7 +916,7 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_5(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -704,12 +924,12 @@ extern PropIdxType& get_all_prop_idxs();
         Mem5 = other.Mem5; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
         Mem4 = other.Mem4; \
         Mem5 = other.Mem5; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -725,7 +945,7 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_6(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -734,13 +954,13 @@ extern PropIdxType& get_all_prop_idxs();
         Mem6 = other.Mem6; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
         Mem4 = other.Mem4; \
         Mem5 = other.Mem5; \
         Mem6 = other.Mem6; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -757,7 +977,7 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_7(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -767,7 +987,6 @@ extern PropIdxType& get_all_prop_idxs();
         Mem7 = other.Mem7; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -775,6 +994,7 @@ extern PropIdxType& get_all_prop_idxs();
         Mem5 = other.Mem5; \
         Mem6 = other.Mem6; \
         Mem7 = other.Mem7; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -792,7 +1012,7 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -803,7 +1023,6 @@ extern PropIdxType& get_all_prop_idxs();
         Mem8 = other.Mem8; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -812,6 +1031,7 @@ extern PropIdxType& get_all_prop_idxs();
         Mem6 = other.Mem6; \
         Mem7 = other.Mem7; \
         Mem8 = other.Mem8; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \
@@ -830,7 +1050,7 @@ extern PropIdxType& get_all_prop_idxs();
     }
 
 #define COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) \
-    TComplex(const TComplex& other) : EntityPropertyComplex([](EntityPropertyBase* mem) {}, PropType::NONE) { \
+    TComplex(const TComplex& other) { \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -842,7 +1062,6 @@ extern PropIdxType& get_all_prop_idxs();
         Mem9 = other.Mem9; \
     } \
     TComplex& operator=(const TComplex& other) { \
-        EntityPropertyBase::copy_from(other); \
         Mem1 = other.Mem1; \
         Mem2 = other.Mem2; \
         Mem3 = other.Mem3; \
@@ -852,6 +1071,7 @@ extern PropIdxType& get_all_prop_idxs();
         Mem7 = other.Mem7; \
         Mem8 = other.Mem8; \
         Mem9 = other.Mem9; \
+        set_all_dirty(); \
         return *this; \
     } \
     void gen_prop_idxs() { \

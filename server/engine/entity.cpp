@@ -5,15 +5,8 @@
 
 
 void Entity::tick() {
-    prop_sync();
+    propertys_sync2client();
     on_tick();
-}
-
-void Entity::prop_sync() {
-    Encoder encoder;
-    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
-        //encoder.write_uint16();
-    }
 }
 
 void Entity::release_component() {
@@ -28,6 +21,54 @@ void Entity::release_property() {
         delete iter->second;
     }
     propertys.clear();
+}
+
+void Entity::propertys_sync2client(bool force_all) {
+    // do nothing
+}
+
+void Entity::serialize2client(Encoder& encoder, bool force_all) {
+
+    if (force_all) {
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+
+            if (!iter->second->need_sync2client()) {
+                continue;
+            }
+
+            encoder.write_uint16(prop_str2int(iter->first));
+            iter->second->serialize_all(encoder);
+        }
+    }
+    else {
+        for (auto iter = dirty_propertys.begin(); iter != dirty_propertys.end(); ++iter) {
+
+            if (!iter->second->need_sync2client()) {
+                continue;
+            }
+
+            if (!iter->second->is_dirty() && !iter->second->is_all_dirty()) {
+                continue;
+            }
+
+            encoder.write_uint16(prop_str2int(iter->first));
+            iter->second->serialize(encoder);
+        }
+    }
+
+    dirty_propertys.clear();
+}
+
+void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_propertys) {
+    propertys.clear();
+    for (auto iter = other_propertys.begin(); iter != other_propertys.end(); ++iter) {
+        auto prop = iter->second->create_self();
+        prop->set_prop_type(iter->second->get_prop_type());
+        prop->set_first_level();
+        prop->set_parent((EntityPropertyBase*)this);
+        propertys[iter->first] = prop;
+        propertys_turn[prop] = iter->first;
+    }
 }
 
 void BaseEntity::on_create(const GDict& create_data) {
@@ -75,6 +116,18 @@ void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     on_ready();
 }
 
+void BaseEntityWithClient::propertys_sync2client(bool force_all) {
+    
+    Encoder encoder;
+    serialize2client(encoder, force_all);
+    encoder.write_end();
+
+    if (encoder.anything()) {
+        //byte_print(encoder.get_buf(), encoder.get_offset()); // TODO delete
+        client.call("prop_sync_from_base", GBin(encoder.get_buf(), encoder.get_offset()));
+    }
+}
+
 void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
     client.set_entity_and_addr("", create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
@@ -118,6 +171,17 @@ void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     on_ready();
 }
 
+void CellEntityWithClient::propertys_sync2client(bool force_all) {
+
+    Encoder encoder;
+    serialize2client(encoder, force_all);
+    encoder.write_end();
+
+    if (encoder.anything()) {
+        client.call("prop_sync_from_cell", GBin(encoder.get_buf(), encoder.get_offset()));
+    }
+}
+
 void ClientEntity::on_create(const GDict& create_data) {
     base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
     cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
@@ -125,9 +189,33 @@ void ClientEntity::on_create(const GDict& create_data) {
     base.call("on_client_create", uuid);
 }
 
+//extern void prop_read_for_test(EntityPropertyBase*);
+
+void ClientEntity::prop_sync_from_base(const GValue& v) {
+    Decoder decoder(v.as_bin().buf, v.as_bin().size);
+    //byte_print(decoder.get_buf(), decoder.get_max_offset()); // TODO delete
+    decoder.read_int16(); // skip pkg len offset
+    unserialize_from_server(decoder);
+
+    //prop_read_for_test(get_prop("avatar_datas"));
+}
+
+void ClientEntity::prop_sync_from_cell(const GValue& v) {
+    Decoder decoder(v.as_bin().buf, v.as_bin().size);
+    decoder.read_int16(); // skip pkg len offset
+    unserialize_from_server(decoder);
+}
+
+void ClientEntity::unserialize_from_server(Decoder& decoder) {
+    while (!decoder.is_finish()) {
+        auto idx = decoder.read_int16();
+        const GString& prop_name = prop_int2str(idx);
+        propertys.at(prop_name)->unserialize(decoder);
+    }
+}
+
 unordered_map<GString, Entity*> g_entities; // uuid -> entity
 typedef unordered_map<GString, function<Entity*()>> CreatorMap;
-//shared_ptr<CreatorMap> g_entity_creator(nullptr);
 CreatorMap* g_entity_creator = nullptr;
 
 void regist_entity_creator(const GString& entity_class_name, const function<Entity*()>& creator) {

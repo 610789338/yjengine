@@ -20,7 +20,6 @@ public:
 
     void property_test();
     void property_create();
-    void property_read();
     void property_delete();
     void property_update();
 };

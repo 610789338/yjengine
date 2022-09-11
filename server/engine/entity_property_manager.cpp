@@ -1,4 +1,5 @@
 #include "entity_property_manager.h"
+#include "entity.h"
 
 
 PropIdxType* g_all_prop_idxs = nullptr;
@@ -9,6 +10,49 @@ PropIdxType& get_all_prop_idxs() {
     }
 
     return *g_all_prop_idxs;
+}
+
+bool prop_regist_check(int8_t t, enum PropType type) {
+
+    switch (EntityType(t)) {
+    case EntityType::EntityType_Base:
+    case EntityType::EntityType_BaseWithCell:
+    case EntityType::EntityType_BaseWithClient:
+    case EntityType::EntityType_BaseWithCellAndClient: {
+        if (type == PropType::ALL ||
+            type == PropType::BASE_PRIVATE ||
+            type == PropType::BASE_AND_CLIENT) {
+            return true;
+        }
+
+        break;
+    }
+
+    case EntityType::EntityType_Cell:
+    case EntityType::EntityType_CellWithClient: {
+        if (type == PropType::ALL ||
+            type == PropType::CELL_PRIVATE ||
+            type == PropType::CELL_PUBLIC ||
+            type == PropType::CELL_AND_CLIENT) {
+            return true;
+        }
+
+        break;
+    }
+
+    case EntityType::EntityType_Client: {
+        if (type == PropType::ALL ||
+            type == PropType::BASE_AND_CLIENT ||
+            type == PropType::CELL_AND_CLIENT ||
+            type == PropType::ALL_CLIENT) {
+            return true;
+        }
+
+        break;
+    }
+    }
+
+    return false;
 }
 
 void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, GString self_name) {
@@ -27,10 +71,62 @@ void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, GString self_na
 }
 
 void EntityPropertyBase::set_dirty() {
-    flag |= 0x80;
-    if (parent != nullptr && !parent->is_dirty()) {
-        parent->set_dirty();
+    if (is_dirty()) {
+        return;
     }
+
+    flag |= 0x80;
+
+    if (parent == nullptr) {
+        return;
+    }
+
+    if (!is_first_level()) {
+        if (!parent->is_dirty()) {
+            parent->set_dirty();
+        }
+    }
+    else {
+        Entity* owner = (Entity*)parent;
+        owner->dirty_propertys.insert(make_pair(owner->propertys_turn.at(this), this));
+    }
+}
+
+void EntityPropertyBase::set_all_dirty() {
+    if (is_all_dirty()) {
+        return;
+    }
+
+    flag |= 0x40;
+
+    if (parent == nullptr) {
+        return;
+    }
+
+    if (!is_first_level()) {
+        if (!parent->is_dirty()) {
+            parent->set_dirty();
+        }
+    }
+    else {
+        Entity* owner = (Entity*)parent;
+        owner->dirty_propertys.insert(make_pair(owner->propertys_turn.at(this), this));
+    }
+}
+
+bool EntityPropertyBase::need_sync2client() {
+
+    const auto& prop_type = get_prop_type();
+
+    if (prop_type == PropType::BASE_AND_CLIENT ||
+        prop_type == PropType::CELL_AND_CLIENT ||
+        prop_type == PropType::ALL_CLIENT ||
+        prop_type == PropType::OTHER_CLIENT ||
+        prop_type == PropType::ALL) {
+        return true;
+    }
+
+    return false;
 }
 
 // ------------------------------------------------------------------------------- //
@@ -358,4 +454,64 @@ void EntityPropertyBase::update_cstr(GString k, const char*  v) {
 
     EntityPropertyMap<GString>* child = dynamic_cast<EntityPropertyMap<GString>*>(this);
     child->update(k, GString(v));
+}
+
+void EntityPropertyComplex::serialize(Encoder& encoder) {
+    if (is_all_dirty())
+        serialize_all(encoder);
+    else
+        serialize_dirty(encoder);
+}
+
+void EntityPropertyComplex::serialize_all(Encoder& encoder) {
+
+    encoder.write_string("y");
+    auto const& propertys = get_propertys();
+    for (int8_t i = 0; i < get_propertys_len(); ++i) {
+        propertys[i]->serialize_all(encoder);
+    }
+}
+
+void EntityPropertyComplex::serialize_dirty(Encoder& encoder) {
+
+    encoder.write_string("j");
+
+    auto const& propertys = get_propertys();
+
+    int8_t num = 0;
+    for (int8_t i = 0; i < get_propertys_len(); ++i) {
+        if (!propertys[i]->is_dirty() && !propertys[i]->is_all_dirty()) {
+            continue;
+        }
+        ++num;
+    }
+    encoder.write_int8(num);
+
+    for (int8_t i = 0; i < get_propertys_len(); ++i) {
+        if (!propertys[i]->is_dirty() && !propertys[i]->is_all_dirty()) {
+            continue;
+        }
+        encoder.write_int8(i);
+        propertys[i]->serialize(encoder);
+    }
+}
+
+void EntityPropertyComplex::unserialize(Decoder& decoder) {
+    bool is_unserialize_all = decoder.read_string() == "y";
+
+    auto const& propertys = get_propertys();
+
+    if (is_unserialize_all) {
+        for (int8_t i = 0; i < get_propertys_len(); ++i) {
+            propertys[i]->unserialize(decoder);
+        }
+    }
+    else {
+        int8_t num = decoder.read_int8();
+        while (num > 0) {
+            int8_t i = decoder.read_int8();
+            propertys[i]->unserialize(decoder);
+            --num;
+        }
+    }
 }

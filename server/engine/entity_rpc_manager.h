@@ -51,7 +51,9 @@ public:
             entity_rpc_regist(RpcType::EXPOSED,    "on_client_create",    &CellEntityWithClient::on_client_create, GString());
         }
         else if (entity_type == EntityType::EntityType_Client) {
-            entity_rpc_regist(RpcType::CLIENT,    "on_ready",             &ClientEntity::on_ready);
+            entity_rpc_regist(RpcType::CLIENT, "on_ready",                &ClientEntity::on_ready);
+            entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base",     &ClientEntity::prop_sync_from_base, GBin());
+            entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell",     &ClientEntity::prop_sync_from_cell, GBin());
         }
 
         regist_entity_creator(entity_class_name, creator);

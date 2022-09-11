@@ -38,11 +38,11 @@ public:
 
     uint16_t get_max_offset() { return m_max_offset; }
     uint16_t get_offset() { return m_offset; }
+    const char* get_buf() const { return m_buf; }
     bool is_finish();
-
-private:
     GValue read_gvalue();
 
+private:
     const char* m_buf;
     uint16_t m_max_offset;
     uint16_t m_offset;

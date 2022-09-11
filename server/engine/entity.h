@@ -58,12 +58,20 @@ public:
     void release_component();
     void release_property();
 
-    void prop_sync(); //  Ù–‘Õ¨≤Ω
+    // proppertys
+    virtual void propertys_sync2client(bool force_all = false);
+    void serialize2client(Encoder& encoder, bool force_all = false);
+    virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
+    virtual GString prop_int2str(int16_t idx) { return ""; }
+
+    void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
 
     GString uuid = "";
     GString class_name = "";
 
     unordered_map<GString, EntityPropertyBase*> propertys;
+    unordered_map<EntityPropertyBase*, GString> propertys_turn;
+    unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
 
     RpcManagerBase* rpc_mgr;
@@ -126,6 +134,7 @@ public:
     virtual void on_client_create(const GValue& client_entity_uuid);
     virtual void on_ready() {}
     virtual void on_destroy() {}
+    virtual void propertys_sync2client(bool force_all);
 
     GString client_class_name;
     ClientMailBox client;
@@ -148,6 +157,7 @@ public:
     virtual void on_client_create(const GValue& client_entity_uuid);
     virtual void on_ready() {}
     virtual void on_destroy() {}
+    virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
 };
 
 
@@ -187,6 +197,7 @@ public:
     virtual void on_client_create(const GValue& client_entity_uuid);
     virtual void on_ready() {}
     virtual void on_destroy() {}
+    virtual void propertys_sync2client(bool force_all);
 
     ClientMailBox client;
 };
@@ -213,6 +224,9 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void on_ready() {}
     virtual void on_destroy() {}
+    void prop_sync_from_base(const GValue& bin);
+    void prop_sync_from_cell(const GValue& bin);
+    void unserialize_from_server(Decoder& decoder);
 
     BaseMailBox base;
     CellMailBox cell;
@@ -233,13 +247,15 @@ public: \
     static EntityComponentManager<TCLASS> component_manager; \
     static TimerManager<TCLASS> timer_manager; \
     static PropertyTree property_tree; \
-    static void generate_property_tree();
+    static void generate_property_tree(); \
+    int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
+    GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
 EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
     auto entity = new TCLASS(); \
-    property_manager.give_propertys(entity->propertys); \
+    entity->give_propertys(property_manager.propertys); \
     component_manager.generate_entity_components(entity); \
     entity->rpc_mgr = &TCLASS::rpc_manager; \
     return entity; }); \
@@ -251,4 +267,3 @@ PropertyTree TCLASS::property_tree(property_manager.propertys);
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
 extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
-extern void entity_tick();

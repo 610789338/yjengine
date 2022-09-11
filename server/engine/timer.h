@@ -93,7 +93,6 @@ protected:
 
 extern TimerID g_time_id;
 extern set<TimerManagerBase*>* timer_mgr_set;
-extern void timer_tick();
 
 template<class TEntity>
 class TimerManager : public TimerManagerBase {

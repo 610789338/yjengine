@@ -200,8 +200,6 @@ extern RpcManager g_rpc_manager;
 #define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, __VA_ARGS__)
 #define LOCAL_RPC_CALL(r, rpc_name, ...) (r)->local_rpc_call(rpc_name, __VA_ARGS__)
 
-extern void rpc_imp_input_tick();
-extern void rpc_handle_regist();
 
 template<class T, class ...T2>
 void args2array(GArray& rpc_params, T arg, T2 ...args) {

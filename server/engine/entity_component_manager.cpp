@@ -5,5 +5,5 @@
 EntityComponentBase::~EntityComponentBase() {}
 
 EntityPropertyBase* EntityComponentBase::get_prop(const GString& prop_name) const { 
-    return owner->propertys.at(prop_name); 
+    return owner->get_prop(prop_name);
 }

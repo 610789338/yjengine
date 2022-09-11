@@ -10,6 +10,7 @@ using namespace std;
 class Encoder {
 
 #define OFFSET_CHECK(cur, add) ASSERT((cur) < (0xffff - add))
+#define PKG_LEN_OFFSET 2
 
 public:
     Encoder() = default;
@@ -56,12 +57,14 @@ public:
     void write_bin(const GBin& v);
     void write_end();
 
+    bool anything() { return m_offset > PKG_LEN_OFFSET; }
+
     const char* get_buf() const { return m_buf; }
     uint16_t get_offset() const { return m_offset; }
 
-private:
     void write_gvalue(const GValue& v);
 
+private:
     char m_buf[4 * 1024] = {0};
-    uint16_t m_offset = 2;  // pkg len offset
+    uint16_t m_offset = PKG_LEN_OFFSET;  // pkg len offset
 };

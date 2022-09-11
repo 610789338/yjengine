@@ -22,7 +22,7 @@ public:
     ~ConstructGuarantee() {}
 };
 
-extern void byte_print(char* buf, uint16_t length);
+extern void byte_print(const char* buf, uint16_t length);
 extern string gen_uuid();
 
 extern string get_proc_name();

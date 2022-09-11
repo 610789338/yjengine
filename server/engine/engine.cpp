@@ -1,8 +1,11 @@
 #include <stdint.h>
 
 #include "boost_asio.h"
-#include "rpc_manager.h"
-#include "timer.h"
+
+extern void rpc_handle_regist();
+extern void rpc_imp_input_tick();
+extern void timer_tick();
+extern void entity_tick();
 
 void engine_init() {
 
@@ -15,5 +18,6 @@ void engine_tick() {
     // update_time_now_cache();
     rpc_imp_input_tick();
     timer_tick();
+    entity_tick();
 }
 
