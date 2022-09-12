@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <typeinfo>
 
@@ -38,7 +39,7 @@ struct EntityPropertyBase {
     virtual GString get_v_tstring() { ASSERT(false); return ""; }
     virtual EntityPropertyBase** get_propertys() { ASSERT(false); return nullptr; }
 
-    void link_node(EntityPropertyBase* pre_node, GString self_name);
+    void link_node(EntityPropertyBase* pre_node, const GString& self_name);
 
     // simple property
     virtual bool as_bool() const { ASSERT(false); return bool(); }
@@ -55,7 +56,7 @@ struct EntityPropertyBase {
     virtual GString& as_string() const { ASSERT(false); static GString ret; return ret; }
 
     template<class T>
-    void update(T v);
+    void update(const T& v);
     void update(int8_t v) { update_int(v); }
     void update(int16_t v) { update_int(v); }
     void update(int32_t v) { update_int(v); }
@@ -74,7 +75,7 @@ struct EntityPropertyBase {
 
     // array property - crud
     template<class T>
-    void push_back(T v);
+    void push_back(const T& v);
     void push_back(int8_t v) { push_back_int(v); }
     void push_back(int16_t v) { push_back_int(v); }
     void push_back(int32_t v) { push_back_int(v); }
@@ -94,7 +95,7 @@ struct EntityPropertyBase {
     virtual void pop_back() { ASSERT(false); }
 
     template<class T>
-    void update(int32_t idx, T v);
+    void update(int32_t idx, const T& v);
     void update(int32_t idx, int8_t v) { update_int(idx, v); }
     void update(int32_t idx, int16_t v) { update_int(idx, v); }
     void update(int32_t idx, int32_t v) { update_int(idx, v); }
@@ -115,42 +116,42 @@ struct EntityPropertyBase {
 
     // map property - crud
     template<class T>
-    void insert(GString k, T v);
-    void insert(GString k, int8_t v) { insert_int(k, v); }
-    void insert(GString k, int16_t v) { insert_int(k, v); }
-    void insert(GString k, int32_t v) { insert_int(k, v); }
-    void insert(GString k, int64_t v) { insert_int(k, v); }
-    void insert(GString k, uint8_t v) { insert_int(k, v); }
-    void insert(GString k, uint16_t v) { insert_int(k, v); }
-    void insert(GString k, uint32_t v) { insert_int(k, v); }
-    void insert(GString k, uint64_t v) { insert_int(k, v); }
-    void insert(GString k, float v) { insert_float(k, v); }
-    void insert(GString k, double v) { insert_float(k, v); }
-    void insert(GString k, const char* v) { insert_cstr(k, v); }
+    void insert(const GString& k, const T& v);
+    void insert(const GString& k, int8_t v) { insert_int(k, v); }
+    void insert(const GString& k, int16_t v) { insert_int(k, v); }
+    void insert(const GString& k, int32_t v) { insert_int(k, v); }
+    void insert(const GString& k, int64_t v) { insert_int(k, v); }
+    void insert(const GString& k, uint8_t v) { insert_int(k, v); }
+    void insert(const GString& k, uint16_t v) { insert_int(k, v); }
+    void insert(const GString& k, uint32_t v) { insert_int(k, v); }
+    void insert(const GString& k, uint64_t v) { insert_int(k, v); }
+    void insert(const GString& k, float v) { insert_float(k, v); }
+    void insert(const GString& k, double v) { insert_float(k, v); }
+    void insert(const GString& k, const char* v) { insert_cstr(k, v); }
 
-    void insert_int(GString k, uint64_t v);
-    void insert_float(GString k, double v);
-    void insert_cstr(GString k, const char*  v);
+    void insert_int(const GString& k, uint64_t v);
+    void insert_float(const GString& k, double v);
+    void insert_cstr(const GString& k, const char*  v);
 
-    virtual void erase(GString k) {}
+    virtual void erase(const GString& k) {}
 
     template<class T>
-    void update(GString k, T v);
-    void update(GString k, int8_t v) { update_int(k, v); }
-    void update(GString k, int16_t v) { update_int(k, v); }
-    void update(GString k, int32_t v) { update_int(k, v); }
-    void update(GString k, int64_t v) { update_int(k, v); }
-    void update(GString k, uint8_t v) { update_int(k, v); }
-    void update(GString k, uint16_t v) { update_int(k, v); }
-    void update(GString k, uint32_t v) { update_int(k, v); }
-    void update(GString k, uint64_t v) { update_int(k, v); }
-    void update(GString k, float v) { update_float(k, v); }
-    void update(GString k, double v) { update_float(k, v); }
-    void update(GString k, const char* v) { update_cstr(k, v); }
+    void update(const GString& k, const T& v);
+    void update(const GString& k, int8_t v) { update_int(k, v); }
+    void update(const GString& k, int16_t v) { update_int(k, v); }
+    void update(const GString& k, int32_t v) { update_int(k, v); }
+    void update(const GString& k, int64_t v) { update_int(k, v); }
+    void update(const GString& k, uint8_t v) { update_int(k, v); }
+    void update(const GString& k, uint16_t v) { update_int(k, v); }
+    void update(const GString& k, uint32_t v) { update_int(k, v); }
+    void update(const GString& k, uint64_t v) { update_int(k, v); }
+    void update(const GString& k, float v) { update_float(k, v); }
+    void update(const GString& k, double v) { update_float(k, v); }
+    void update(const GString& k, const char* v) { update_cstr(k, v); }
 
-    void update_int(GString k, uint64_t v);
-    void update_float(GString k, double v);
-    void update_cstr(GString k, const char*  v);
+    void update_int(const GString& k, uint64_t v);
+    void update_float(const GString& k, double v);
+    void update_cstr(const GString& k, const char*  v);
 
     virtual EntityPropertyBase* get(const GString& prop_name) const { ASSERT(false); return nullptr; }
     virtual vector<GString> keys() { ASSERT(false); return vector<GString>(); }
@@ -167,6 +168,7 @@ struct EntityPropertyBase {
     virtual bool is_value_complex() { return false; }
 
     void set_parent(EntityPropertyBase* _parent) { parent = _parent; }
+    virtual void set_parent_deep(EntityPropertyBase* _parent) { set_parent(_parent); }
     EntityPropertyBase* parent = nullptr;
 
     bool need_sync2client();
@@ -190,13 +192,11 @@ struct EntityPropertyBase {
 
     void clean_dirty() { flag &= 0x3F; }
 
-    // void copy_flag(int8_t _flag) { flag &= 0xF0; flag |= (_flag & 0x0F); }
-
-    // bit [0, 3] means PropType, only useful with first level property, immutable
-    // bit 4 reserved
-    // bit 5 means whether this is a first level property, immutable
-    // bit 6 means all dirty, mutable
-    // bit 7 means dirty, mutable
+    // bit [0, 3] 代表属性类型，只对一级属性有用，不变
+    // bit 4 预留
+    // bit 5 代表这是否是一级属性，不变
+    // bit 6 代表是否全脏，当complex/map/array属性发生赋值操作时为全脏，需要全同步，易变
+    // bit 7 代表是否已脏，易变
     int8_t flag = 0x00;
 };
 
@@ -206,7 +206,7 @@ template<class T>
 struct EntityPropertySimple : public EntityPropertyBase {
 
     EntityPropertySimple() : v(T()) {}
-    EntityPropertySimple(T _v) : v(_v) {}
+    EntityPropertySimple(const T& _v) : v(_v) {}
     EntityPropertySimple(const TCallBack& cb, T _v) : v(_v) { cb(this); }
     EntityPropertySimple(const EntityPropertySimple& other) : v(other.v) {};
 
@@ -216,15 +216,18 @@ struct EntityPropertySimple : public EntityPropertyBase {
         return *this;
     }
     EntityPropertySimple<T>& operator=(const T& _v) { 
-        v = _v; 
+        v = _v;
         set_dirty(); 
         return *this; 
+    }
+    void update(const T& _v) {
+        set_dirty();
+        v = _v;
     }
 
     EntityPropertyBase* create_self() { return new EntityPropertySimple<T>(*this); }
 
     GString get_v_tstring() { return typeid(T).name(); }
-    void update(T _v) { set_dirty(); v = _v; }
 
     bool as_bool() const { return v.as_bool(); }
     int8_t as_int8() const { return v.as_int8(); }
@@ -239,16 +242,16 @@ struct EntityPropertySimple : public EntityPropertyBase {
     double as_double() const { return v.as_double(); }
     GString& as_string() const { return v.as_string(); }
 
-    void serialize(Encoder& encoder) { encoder.write_gvalue(v); }
-    void serialize_all(Encoder& encoder) { encoder.write_gvalue(v); }
-    void serialize_dirty(Encoder& encoder) { encoder.write_gvalue(v); }
+    void serialize(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
+    void serialize_all(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
+    void serialize_dirty(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
     void unserialize(Decoder& decoder) { v = decoder.read_gvalue(); }
 
     GValue v;
 };
 
 template<class T>
-void EntityPropertyBase::update(T v) {
+void EntityPropertyBase::update(const T& v) {
 
     ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "update type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());
@@ -266,6 +269,14 @@ struct EntityPropertyComplex : public EntityPropertyBase {
     virtual int8_t get_propertys_len() = 0;
     virtual void gen_prop_idxs() = 0;
     virtual EntityPropertyBase** get_propertys() { return nullptr; }
+
+    void set_parent_deep(EntityPropertyBase* _parent) {
+        set_parent(_parent);
+        auto propertys = get_propertys();
+        for (int8_t i = 0; i < get_propertys_len(); ++i) {
+            propertys[i]->set_parent_deep(this);
+        }
+    }
 
     bool is_complex() { return true; }
 
@@ -285,22 +296,32 @@ struct EntityPropertyArray : public EntityPropertyBase {
     EntityPropertyBase* create_self() { return new EntityPropertyArray<TValue>(); }
     EntityPropertyBase* create_array_value() { return new TValue(); }
 
+    void set_parent_deep(EntityPropertyBase* _parent) {
+        set_parent(_parent);
+        for (int16_t i = 0; i < propertys.size(); ++i) {
+            propertys[i].set_parent_deep(this);
+        }
+    }
+
     EntityPropertyArray<TValue>& operator=(const EntityPropertyArray<TValue>& other) {
         propertys = other.propertys;
         set_all_dirty();
+        set_parent_deep(parent);
         return *this;
     }
 
     // crud
-    void push_back(TValue v) {
+    void push_back(const TValue& v) {
         propertys.push_back(v);
-        propertys[propertys.size() - 1].set_parent(this);
+        propertys[propertys.size() - 1].clean_dirty();
+        propertys[propertys.size() - 1].set_parent_deep(this);
         propertys[propertys.size() - 1].set_dirty();
     }
-    void pop_back() { propertys.pop_back(); set_all_dirty(); }
-    void update(const int32_t idx, TValue v) { 
+    void pop_back() { propertys.pop_back(); set_dirty(); }
+    void update(const int32_t idx, const TValue& v) { 
         propertys[idx] = v;
-        propertys[idx].set_parent(this);
+        propertys[idx].clean_dirty();
+        propertys[idx].set_parent_deep(this);
         propertys[idx].set_dirty();
     }
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; }
@@ -323,6 +344,7 @@ struct EntityPropertyArray : public EntityPropertyBase {
         for (int16_t i = 0; i < propertys.size(); ++i) {
             propertys[i].serialize_all(encoder);
         }
+        clean_dirty();
     }
 
     void serialize_dirty(Encoder& encoder) {
@@ -343,6 +365,10 @@ struct EntityPropertyArray : public EntityPropertyBase {
             encoder.write_int16(i);
             propertys[i].serialize(encoder);
         }
+
+        // total num, for delete sync
+        encoder.write_int16((int16_t)propertys.size());
+        clean_dirty();
     }
 
     void unserialize(Decoder& decoder) {
@@ -350,23 +376,37 @@ struct EntityPropertyArray : public EntityPropertyBase {
         int16_t num = decoder.read_int16();
         if (is_unserialize_all) {
             int16_t i = 0;
-            while (num > 0) {
+            while (i < num) {
                 if (i >= propertys.size()) {
+                    // add non exist
                     push_back(TValue());
                 }
+                // update existing
                 propertys[i].unserialize(decoder);
-                --num;
                 ++i;
+            }
+
+            // delete extra element
+            while (propertys.size() > num) {
+                propertys.pop_back();
             }
         }
         else {
             while (num > 0) {
                 int16_t i = decoder.read_int16();
                 if (i >= propertys.size()) {
+                    // add non exist
                     push_back(TValue());
                 }
+                // update existing
                 propertys[i].unserialize(decoder);
                 --num;
+            }
+
+            // delete extra element
+            int16_t total_num = decoder.read_int16();
+            while (propertys.size() > total_num) {
+                propertys.pop_back();
             }
         }
     }
@@ -384,6 +424,13 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
     GString get_v_tstring() { return typeid(T).name(); } \
     EntityPropertyBase* create_self() { return new EntityPropertyArray<T>(); } \
 \
+    void set_parent_deep(EntityPropertyBase* _parent) { \
+        set_parent(_parent);  \
+        for (int16_t i = 0; i < propertys.size(); ++i) { \
+            propertys[i].set_parent_deep(this); \
+        } \
+    } \
+\
     EntityPropertyArray<T>& operator=(const EntityPropertyArray<T>& other) { \
         propertys = other.propertys; \
         set_all_dirty(); \
@@ -391,15 +438,17 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
     } \
 \
     /* crud */ \
-    void push_back(T _v) { \
+    void push_back(const T& _v) { \
         propertys.push_back(EntityPropertySimple<T>(_v)); \
-        propertys[propertys.size() - 1].set_parent(this); \
+        propertys[propertys.size() - 1].clean_dirty(); \
+        propertys[propertys.size() - 1].set_parent_deep(this); \
         propertys[propertys.size() - 1].set_dirty(); \
     } \
-    void pop_back() { propertys.pop_back(); set_all_dirty(); } \
-    void update(const int32_t idx, T _v) { \
+    void pop_back() { propertys.pop_back(); set_dirty(); } \
+    void update(const int32_t idx, const T& _v) { \
         propertys[idx] = EntityPropertySimple<T>(_v); \
-        propertys[idx].set_parent(this); \
+        propertys[idx].clean_dirty(); \
+        propertys[idx].set_parent_deep(this); \
         propertys[idx].set_dirty(); \
     } \
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; } \
@@ -420,6 +469,7 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
         for (int16_t i = 0; i < propertys.size(); ++i) { \
             propertys[i].serialize_all(encoder); \
         } \
+        clean_dirty(); \
     } \
 \
     void serialize_dirty(Encoder& encoder) { \
@@ -440,6 +490,8 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
             encoder.write_int16(i); \
             propertys[i].serialize(encoder); \
         } \
+        encoder.write_int16((int16_t)propertys.size()); \
+        clean_dirty(); \
     } \
 \
     void unserialize(Decoder& decoder) { \
@@ -447,13 +499,16 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
         int16_t num = decoder.read_int16(); \
         if (is_unserialize_all) { \
             int16_t i = 0; \
-            while (num > 0) { \
+            while (i < num) { \
                 if (i >= propertys.size()) { \
                     push_back(T()); \
                 } \
                 propertys[i].unserialize(decoder); \
-                --num; \
                 ++i; \
+            } \
+ \
+            while (propertys.size() > num) { \
+                propertys.pop_back(); \
             } \
         } \
         else { \
@@ -464,6 +519,11 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
                 } \
                 propertys[i].unserialize(decoder); \
                 --num; \
+            } \
+ \
+            int16_t total_num = decoder.read_int16(); \
+            while (propertys.size() > total_num) { \
+                propertys.pop_back(); \
             } \
         } \
     } \
@@ -486,7 +546,7 @@ ENTITY_PROPERTY_ARRAY_PARTIAL(double)
 ENTITY_PROPERTY_ARRAY_PARTIAL(GBin)
 
 template<class T>
-void EntityPropertyBase::push_back(T v) {
+void EntityPropertyBase::push_back(const T& v) {
 
     ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "push_back type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());
@@ -496,7 +556,7 @@ void EntityPropertyBase::push_back(T v) {
 }
 
 template<class T>
-void EntityPropertyBase::update(const int32_t idx, T v) {
+void EntityPropertyBase::update(const int32_t idx, const T& v) {
 
     ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "update type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());
@@ -515,6 +575,13 @@ struct EntityPropertyMap : public EntityPropertyBase {
     EntityPropertyBase* create_self() { return new EntityPropertyMap<TValue>(); }
     EntityPropertyBase* create_map_value() { return new TValue(); }
 
+    void set_parent_deep(EntityPropertyBase* _parent) {
+        set_parent(_parent);
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+            iter->second.set_parent_deep(this);
+        }
+    }
+
     EntityPropertyMap<TValue>& operator=(const EntityPropertyMap<TValue>& other) {
         propertys = other.propertys;
         set_all_dirty();
@@ -522,9 +589,23 @@ struct EntityPropertyMap : public EntityPropertyBase {
     }
 
     // crud
-    void insert(GString k, TValue v) { propertys.insert(make_pair(k, v)); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); }
-    void erase(GString k) { propertys.erase(k); set_all_dirty(); }
-    void update(GString k, TValue v) { propertys[k] = v; propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); }
+    void insert(const GString& k, const TValue& v) {
+        propertys.insert(make_pair(k, v)); 
+        propertys.at(k).clean_dirty();
+        propertys.at(k).set_parent_deep(this);
+        propertys.at(k).set_dirty(); 
+    }
+    void erase(const GString& k) {
+        propertys.erase(k);
+        sync_tobe_delete.insert(k);
+        set_dirty();
+    }
+    void update(const GString& k, const TValue& v) {
+        propertys[k] = v;
+        propertys.at(k).clean_dirty();
+        propertys.at(k).set_parent_deep(this);
+        propertys.at(k).set_dirty(); 
+    }
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); }
 
     int32_t size() { return (int32_t)propertys.size(); }
@@ -546,15 +627,33 @@ struct EntityPropertyMap : public EntityPropertyBase {
     }
 
     void serialize_all(Encoder& encoder) {
+        encoder.write_string("y");
         encoder.write_int16((int16_t)propertys.size());
-
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
             encoder.write_string(iter->first);
             iter->second.serialize_all(encoder);
         }
+        clean_dirty();
+        sync_tobe_delete.clear();
     }
 
     void serialize_dirty(Encoder& encoder) {
+        encoder.write_string("j");
+
+        // delete
+        for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end();) {
+            if (propertys.find(*iter) != propertys.end())
+                sync_tobe_delete.erase(iter++);
+            else
+                ++iter;
+        }
+        encoder.write_int16((int16_t)sync_tobe_delete.size());
+        for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end(); ++iter) {
+            encoder.write_string(*iter);
+        }
+        sync_tobe_delete.clear();
+
+        // add && update
         int16_t num = 0;
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
             if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) {
@@ -571,9 +670,23 @@ struct EntityPropertyMap : public EntityPropertyBase {
             encoder.write_string(iter->first);
             iter->second.serialize(encoder);
         }
+        clean_dirty();
     }
 
     void unserialize(Decoder& decoder) {
+        bool is_unserialize_all = decoder.read_string() == "y";
+        if (is_unserialize_all) {
+            propertys.clear();
+        }
+        else {
+            int16_t delete_num = decoder.read_int16();
+            while (delete_num > 0) {
+                const GString& prop_name = decoder.read_string();
+                propertys.erase(prop_name);
+                --delete_num;
+            }
+        }
+
         int16_t num = decoder.read_int16();
         while (num > 0) {
             const GString& prop_name = decoder.read_string();
@@ -586,6 +699,7 @@ struct EntityPropertyMap : public EntityPropertyBase {
     }
 
     unordered_map<GString, TValue> propertys;
+    unordered_set<GString> sync_tobe_delete;
 };
 
 #define ENTITY_PROPERTY_MAP_PARTIAL(T) \
@@ -598,6 +712,13 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     GString get_v_tstring() { return typeid(T).name(); } \
     EntityPropertyBase* create_self() { return new EntityPropertyMap<T>(); } \
 \
+    void set_parent_deep(EntityPropertyBase* _parent) { \
+        set_parent(_parent); \
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
+            iter->second.set_parent_deep(this); \
+        } \
+    } \
+\
     EntityPropertyMap<T>& operator=(const EntityPropertyMap<T>& other) { \
         propertys = other.propertys; \
         set_all_dirty(); \
@@ -605,9 +726,23 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     } \
 \
     /* crud */ \
-    void insert(GString k, T _v) { propertys.insert(make_pair(k, EntityPropertySimple<T>(_v))); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); } \
-    void erase(GString k) { propertys.erase(k); set_all_dirty(); } \
-    void update(GString k, T _v) { propertys[k] = EntityPropertySimple<T>(_v); propertys.at(k).set_parent(this); propertys.at(k).set_dirty(); } \
+    void insert(const GString& k, const T& _v) { \
+        propertys.insert(make_pair(k, EntityPropertySimple<T>(_v))); \
+        propertys.at(k).clean_dirty(); \
+        propertys.at(k).set_parent_deep(this); \
+        propertys.at(k).set_dirty(); \
+    } \
+    void erase(const GString& k) { \
+        propertys.erase(k); \
+        sync_tobe_delete.insert(k);\
+        set_dirty(); \
+    } \
+    void update(const GString& k, const T& _v) { \
+        propertys[k] = EntityPropertySimple<T>(_v); \
+        propertys.at(k).clean_dirty(); \
+        propertys.at(k).set_parent_deep(this); \
+        propertys.at(k).set_dirty(); \
+    } \
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
@@ -628,14 +763,30 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     } \
 \
     void serialize_all(Encoder& encoder) { \
+        encoder.write_string("y"); \
         encoder.write_int16((int16_t)propertys.size()); \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
             encoder.write_string(iter->first); \
             iter->second.serialize_all(encoder); \
         } \
+        clean_dirty(); \
+        sync_tobe_delete.clear(); \
     } \
 \
     void serialize_dirty(Encoder& encoder) { \
+        encoder.write_string("j"); \
+        for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end();) { \
+            if (propertys.find(*iter) != propertys.end()) \
+                sync_tobe_delete.erase(iter++); \
+            else \
+                ++iter; \
+        } \
+        encoder.write_int16((int16_t)sync_tobe_delete.size()); \
+        for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end(); ++iter) { \
+            encoder.write_string(*iter); \
+        } \
+        sync_tobe_delete.clear(); \
+ \
         int16_t num = 0; \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
             if (!iter->second.is_dirty() && !iter->second.is_all_dirty()) { \
@@ -652,9 +803,23 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
             encoder.write_string(iter->first); \
             iter->second.serialize(encoder); \
         } \
+        clean_dirty(); \
     } \
 \
     void unserialize(Decoder& decoder) { \
+        bool is_unserialize_all = decoder.read_string() == "y"; \
+        if (is_unserialize_all) { \
+            propertys.clear(); \
+        } \
+        else { \
+            int16_t delete_num = decoder.read_int16(); \
+            while (delete_num > 0) { \
+                const GString& prop_name = decoder.read_string(); \
+                propertys.erase(prop_name); \
+                --delete_num; \
+            } \
+        } \
+\
         int16_t num = decoder.read_int16(); \
         while (num > 0) { \
             const GString& prop_name = decoder.read_string(); \
@@ -667,6 +832,7 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     } \
 \
     unordered_map<GString, EntityPropertySimple<T>> propertys; \
+    unordered_set<GString> sync_tobe_delete; \
 };
 
 ENTITY_PROPERTY_MAP_PARTIAL(bool)
@@ -685,7 +851,7 @@ ENTITY_PROPERTY_MAP_PARTIAL(GBin)
 
 
 template<class T>
-void EntityPropertyBase::insert(GString k, T v) {
+void EntityPropertyBase::insert(const GString& k, const T& v) {
 
     ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "insert type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());
@@ -695,7 +861,7 @@ void EntityPropertyBase::insert(GString k, T v) {
 }
 
 template<class T>
-void EntityPropertyBase::update(GString k, T v) {
+void EntityPropertyBase::update(const GString& k, const T& v) {
 
     ASSERT_LOG(GString(typeid(T).name()) == this->get_v_tstring(),
         "update type.%s error, should be %s\n", typeid(T).name(), this->get_v_tstring().c_str());

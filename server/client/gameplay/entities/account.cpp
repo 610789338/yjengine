@@ -32,3 +32,9 @@ void ClientAccount::on_ready() {
 
     base.call("component_rpc_test", "hello, my cute component");
 }
+
+extern void prop_read_for_test(EntityPropertyBase*);
+
+void ClientAccount::on_prop_sync_from_server() {
+    prop_read_for_test(get_prop("avatar_datas"));
+}

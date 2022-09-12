@@ -1,7 +1,10 @@
 #include <vector>
 
 #include "entity.h"
+#include "log.h"
+#include "rpc_manager.h"
 #include "entity_component_manager.h"
+#include "entity_property_manager.h"
 
 
 void Entity::tick() {
@@ -189,24 +192,21 @@ void ClientEntity::on_create(const GDict& create_data) {
     base.call("on_client_create", uuid);
 }
 
-//extern void prop_read_for_test(EntityPropertyBase*);
-
 void ClientEntity::prop_sync_from_base(const GValue& v) {
     Decoder decoder(v.as_bin().buf, v.as_bin().size);
-    //byte_print(decoder.get_buf(), decoder.get_max_offset()); // TODO delete
     decoder.read_int16(); // skip pkg len offset
-    unserialize_from_server(decoder);
-
-    //prop_read_for_test(get_prop("avatar_datas"));
+    propertys_unserialize(decoder);
+    on_prop_sync_from_server();
 }
 
 void ClientEntity::prop_sync_from_cell(const GValue& v) {
     Decoder decoder(v.as_bin().buf, v.as_bin().size);
     decoder.read_int16(); // skip pkg len offset
-    unserialize_from_server(decoder);
+    propertys_unserialize(decoder);
+    on_prop_sync_from_server();
 }
 
-void ClientEntity::unserialize_from_server(Decoder& decoder) {
+void ClientEntity::propertys_unserialize(Decoder& decoder) {
     while (!decoder.is_finish()) {
         auto idx = decoder.read_int16();
         const GString& prop_name = prop_int2str(idx);

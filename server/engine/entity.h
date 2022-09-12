@@ -4,9 +4,6 @@
 #include <unordered_map>
 
 #include "gvalue.h"
-#include "log.h"
-#include "rpc_manager.h"
-#include "entity_property_manager.h"
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
@@ -15,6 +12,11 @@
 using namespace std;
 
 class Entity;
+struct RpcMethodBase;
+class RpcManagerBase;
+class ComponentManagerBase;
+class EntityComponentBase;
+struct EntityPropertyBase;
 
 enum EntityType {
     EntityType_Base,
@@ -27,9 +29,6 @@ enum EntityType {
 
     EntityType_None
 };
-
-class ComponentManagerBase;
-class EntityComponentBase;
 
 class Entity {
 public:
@@ -226,7 +225,8 @@ public:
     virtual void on_destroy() {}
     void prop_sync_from_base(const GValue& bin);
     void prop_sync_from_cell(const GValue& bin);
-    void unserialize_from_server(Decoder& decoder);
+    void propertys_unserialize(Decoder& decoder);
+    virtual void on_prop_sync_from_server() {}
 
     BaseMailBox base;
     CellMailBox cell;

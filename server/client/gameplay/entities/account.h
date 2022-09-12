@@ -19,4 +19,6 @@ public:
 
     void msg_from_base(const GValue& msg);
     void msg_from_cell(const GValue& msg);
+
+    void on_prop_sync_from_server();
 };

@@ -15,11 +15,15 @@ extern void prop_read_for_test(EntityPropertyBase*);
 void CreateAvatarComponent::property_test() {
     property_create();
     prop_read_for_test(get_prop("avatar_datas"));
+    get_owner()->propertys_sync2client();
+
     property_update();
+    prop_read_for_test(get_prop("avatar_datas"));
+    get_owner()->propertys_sync2client();
+
     property_delete();
     prop_read_for_test(get_prop("avatar_datas"));
-
-    get_owner()->propertys_sync2client(true);
+    get_owner()->propertys_sync2client();
 }
 
 void CreateAvatarComponent::property_create() {

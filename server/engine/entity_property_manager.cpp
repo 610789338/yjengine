@@ -55,7 +55,7 @@ bool prop_regist_check(int8_t t, enum PropType type) {
     return false;
 }
 
-void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, GString self_name) {
+void EntityPropertyBase::link_node(EntityPropertyBase* pre_node, const GString& self_name) {
     if (pre_node != nullptr) {
         EntityPropertyComplex* parent = (EntityPropertyComplex*)pre_node;
         parent->gen_prop_idxs();
@@ -81,6 +81,10 @@ void EntityPropertyBase::set_dirty() {
         return;
     }
 
+    if (is_all_dirty()) {
+        return;
+    }
+
     if (!is_first_level()) {
         if (!parent->is_dirty()) {
             parent->set_dirty();
@@ -100,6 +104,10 @@ void EntityPropertyBase::set_all_dirty() {
     flag |= 0x40;
 
     if (parent == nullptr) {
+        return;
+    }
+
+    if (is_dirty()) {
         return;
     }
 
@@ -330,7 +338,7 @@ void EntityPropertyBase::update_cstr(int32_t idx, const char*  v) {
 // ------------------------------------- map ------------------------------------- //
 // ------------------------------------------------------------------------------- //
 
-void EntityPropertyBase::insert_int(GString k, uint64_t v) {
+void EntityPropertyBase::insert_int(const GString& k, uint64_t v) {
 
     if (this->get_v_tstring() == GString(typeid(int8_t).name())) {
         EntityPropertyMap<int8_t>* child = dynamic_cast<EntityPropertyMap<int8_t>*>(this);
@@ -369,7 +377,7 @@ void EntityPropertyBase::insert_int(GString k, uint64_t v) {
     }
 }
 
-void EntityPropertyBase::insert_float(GString k, double v) {
+void EntityPropertyBase::insert_float(const GString& k, double v) {
 
     if (this->get_v_tstring() == GString(typeid(float).name())) {
         EntityPropertyMap<float>* child = dynamic_cast<EntityPropertyMap<float>*>(this);
@@ -384,7 +392,7 @@ void EntityPropertyBase::insert_float(GString k, double v) {
     }
 }
 
-void EntityPropertyBase::insert_cstr(GString k, const char*  v) {
+void EntityPropertyBase::insert_cstr(const GString& k, const char*  v) {
 
     ASSERT_LOG(GString(typeid(GString).name()) == this->get_v_tstring(),
         "insert type.%s error, should be %s\n", typeid(GString).name(), this->get_v_tstring().c_str());
@@ -393,7 +401,7 @@ void EntityPropertyBase::insert_cstr(GString k, const char*  v) {
     child->insert(k, GString(v));
 }
 
-void EntityPropertyBase::update_int(GString k, uint64_t v) {
+void EntityPropertyBase::update_int(const GString& k, uint64_t v) {
 
     if (this->get_v_tstring() == GString(typeid(int8_t).name())) {
         EntityPropertyMap<int8_t>* child = dynamic_cast<EntityPropertyMap<int8_t>*>(this);
@@ -432,7 +440,7 @@ void EntityPropertyBase::update_int(GString k, uint64_t v) {
     }
 }
 
-void EntityPropertyBase::update_float(GString k, double v) {
+void EntityPropertyBase::update_float(const GString& k, double v) {
 
     if (this->get_v_tstring() == GString(typeid(float).name())) {
         EntityPropertyMap<float>* child = dynamic_cast<EntityPropertyMap<float>*>(this);
@@ -447,7 +455,7 @@ void EntityPropertyBase::update_float(GString k, double v) {
     }
 }
 
-void EntityPropertyBase::update_cstr(GString k, const char*  v) {
+void EntityPropertyBase::update_cstr(const GString& k, const char*  v) {
 
     ASSERT_LOG(GString(typeid(GString).name()) == this->get_v_tstring(),
         "update type.%s error, should be %s\n", typeid(GString).name(), this->get_v_tstring().c_str());
@@ -464,18 +472,16 @@ void EntityPropertyComplex::serialize(Encoder& encoder) {
 }
 
 void EntityPropertyComplex::serialize_all(Encoder& encoder) {
-
     encoder.write_string("y");
     auto const& propertys = get_propertys();
     for (int8_t i = 0; i < get_propertys_len(); ++i) {
         propertys[i]->serialize_all(encoder);
     }
+    clean_dirty();
 }
 
 void EntityPropertyComplex::serialize_dirty(Encoder& encoder) {
-
     encoder.write_string("j");
-
     auto const& propertys = get_propertys();
 
     int8_t num = 0;
@@ -494,11 +500,11 @@ void EntityPropertyComplex::serialize_dirty(Encoder& encoder) {
         encoder.write_int8(i);
         propertys[i]->serialize(encoder);
     }
+    clean_dirty();
 }
 
 void EntityPropertyComplex::unserialize(Decoder& decoder) {
     bool is_unserialize_all = decoder.read_string() == "y";
-
     auto const& propertys = get_propertys();
 
     if (is_unserialize_all) {

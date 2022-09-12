@@ -145,5 +145,5 @@ void prop_read_for_test(EntityPropertyBase* avatar_datas) {
         }
     }
 
-    INFO_LOG("\n\n");
+    INFO_LOG("############################ END ############################\n\n");
 }

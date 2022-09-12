@@ -26,7 +26,7 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    test_timer = RETIST_TIMER(0, 60, true, &BaseAccount::account_timer_test, "60 seconds");
+    //test_timer = RETIST_TIMER(0, 60, true, &BaseAccount::account_timer_test, "60 seconds");
 }
 
 void BaseAccount::msg_from_cell(const GValue& msg) { 
