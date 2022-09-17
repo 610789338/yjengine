@@ -79,7 +79,7 @@ void call_client_entity(const GValue& entity_uuid, const GValue& inner_rpc) {
     auto const pkg_len = decoder.read_uint16();
     auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
 
-    INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
+    //INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
     iter->second->rpc_call(false, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 

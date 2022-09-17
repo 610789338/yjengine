@@ -64,6 +64,8 @@ public:
     virtual GString prop_int2str(int16_t idx) { return ""; }
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
+    void ready();
+    virtual void on_ready() {}
 
     GString uuid = "";
     GString class_name = "";
@@ -74,6 +76,7 @@ public:
     unordered_map<GString, EntityComponentBase*> components;
 
     RpcManagerBase* rpc_mgr;
+    bool is_ready = false;
 };
 
 // ------------------------------- base ------------------------------- //
@@ -88,7 +91,7 @@ public:
     virtual ~BaseEntity() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); }  // must exist
     virtual void on_destroy() {}
 };
 
@@ -108,7 +111,7 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void create_cell(const GDict& create_data);
     virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
     GString cell_class_name;
@@ -131,7 +134,7 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void create_client();
     virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
@@ -154,7 +157,7 @@ public:
     virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
     virtual void create_client();
     virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
 };
@@ -174,7 +177,7 @@ public:
     virtual ~CellEntity() {}
 
     virtual void on_create(const GDict& create_data) {}
-    virtual void on_ready() = 0;
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
     BaseMailBox base;
@@ -194,7 +197,7 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
@@ -221,7 +224,7 @@ public:
     virtual ~ClientEntity() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_ready() {}
+    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     void prop_sync_from_base(const GValue& bin);
     void prop_sync_from_cell(const GValue& bin);

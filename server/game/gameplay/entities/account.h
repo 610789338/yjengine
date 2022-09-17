@@ -15,11 +15,25 @@ public:
     static void rpc_method_define();
     static void property_define();
 
+    void on_tick();
+
     void on_ready(); // call by engine
 
     void msg_from_cell(const GValue& msg);
     void msg_from_client(const GValue& msg);
     void account_timer_test(const GValue& arg1);
+
+    void property_test();
+    void property_create();
+    void property_delete();
+    void property_update();
+
+    void property_sync_test();
+    void property_sync_test_create();
+    void property_sync_test_clear();
+    void property_sync_test_add();
+    void property_sync_test_del();
+    void property_sync_test_update();
 
 private:
     TimerID test_timer;

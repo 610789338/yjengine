@@ -8,8 +8,12 @@
 
 
 void Entity::tick() {
-    propertys_sync2client();
+    if (!is_ready) {
+        return;
+    }
+
     on_tick();
+    propertys_sync2client();
 }
 
 void Entity::release_component() {
@@ -74,8 +78,14 @@ void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_p
     }
 }
 
-void BaseEntity::on_create(const GDict& create_data) {
+void Entity::ready() {
+    is_ready = true;
+    propertys_sync2client(true);
     on_ready();
+}
+
+void BaseEntity::on_create(const GDict& create_data) {
+    ready();
 }
 
 void BaseEntityWithCell::on_create(const GDict& create_data) {
@@ -95,7 +105,7 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
 
 void BaseEntityWithCell::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
     cell.set_entity_and_addr(cell_entity_uuid.as_string(), cell_addr.as_string());
-    on_ready();
+    ready();
 }
 
 void BaseEntityWithClient::on_create(const GDict& create_data) {
@@ -116,7 +126,8 @@ void BaseEntityWithClient::create_client() {
 
 void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
-    on_ready();
+    client.call("ready");
+    ready();
 }
 
 void BaseEntityWithClient::propertys_sync2client(bool force_all) {
@@ -169,9 +180,9 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
 void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
 
-    base.call("on_ready");
-    client.call("on_ready");
-    on_ready();
+    base.call("ready");
+    client.call("ready");
+    ready();
 }
 
 void CellEntityWithClient::propertys_sync2client(bool force_all) {

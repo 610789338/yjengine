@@ -2,6 +2,7 @@
 
 #include "engine/engine.h"
 
+struct AvatarData;
 
 class CreateAvatarComponent : public EntityComponentBase {
 
@@ -17,9 +18,4 @@ public:
     }
 
     void component_rpc_test(const GValue& msg);
-
-    void property_test();
-    void property_create();
-    void property_delete();
-    void property_update();
 };

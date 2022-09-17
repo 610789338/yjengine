@@ -10,6 +10,7 @@ void ClientAccount::regist_components() {
 void ClientAccount::rpc_method_define() {
     RPC_METHOD(RpcType::CLIENT, msg_from_base, GString());
     RPC_METHOD(RpcType::CLIENT, msg_from_cell, GString());
+    RPC_METHOD(RpcType::CLIENT, prop_sync_compare, GBin());
 }
 
 void ClientAccount::property_define() {
@@ -24,6 +25,21 @@ void ClientAccount::msg_from_cell(const GValue& msg) {
     INFO_LOG("[client] msg.%s from cell\n", msg.as_string().c_str()); 
 }
 
+void ClientAccount::prop_sync_compare(const GValue& v) {
+    
+    Encoder encoder;
+    serialize2client(encoder, true);
+    encoder.write_end();
+
+    auto server_len = v.as_bin().size;
+    auto client_len = encoder.get_offset();
+    ASSERT_LOG(server_len == client_len, "server_len.%d != client_len.%d\n", server_len, client_len);
+
+    ASSERT_LOG(memcmp(v.as_bin().buf, encoder.get_buf(), v.as_bin().size) == 0, "server buf != client buf\n");
+
+    INFO_LOG("prop syc compare %d.%d\n", server_len, client_len);
+}
+
 void ClientAccount::on_ready() {
     INFO_LOG("ClientAccount on_ready\n");
 
@@ -33,8 +49,6 @@ void ClientAccount::on_ready() {
     base.call("component_rpc_test", "hello, my cute component");
 }
 
-extern void prop_read_for_test(EntityPropertyBase*);
-
 void ClientAccount::on_prop_sync_from_server() {
-    prop_read_for_test(get_prop("avatar_datas"));
+    //avatar_data_print(get_prop("avatar_datas"));
 }

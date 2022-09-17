@@ -135,7 +135,6 @@
     <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gameplay\components\create_avatar_prop_def.h" />
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\game_utils.h" />

@@ -157,6 +157,7 @@ struct EntityPropertyBase {
     virtual vector<GString> keys() { ASSERT(false); return vector<GString>(); }
 
     virtual int32_t size() { ASSERT(false); return 0; }
+    virtual void clear() { ASSERT(false); };
 
     virtual void encode() { ASSERT(false); }
     virtual void decode() { ASSERT(false); }
@@ -316,6 +317,28 @@ struct EntityPropertyArray : public EntityPropertyBase {
         propertys[propertys.size() - 1].clean_dirty();
         propertys[propertys.size() - 1].set_parent_deep(this);
         propertys[propertys.size() - 1].set_dirty();
+        if (propertys.size() == propertys.capacity()) { reserve(); }
+    }
+    void reserve() {
+        vector<TValue> new_propertys = propertys;
+        for (int32_t i = 0; i < propertys.size(); ++i) {
+            new_propertys[i].clean_dirty();
+            new_propertys[i].set_parent_deep(this);
+            if (propertys[i].is_dirty()) {
+                new_propertys[i].set_dirty();
+            }
+        }
+
+        propertys.reserve(propertys.size() * 2);
+
+        for (int32_t i = 0; i < new_propertys.size(); ++i) {
+            propertys[i] = new_propertys[i];
+            propertys[i].clean_dirty();
+            propertys[i].set_parent_deep(this);
+            if (new_propertys[i].is_dirty()) {
+                propertys[i].set_dirty();
+            }
+        }
     }
     void pop_back() { propertys.pop_back(); set_dirty(); }
     void update(const int32_t idx, const TValue& v) { 
@@ -327,6 +350,7 @@ struct EntityPropertyArray : public EntityPropertyBase {
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; }
 
     int32_t size() { return (int32_t)propertys.size(); }
+    void clear() { propertys.clear(); set_all_dirty(); };
 
     bool is_array() { return true; }
     bool is_value_complex() { return true; }
@@ -443,6 +467,28 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
         propertys[propertys.size() - 1].clean_dirty(); \
         propertys[propertys.size() - 1].set_parent_deep(this); \
         propertys[propertys.size() - 1].set_dirty(); \
+        if (propertys.size() == propertys.capacity()) { reserve(); } \
+    } \
+    void reserve() { \
+        vector<EntityPropertySimple<T>> new_propertys = propertys; \
+        for (int32_t i = 0; i < propertys.size(); ++i) { \
+            new_propertys[i].clean_dirty(); \
+            new_propertys[i].set_parent_deep(this); \
+            if (propertys[i].is_dirty()) { \
+                new_propertys[i].set_dirty(); \
+            } \
+        } \
+ \
+        propertys.reserve(propertys.size() * 2); \
+ \
+        for (int32_t i = 0; i < new_propertys.size(); ++i) { \
+            propertys[i] = new_propertys[i]; \
+            propertys[i].clean_dirty(); \
+            propertys[i].set_parent_deep(this); \
+            if (new_propertys[i].is_dirty()) { \
+                propertys[i].set_dirty(); \
+            } \
+        } \
     } \
     void pop_back() { propertys.pop_back(); set_dirty(); } \
     void update(const int32_t idx, const T& _v) { \
@@ -454,6 +500,7 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
+    void clear() { propertys.clear(); set_all_dirty(); }; \
     bool is_array() { return true; } \
 \
     void serialize(Encoder& encoder) { \
@@ -609,6 +656,8 @@ struct EntityPropertyMap : public EntityPropertyBase {
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); }
 
     int32_t size() { return (int32_t)propertys.size(); }
+    void clear() { propertys.clear(); set_all_dirty(); };
+
     vector<GString> keys() { 
         vector<GString> ret; 
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter)
@@ -746,6 +795,7 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
+    void clear() { propertys.clear(); set_all_dirty(); }; \
     vector<GString> keys() { \
         vector<GString> ret; \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) \

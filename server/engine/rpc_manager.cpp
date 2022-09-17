@@ -187,10 +187,23 @@ bool RpcManager::imp_queue_empty() {
 void args2array(vector<GValue>& rpc_params) {}
 
 shared_ptr<RpcImp> g_cur_imp = nullptr;
+void _rpc_imp_input_tick();
 void rpc_imp_input_tick() {
     if (g_rpc_manager.imp_queue_empty())
         return;
 
+    int8_t max_loop = 50;
+    while (--max_loop > 0) {
+
+        _rpc_imp_input_tick();
+
+        if (g_rpc_manager.imp_queue_empty())
+            return;
+
+    }
+}
+
+void _rpc_imp_input_tick() {
     auto imp = g_rpc_manager.imp_queue_pop();
     if (nullptr == imp)
         return;

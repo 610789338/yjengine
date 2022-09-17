@@ -45,13 +45,13 @@ public:
         else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) {
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create",     &BaseEntityWithCellAndClient::on_cell_create, GString(), GString());
             entity_rpc_regist(RpcType::EXPOSED,     "on_client_create",   &BaseEntityWithCellAndClient::on_client_create, GString());
-            entity_rpc_regist(RpcType::SERVER_ONLY, "on_ready",           &BaseEntityWithCellAndClient::on_ready);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "ready",              &BaseEntityWithCellAndClient::ready);
         }
         else if (entity_type == EntityType::EntityType_CellWithClient) {
             entity_rpc_regist(RpcType::EXPOSED,    "on_client_create",    &CellEntityWithClient::on_client_create, GString());
         }
         else if (entity_type == EntityType::EntityType_Client) {
-            entity_rpc_regist(RpcType::CLIENT, "on_ready",                &ClientEntity::on_ready);
+            entity_rpc_regist(RpcType::CLIENT, "ready",                   &ClientEntity::ready);
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base",     &ClientEntity::prop_sync_from_base, GBin());
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell",     &ClientEntity::prop_sync_from_cell, GBin());
         }
