@@ -8,7 +8,9 @@ class BaseAccount : public BaseEntityWithCellAndClient {
     GENERATE_ENTITY_INNER(BaseAccount)
 
 public:
-    BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {}
+    BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {
+        int a = 10;
+    }
     ~BaseAccount() {}
 
     static void regist_components();
@@ -36,6 +38,10 @@ public:
     void property_sync_test_update();
 
 private:
+    int32_t sync_count = 0;
+    int32_t incr = 0;
+
+private:
     TimerID test_timer;
 };
 
@@ -55,4 +61,8 @@ public:
 
     void msg_from_base(const GValue& msg);
     void msg_from_client(const GValue& msg);
+    void account_timer_test(const GValue& arg1);
+
+private:
+    TimerID test_timer;
 };

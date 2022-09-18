@@ -8,12 +8,12 @@
 
 using namespace std;
 
-extern const char* ini_file;
+extern GString ini_file;
 
 class GIni {
 public:
     GIni() { 
-        parser_ini(ini_file); 
+        parser_ini(ini_file.c_str()); 
     }
     ~GIni() {}
 

@@ -4,9 +4,19 @@
 
 using namespace std;
 
-const char* ini_file = "gate.ini";
+GString ini_file("gate.ini");
 
 void init(int argc, char* args[]) {
+
+    int idx = 0;
+    while (idx < argc) {
+        if (strcmp(args[idx], "-c") == 0) {
+            ++idx;
+            ini_file = args[idx];
+        }
+
+        ++idx;
+    }
 
     auto ip = ini_get_string("Listen", "ip");
     auto port = ini_get_int("Listen", "port");
@@ -16,11 +26,24 @@ void init(int argc, char* args[]) {
 }
 
 void connect_game() {
-    auto ip = ini_get_string("Game1", "ip");
-    auto port = ini_get_string("Game1", "port");
 
-    INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
-    g_remote_mgr.connect_remote(ip, port);
+    {
+        auto ip = ini_get_string("Game0", "ip");
+        auto port = ini_get_string("Game0", "port");
+        if (!ip.empty() && !port.empty()) {
+            INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
+            g_remote_mgr.connect_remote(ip, port);
+        }
+    }
+
+    {
+        auto ip = ini_get_string("Game1", "ip");
+        auto port = ini_get_string("Game1", "port");
+        if (!ip.empty() && !port.empty()) {
+            INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
+            g_remote_mgr.connect_remote(ip, port);
+        }
+    }
 }
 
 int main(int argc, char* args[]) {

@@ -54,7 +54,11 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
         g_entity_rpc_name_s2l.insert(make_pair(iter->second, iter->first));
     }
 
-    REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
+    static bool is_call_create = false;
+    if (!is_call_create) {
+        REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
+        is_call_create = true;
+    }
 }
 
 void create_client_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {

@@ -42,7 +42,7 @@ void BaseAccount::msg_from_client(const GValue& msg) {
 }
 
 void BaseAccount::account_timer_test(const GValue& arg1) {
-    INFO_LOG("this is timer test arg1.%s\n", arg1.as_string().c_str());
+    INFO_LOG("[Base] this is timer test arg1.%s\n", arg1.as_string().c_str());
 }
 
 void BaseAccount::property_test() {
@@ -132,9 +132,7 @@ void BaseAccount::property_sync_test() {
     if (encoder.anything()) {
         client.call("prop_sync_compare", GBin(encoder.get_buf(), encoder.get_offset()));
     }
-
-    static int8_t sync_count = 0;
-
+    
     if (sync_count == 0) {
         property_sync_test_clear();
     }
@@ -165,6 +163,7 @@ void BaseAccount::property_sync_test() {
 }
 
 void BaseAccount::property_sync_test_create() {
+
     AvatarData* avatar_data = (AvatarData*)get_prop("complex_test");
     avatar_data_create(*avatar_data);
 
@@ -194,6 +193,7 @@ void BaseAccount::property_sync_test_create() {
 }
 
 void BaseAccount::property_sync_test_clear() {
+
     get_prop("complex_test")->get("avatar_title_ids")->clear();
     get_prop("complex_test")->get("avatar_equips")->clear();
     get_prop("complex_test")->get("avatar_fashion_shows")->clear();
@@ -205,7 +205,6 @@ void BaseAccount::property_sync_test_clear() {
 }
 
 void BaseAccount::property_sync_test_add() {
-    static int32_t incr = 0;
 
     get_prop("complex_test")->get("avatar_title_ids")->push_back(incr);
 
@@ -229,6 +228,7 @@ void BaseAccount::property_sync_test_add() {
 }
 
 void BaseAccount::property_sync_test_del() {
+
     get_prop("complex_test")->get("avatar_title_ids")->pop_back();
     get_prop("complex_test")->get("avatar_equips")->pop_back();
     
@@ -269,7 +269,6 @@ void BaseAccount::property_sync_test_del() {
 }
 
 void BaseAccount::property_sync_test_update() {
-    static int32_t incr = 0xFFFF;
 
     get_prop("complex_test")->get("avatar_level")->update(incr);
     get_prop("complex_test")->get("avatar_name")->update(to_string(incr));
@@ -325,4 +324,10 @@ void CellAccount::on_ready() {
 
     base.call("msg_from_cell", "hello, i am cell");
     client.call("msg_from_cell", "hello, i am cell");
+
+    test_timer = RETIST_TIMER(0, 60, true, &CellAccount::account_timer_test, "60 seconds");
+}
+
+void CellAccount::account_timer_test(const GValue& arg1) {
+    INFO_LOG("[Cell] this is timer test arg1.%s\n", arg1.as_string().c_str());
 }

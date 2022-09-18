@@ -4,9 +4,19 @@
 
 using namespace std;
 
-const char* ini_file = "game.ini";
+GString ini_file("game.ini");
 
 void init(int argc, char* args[]) {
+
+    int idx = 0;
+    while (idx < argc) {
+        if (strcmp(args[idx], "-c") == 0) {
+            ++idx;
+            ini_file = args[idx];
+        }
+
+        ++idx;
+    }
 
     auto ip = ini_get_string("Listen", "ip");
     auto port = ini_get_int("Listen", "port");
