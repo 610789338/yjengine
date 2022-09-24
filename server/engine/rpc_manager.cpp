@@ -148,10 +148,10 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_p
         READ_PRE_CHECK(ret + 2, length);
         Decoder decoder(buf + ret, 2);
         uint16_t pkg_len = decoder.read_uint16();
-        ret += decoder.get_offset();  // pkg head len
 
         // 生成RPC实例，塞进队列
-        READ_PRE_CHECK(ret + pkg_len, length);
+        READ_PRE_CHECK(ret + 2 + pkg_len, length);
+        ret += 2;  // pkg head len
         auto imp = rpc_decode(buf + ret, pkg_len);
         ret += pkg_len;  // pkg len
 

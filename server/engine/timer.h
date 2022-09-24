@@ -15,12 +15,7 @@ typedef int TimerID;
 
 class TimerBase {
 public:
-    TimerBase() = delete;
-    TimerBase(TimerID id, float interval, bool repeat, int64_t expiration)
-        : m_id(id)
-        , m_interval(interval)
-        , m_repeat(repeat)
-        , m_expiration(expiration) {}
+    TimerBase() {};
     virtual ~TimerBase() {}
 
     bool operator < (const TimerBase& other) const {
@@ -41,11 +36,13 @@ public:
 
     vector<GValue> m_params_t;
 
-    TimerID m_id;
-    float m_interval;
-    bool m_repeat;
+    TimerID m_id = 0;
+    float m_interval = 0.0f;
+    bool m_repeat = false;
 
-    int64_t m_expiration; // ms timestamp
+    int64_t m_start_time = 0;
+    int32_t m_fire_num = 0;
+    int64_t m_expiration = 0; // ms timestamp
 };
 
 class TimerCompare {
@@ -62,9 +59,7 @@ class Timer : public TimerBase {
 
 public:
     Timer() = delete;
-    Timer(TEntity* _this, TimerID id, float interval, bool repeat, int64_t expiration) 
-        : TimerBase(id, interval, repeat, expiration)
-        , __this(_this) {}
+    Timer(TEntity* _this) : __this(_this) {}
     ~Timer() {}
 
     template<class... T>
@@ -91,7 +86,7 @@ protected:
     unordered_map<TimerID, TimerBase*> m_timer_ids;
 };
 
-extern TimerID g_time_id;
+extern TimerID g_timer_id;
 extern set<TimerManagerBase*>* timer_mgr_set;
 
 template<class TEntity>
@@ -111,17 +106,22 @@ public:
     template<class... T, class... T2>
     TimerID regist_timer(TEntity* entity, float start, float interval, bool repeat, void(TEntity::*cb)(T...), T2... args) {
 
-        int64_t expiration = nowms_timestamp() + int64_t(start * 1000);
-        DEBUG_LOG("regist_timer expiration.%lld\n", expiration);
+        int64_t start_time = nowms_timestamp() + int64_t(start * 1000);
 
-        TimerID time_id = ++g_time_id;
-        auto timer = new Timer<TEntity, T...>(entity, time_id, interval, repeat, expiration);
+        auto timer = new Timer<TEntity, T...>(entity);
+        timer->m_id = ++g_timer_id;
+        timer->m_interval = interval;
+        timer->m_repeat = repeat;
+        timer->m_start_time = start_time;
+        timer->m_expiration = start_time;
         timer->m_cb = cb;
         timer->params_parse(args...);
 
+        DEBUG_LOG("regist_timer.%d \n", timer->m_id);
+
         _insert(timer);
 
-        return time_id;
+        return timer->m_id;
     }
 
     void timer_callback(TimerBase* timer) {

@@ -46,22 +46,17 @@ void connect_game() {
     }
 }
 
+extern void main_tick(const int64_t ms_pertick);
+
 int main(int argc, char* args[]) {
 
     init(argc, args);
 
-     connect_game();
+    connect_game();
 
     INFO_LOG("main tick start\n");
-
-    // main tick
-    while (true) {
-
-        engine_tick();
-
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    }
-
+    main_tick(100);
     INFO_LOG("end\n");
+
     return 0;
 }

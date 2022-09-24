@@ -3,7 +3,7 @@
 #include "timer.h"
 #include "utils.h"
 
-TimerID g_time_id = 0;
+TimerID g_timer_id = 0;
 
 
 void TimerManagerBase::cancel_timer(TimerID timer_id) {
@@ -23,7 +23,8 @@ void TimerManagerBase::tick() {
     vector<TimerBase*> timer_fired;
     for (auto iter = m_timers.begin(); iter != m_timers.end();) {
         const auto& timer = *iter;
-        if (timer->m_expiration < now) {
+        if (timer->m_expiration <= now) {
+            ++timer->m_fire_num;
             timer_callback(timer);
             timer_fired.push_back(timer);
         }
@@ -37,7 +38,7 @@ void TimerManagerBase::tick() {
         _remove(timer);
 
         if (timer->m_repeat) {
-            timer->m_expiration = now + int64_t(timer->m_interval * 1000);
+            timer->m_expiration = timer->m_start_time + int64_t(timer->m_fire_num * timer->m_interval * 1000);
             _insert(timer);
         }
     }

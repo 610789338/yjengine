@@ -6,6 +6,7 @@
 #include "boost/uuid/uuid_generators.hpp"
 #include "boost/uuid/uuid_io.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/thread.hpp"
 
 #include "utils.h"
 #include "ini.h"
@@ -96,4 +97,31 @@ int64_t nowmicro_timestamp(bool use_cache) {
 
     const boost::posix_time::time_duration time_duration{ now - timestamp0 };
     return (int64_t)time_duration.total_microseconds();
+}
+
+extern void engine_tick();
+void main_tick(const int64_t ms_pertick = 100) {
+    auto const tick_origin = nowms_timestamp(false);
+    int32_t loop_num = 0;
+
+    // main tick
+    while (true) {
+        auto const tick_begin = nowms_timestamp(false);
+        //if (loop_num % 100 == 0) {
+        //    DEBUG_LOG("loop.%d - cost %dms - should be %dms\n", loop_num, tick_begin - tick_origin, loop_num * 100);
+        //}
+        engine_tick();
+        auto const tick_end = nowms_timestamp(false);
+
+        if (tick_end - tick_begin < ms_pertick) {
+            // sleep大概有1/1000的误差，用error_ms来矫正
+            int64_t error_ms = (tick_begin - tick_origin) - (loop_num * ms_pertick);
+            boost::this_thread::sleep(boost::posix_time::milliseconds(ms_pertick - (tick_end - tick_begin) - error_ms));
+        }
+        else {
+            WARN_LOG("long tick %dms\n", tick_end - tick_begin);
+        }
+
+        ++loop_num;
+    }
 }

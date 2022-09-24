@@ -26,7 +26,7 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    test_timer = RETIST_TIMER(0, 60, true, &BaseAccount::account_timer_test, "60 seconds");
+    test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
 
     if (!use_property_sync_test) {
         property_test();
@@ -325,9 +325,9 @@ void CellAccount::on_ready() {
     base.call("msg_from_cell", "hello, i am cell");
     client.call("msg_from_cell", "hello, i am cell");
 
-    test_timer = RETIST_TIMER(0, 60, true, &CellAccount::account_timer_test, "60 seconds");
+    test_timer = RETIST_TIMER(0, 60 * 60, true, &CellAccount::account_timer_test, "60 minutes");
 }
 
 void CellAccount::account_timer_test(const GValue& arg1) {
-    INFO_LOG("[Cell] this is timer test arg1.%s\n", arg1.as_string().c_str());
+    INFO_LOG("[Cell] @@@@@@ this is timer test arg1.%s\n", arg1.as_string().c_str());
 }

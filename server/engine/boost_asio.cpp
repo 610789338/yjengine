@@ -30,6 +30,14 @@ void Session::do_read() {
     });
 }
 
+struct CrashDebug {
+    uint32_t last_receive_len = 0;
+    uint32_t last_process_len = 0;
+    uint32_t last_cache_idx = 0;
+};
+
+static queue<CrashDebug> queue_crash_debug;
+
 void Session::on_read(boost::system::error_code ec, size_t length) {
     //byte_print(m_buffer, length);
 
@@ -64,6 +72,15 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
     // 拆包
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
     m_cache_idx -= process_len;
+
+    CrashDebug crash_debug;
+    crash_debug.last_process_len = process_len;
+    crash_debug.last_receive_len = (int32_t)length;
+    crash_debug.last_cache_idx = m_cache_idx;
+    queue_crash_debug.push(crash_debug);
+    while (queue_crash_debug.size() > 1000) {
+        queue_crash_debug.pop();
+    }
 
     do_read();
 }
