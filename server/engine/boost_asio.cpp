@@ -186,8 +186,8 @@ void boost_asio_init() {
     if (!listen_ip.empty() && listen_port != 0) {
         server = make_shared<Server>(io_context, listen_ip.c_str(), listen_port);
 
-        // 先run，do_accpet之后run会阻塞
-        io_context.run();
+        // 单线程要先run，do_accpet之后再run会阻塞
+        // io_context.run();
         server->do_accept();
 
         INFO_LOG("boost asio listen@%s\n", IPPORT_STRING(listen_ip, listen_port).c_str());

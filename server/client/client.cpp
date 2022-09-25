@@ -25,8 +25,6 @@ void init(int argc, char* args[]) {
 
         ++idx;
     }
-
-    engine_init();
 }
 
 void connect_gate() {
@@ -61,6 +59,9 @@ int main(int argc, char* args[]) {
     //connect_gate();
     //connect_gate();
     //connect_gate();
+
+    // linux下boost asio先run再connect会阻塞...
+    engine_init();
 
     INFO_LOG("main tick start\n");
     main_tick(100);

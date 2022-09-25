@@ -46,3 +46,7 @@
 *.app
 server/.vs/server/v15/Solution.VC.db-shm
 server/.vs/server/v15/Solution.VC.db-wal
+game
+gate
+client
+

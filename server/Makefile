@@ -70,7 +70,8 @@ utils.o: $(ENGINE_DIR)/utils.cpp
 	g++ -fPIC -g -c $(ENGINE_DIR)/utils.cpp -o $(ENGINE_OUT_DIR)/utils.o -I $(BOOST_INCLUDE) -std=$(CPP_STD)
 
 engine: boost_asio.o decode.o encode.o engine.o entity.o entity_component_manager.o entity_property_manager.o entity_property_tree.o entity_rpc_manager.o gvalue.o ini.o mailbox.o remote_manager.o rpc_manager.o timer.o utils.o
-	g++ -fPIC -shared $(ENGINE_OUT_DIR)/*.o -o $(LIB_DIR)/libengine.so
+	# g++ -fPIC -shared $(ENGINE_OUT_DIR)/*.o -o $(LIB_DIR)/libengine.so
+	ar crv $(LIB_DIR)/libengine.a $(ENGINE_OUT_DIR)/*.o
 
 clean_engine:
 	rm $(ENGINE_OUT_DIR)/*
@@ -136,4 +137,3 @@ clean:
 	rm $(GATE_OUT_DIR)/* -rf
 	rm $(CLIENT_OUT_DIR)/* -rf
 	rm $(LIB_DIR)/* -rf
-	rm $(EXE_DIR)/game $(EXE_DIR)/gate $(EXE_DIR)/client

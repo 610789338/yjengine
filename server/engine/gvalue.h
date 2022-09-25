@@ -19,10 +19,12 @@ typedef unordered_map<GString, GValue> GDict;
 struct GBin {
 public:
     GBin() = default;
-    GBin(const char* _buf, int16_t _size) : buf(new char[size]), size(_size) { 
+    GBin(const char* _buf, int16_t _size) : size(_size) { 
+        buf = new char[size];
         memmove(buf, _buf, size);
     }
-    GBin(const GBin& other) : buf(new char[other.size]), size(other.size) {
+    GBin(const GBin& other) : size(other.size) {
+        buf = new char[other.size];
         memmove(buf, other.buf, size);
     }
     GBin(GBin&& other) : buf(other.buf), size(other.size) {
@@ -51,7 +53,7 @@ public:
     uint16_t size = 0;
 };
 
-enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T, BIN_T};
+enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T, BIN_T, NONE_T};
 
 class GValue {
 
@@ -126,6 +128,6 @@ public:
 
     GType type() const { return m_t; }
 private:
-    GType m_t;
+    GType m_t = GType::NONE_T;
     GV m_v;
 };
