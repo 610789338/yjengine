@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <stdint.h>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <unordered_map>

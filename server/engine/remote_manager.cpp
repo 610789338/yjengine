@@ -55,14 +55,6 @@ void Remote::do_read() {
     });
 }
 
-struct CrashDebug {
-    uint32_t last_receive_len = 0;
-    uint32_t last_process_len = 0;
-    uint32_t last_cache_idx = 0;
-};
-
-static queue<CrashDebug> queue_crash_debug;
-
 void Remote::on_read(boost::system::error_code ec, std::size_t length) {
     if (ec) {
         if (ec == boost::asio::error::eof) {
@@ -95,15 +87,6 @@ void Remote::on_read(boost::system::error_code ec, std::size_t length) {
     // ²ð°ü
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
     m_cache_idx -= process_len;
-
-    CrashDebug crash_debug;
-    crash_debug.last_process_len = process_len;
-    crash_debug.last_receive_len = (int32_t)length;
-    crash_debug.last_cache_idx = m_cache_idx;
-    queue_crash_debug.push(crash_debug);
-    while (queue_crash_debug.size() > 1000) {
-        queue_crash_debug.pop();
-    }
 
     do_read();
 }
@@ -151,17 +134,17 @@ void RemoteManager::on_remote_disconnected(const GString& remote_addr) {
 }
 
 void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
-    //unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_remotes.insert(make_pair(remote->get_remote_addr(), remote));
 }
 
 void RemoteManager::remove_remote(const GString& remote_addr) {
-    //unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_remotes.erase(remote_addr);
 }
 
 shared_ptr<Remote> RemoteManager::get_remote(const GString& remote_addr) {
-    shared_lock<shared_mutex> lock(m_mutex);
+    shared_lock<boost::shared_mutex> lock(m_mutex);
     auto iter = m_remotes.find(remote_addr);
     if (iter == m_remotes.end()) {
         return nullptr;
@@ -171,7 +154,7 @@ shared_ptr<Remote> RemoteManager::get_remote(const GString& remote_addr) {
 }
 
 shared_ptr<Remote> RemoteManager::get_rand_remote() {
-    shared_lock<shared_mutex> lock(m_mutex);
+    shared_lock<boost::shared_mutex> lock(m_mutex);
 
     if (m_remotes.empty()) {
         return nullptr;

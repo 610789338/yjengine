@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "boost/thread.hpp"
+
 #include "decode.h"
 #include "encode.h"
 #include "gvalue.h"
@@ -188,7 +190,7 @@ public:
 
 private:
     queue<shared_ptr<RpcImp>> m_rpc_imp_queue;
-    shared_mutex m_mutex;
+    boost::shared_mutex m_mutex;
 
     unordered_map<GString, uint8_t> m_l2s;
     unordered_map<uint8_t, GString> m_s2l;
@@ -196,9 +198,9 @@ private:
 
 extern RpcManager g_rpc_manager;
 
-#define RPC_REGISTER(rpc_name, ...) g_rpc_manager.rpc_regist(#rpc_name, rpc_name, __VA_ARGS__)
-#define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, __VA_ARGS__)
-#define LOCAL_RPC_CALL(r, rpc_name, ...) (r)->local_rpc_call(rpc_name, __VA_ARGS__)
+#define RPC_REGISTER(rpc_name, ...) g_rpc_manager.rpc_regist(#rpc_name, rpc_name, ##__VA_ARGS__)
+#define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, ##__VA_ARGS__)
+#define LOCAL_RPC_CALL(r, rpc_name, ...) (r)->local_rpc_call(rpc_name, ##__VA_ARGS__)
 
 
 template<class T, class ...T2>

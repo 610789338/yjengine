@@ -164,12 +164,12 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_p
 }
 
 void RpcManager::imp_queue_push(shared_ptr<RpcImp> imp) {
-    unique_lock<shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     m_rpc_imp_queue.push(imp);
 }
 
 shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
-    unique_lock<shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     
     if (m_rpc_imp_queue.empty())
         return nullptr;
@@ -180,7 +180,7 @@ shared_ptr<RpcImp> RpcManager::imp_queue_pop() {
 }
 
 bool RpcManager::imp_queue_empty() {
-    shared_lock<shared_mutex> lock(m_mutex);
+    shared_lock<boost::shared_mutex> lock(m_mutex);
     return m_rpc_imp_queue.empty();
 }
 

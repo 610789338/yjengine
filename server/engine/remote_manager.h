@@ -90,7 +90,7 @@ public:
     shared_ptr<Remote> get_rand_remote();
 
 private:
-    shared_mutex m_mutex;
+    boost::shared_mutex m_mutex;
     unordered_map<GString, shared_ptr<Remote>> m_remotes;
 };
 

@@ -2,8 +2,8 @@
 
 #include "gvalue.h"
 #include "rpc_manager.h"
+#include "entity.h"
 
-class Entity;
 struct EntityPropertyBase;
 
 class EntityComponentBase {
@@ -38,6 +38,8 @@ class ComponentManagerBase {
 public:
     virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, const GArray& params) = 0;
 };
+
+extern GArray* g_local_entity_rpc_names;
 
 // entity component manager
 template<class EntityClassType>

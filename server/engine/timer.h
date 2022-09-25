@@ -62,8 +62,8 @@ public:
     Timer(TEntity* _this) : __this(_this) {}
     ~Timer() {}
 
-    template<class... T>
-    void _callback(T... args) {
+    template<class... T1>
+    void _callback(T1... args) {
         (__this->*m_cb)(args...);
     }
 

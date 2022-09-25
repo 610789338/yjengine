@@ -85,7 +85,7 @@ public:
     shared_ptr<Session> get_rand_session();
 
 private:
-    shared_mutex m_mutex;
+    boost::shared_mutex m_mutex;
     unordered_map<GString, shared_ptr<Session>> m_sessions;
 };
 

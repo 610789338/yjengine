@@ -993,13 +993,13 @@ public:
 };
 
 #define PROPERTY_SIMPLE(prop_type, property_name, prop_class, default_value) \
-    TEntity::property_manager.regist_simple_property<prop_class>(prop_type, #property_name, default_value)
+    TEntity::property_manager.template regist_simple_property<prop_class>(prop_type, #property_name, default_value)
 #define PROPERTY_COMPLEX(prop_type, property_name, prop_class) \
-    TEntity::property_manager.regist_complex_property<prop_class>(prop_type, #property_name)
+    TEntity::property_manager.template regist_complex_property<prop_class>(prop_type, #property_name)
 #define PROPERTY_ARRAY(prop_type, property_name, prop_class) \
-    TEntity::property_manager.regist_array_property<prop_class>(prop_type, #property_name)
+    TEntity::property_manager.template regist_array_property<prop_class>(prop_type, #property_name)
 #define PROPERTY_MAP(prop_type, property_name, prop_class) \
-    TEntity::property_manager.regist_map_property<prop_class>(prop_type, #property_name)
+    TEntity::property_manager.template regist_map_property<prop_class>(prop_type, #property_name)
 
 
 #define MEM_PROPERTY_SIMPLE(property_name, prop_class, default_value) \

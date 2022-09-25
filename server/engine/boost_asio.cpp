@@ -30,14 +30,6 @@ void Session::do_read() {
     });
 }
 
-struct CrashDebug {
-    uint32_t last_receive_len = 0;
-    uint32_t last_process_len = 0;
-    uint32_t last_cache_idx = 0;
-};
-
-static queue<CrashDebug> queue_crash_debug;
-
 void Session::on_read(boost::system::error_code ec, size_t length) {
     //byte_print(m_buffer, length);
 
@@ -72,15 +64,6 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
     // 拆包
     memmove(m_buffer_cache, m_buffer_cache + process_len, m_cache_idx - process_len);
     m_cache_idx -= process_len;
-
-    CrashDebug crash_debug;
-    crash_debug.last_process_len = process_len;
-    crash_debug.last_receive_len = (int32_t)length;
-    crash_debug.last_cache_idx = m_cache_idx;
-    queue_crash_debug.push(crash_debug);
-    while (queue_crash_debug.size() > 1000) {
-        queue_crash_debug.pop();
-    }
 
     do_read();
 }
@@ -124,17 +107,17 @@ void SessionManager::on_session_disconnected(const GString& session_addr) {
 }
 
 void SessionManager::add_session(const shared_ptr<Session>& session) {
-    //unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_sessions.insert(make_pair(session->get_remote_addr(), session));
 }
 
 void SessionManager::remove_session(const GString& session_addr) {
-    //unique_lock<shared_mutex> lock(m_mutex);
+    //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_sessions.erase(session_addr);
 }
 
 shared_ptr<Session> SessionManager::get_session(const GString& session_addr) {
-    shared_lock<shared_mutex> lock(m_mutex);
+    shared_lock<boost::shared_mutex> lock(m_mutex);
     
     auto iter = m_sessions.find(session_addr);
     if (iter == m_sessions.end()) {
@@ -145,7 +128,7 @@ shared_ptr<Session> SessionManager::get_session(const GString& session_addr) {
 }
 
 shared_ptr<Session> SessionManager::get_rand_session() {
-    shared_lock<shared_mutex> lock(m_mutex);
+    shared_lock<boost::shared_mutex> lock(m_mutex);
 
     if (m_sessions.empty()) {
         return nullptr;
