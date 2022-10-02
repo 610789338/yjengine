@@ -99,6 +99,15 @@ int64_t nowmicro_timestamp(bool use_cache) {
     return (int64_t)time_duration.total_microseconds();
 }
 
+uint32_t bkdr_hash(const char* str) {
+    register unsigned int hash = 0;
+    while (unsigned int ch = (unsigned int)*str++) {
+        hash = hash * 131 + ch;
+    }
+
+    return hash;
+}
+
 extern void engine_tick();
 void main_tick(const int64_t ms_pertick = 100) {
     auto const tick_origin = nowms_timestamp(false);

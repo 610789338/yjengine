@@ -136,11 +136,18 @@ void RemoteManager::on_remote_disconnected(const GString& remote_addr) {
 void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
     //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_remotes.insert(make_pair(remote->get_remote_addr(), remote));
+    m_remotes_turn.insert(make_pair(remote, remote->get_remote_addr()));
 }
 
 void RemoteManager::remove_remote(const GString& remote_addr) {
     //unique_lock<boost::shared_mutex> lock(m_mutex);
-    m_remotes.erase(remote_addr);
+    auto iter = m_remotes.find(remote_addr);
+    m_remotes_turn.erase(iter->second);
+    m_remotes.erase(iter);
+}
+
+bool RemoteManager::is_valid_remote(const shared_ptr<Remote>& remote) {
+    return m_remotes_turn.find(remote) != m_remotes_turn.end();
 }
 
 shared_ptr<Remote> RemoteManager::get_remote(const GString& remote_addr) {
@@ -161,6 +168,25 @@ shared_ptr<Remote> RemoteManager::get_rand_remote() {
     }
 
     auto idx = rand() % m_remotes.size();
+    for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
+        if (idx == 0) {
+            return iter->second;
+        }
+
+        --idx;
+    }
+
+    return nullptr;
+}
+
+shared_ptr<Remote> RemoteManager::get_fixed_remote(const GString& input) {
+    shared_lock<boost::shared_mutex> lock(m_mutex);
+
+    if (m_remotes.empty()) {
+        return nullptr;
+    }
+
+    auto idx = bkdr_hash(input.c_str()) % m_remotes.size();
     for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
         if (idx == 0) {
             return iter->second;

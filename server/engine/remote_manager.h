@@ -86,12 +86,16 @@ public:
 
     void add_remote(const shared_ptr<Remote>& remote);
     void remove_remote(const GString& remote_addr);
+    bool is_valid_remote(const shared_ptr<Remote>& remote);
+
     shared_ptr<Remote> get_remote(const GString& remote_addr);
     shared_ptr<Remote> get_rand_remote();
+    shared_ptr<Remote> get_fixed_remote(const GString& input);
 
 private:
     boost::shared_mutex m_mutex;
     unordered_map<GString, shared_ptr<Remote>> m_remotes;
+    unordered_map<shared_ptr<Remote>, GString> m_remotes_turn;
 };
 
 extern RemoteManager g_remote_mgr;

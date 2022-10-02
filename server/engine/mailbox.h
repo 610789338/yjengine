@@ -48,7 +48,12 @@ public:
         GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
-            auto gate = g_session_mgr.get_rand_session();
+            if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
+                m_session_cache = g_session_mgr.get_fixed_session(m_addr);
+            }
+
+            auto gate = m_session_cache;
+            //auto gate = g_session_mgr.get_rand_session();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
@@ -57,7 +62,12 @@ public:
             REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, innner_rpc);
         } 
         else if (m_side == "client") {
-            auto gate = g_remote_mgr.get_rand_remote();
+            if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
+                m_remote_cache = g_remote_mgr.get_fixed_remote(m_addr);
+            }
+
+            auto gate = m_remote_cache;
+            //auto gate = g_remote_mgr.get_rand_remote();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
@@ -66,6 +76,10 @@ public:
             REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, innner_rpc);
         }
     }
+
+private:
+    shared_ptr<Session> m_session_cache = nullptr;
+    shared_ptr<Remote> m_remote_cache = nullptr;
 };
 
 class CellMailBox : public MailBox {
@@ -82,7 +96,12 @@ public:
         GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
-            auto gate = g_session_mgr.get_rand_session();
+            if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
+                m_session_cache = g_session_mgr.get_fixed_session(m_addr);
+            }
+
+            auto gate = m_session_cache;
+            //auto gate = g_session_mgr.get_rand_session();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
@@ -91,7 +110,12 @@ public:
             REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, innner_rpc);
         }
         else if (m_side == "client") {
-            auto gate = g_remote_mgr.get_rand_remote();
+            if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
+                m_remote_cache = g_remote_mgr.get_fixed_remote(m_addr);
+            }
+
+            auto gate = m_remote_cache;
+            //auto gate = g_remote_mgr.get_rand_remote();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
@@ -100,6 +124,10 @@ public:
             REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, innner_rpc);
         }
     }
+
+private:
+    shared_ptr<Session> m_session_cache = nullptr;
+    shared_ptr<Remote> m_remote_cache = nullptr;
 };
 
 class ClientMailBox : public MailBox {

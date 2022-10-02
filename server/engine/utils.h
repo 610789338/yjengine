@@ -32,3 +32,4 @@ extern string now_format(bool use_cache = false);
 extern int64_t now_timestamp(bool use_cache = false);
 extern int64_t nowms_timestamp(bool use_cache = false);
 extern int64_t nowmicro_timestamp(bool use_cache = false);
+extern uint32_t bkdr_hash(const char* str);

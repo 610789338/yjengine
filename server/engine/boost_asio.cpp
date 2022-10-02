@@ -109,11 +109,18 @@ void SessionManager::on_session_disconnected(const GString& session_addr) {
 void SessionManager::add_session(const shared_ptr<Session>& session) {
     //unique_lock<boost::shared_mutex> lock(m_mutex);
     m_sessions.insert(make_pair(session->get_remote_addr(), session));
+    m_sessions_turn.insert(make_pair(session, session->get_remote_addr()));
 }
 
 void SessionManager::remove_session(const GString& session_addr) {
     //unique_lock<boost::shared_mutex> lock(m_mutex);
-    m_sessions.erase(session_addr);
+    auto iter = m_sessions.find(session_addr);
+    m_sessions_turn.erase(iter->second);
+    m_sessions.erase(iter);
+}
+
+bool SessionManager::is_valid_session(const shared_ptr<Session>& session) {
+    return m_sessions_turn.find(session) != m_sessions_turn.end();
 }
 
 shared_ptr<Session> SessionManager::get_session(const GString& session_addr) {
@@ -139,7 +146,24 @@ shared_ptr<Session> SessionManager::get_rand_session() {
         if (idx == 0) {
             return iter->second;
         }
+        --idx;
+    }
 
+    return nullptr;
+}
+
+shared_ptr<Session> SessionManager::get_fixed_session(const GString& input) {
+    shared_lock<boost::shared_mutex> lock(m_mutex);
+
+    if (m_sessions.empty()) {
+        return nullptr;
+    }
+
+    auto idx = bkdr_hash(input.c_str()) % m_sessions.size();
+    for (auto iter = m_sessions.begin(); iter != m_sessions.end(); ++iter) {
+        if (idx == 0) {
+            return iter->second;
+        }
         --idx;
     }
 

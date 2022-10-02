@@ -81,12 +81,16 @@ public:
 
     void add_session(const shared_ptr<Session>& session);
     void remove_session(const GString& session_addr);
+    bool is_valid_session(const shared_ptr<Session>& session);
+
     shared_ptr<Session> get_session(const GString& session_addr);
     shared_ptr<Session> get_rand_session();
+    shared_ptr<Session> get_fixed_session(const GString& input);
 
 private:
     boost::shared_mutex m_mutex;
     unordered_map<GString, shared_ptr<Session>> m_sessions;
+    unordered_map<shared_ptr<Session>, GString> m_sessions_turn;
 };
 
 
