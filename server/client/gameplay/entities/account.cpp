@@ -35,7 +35,11 @@ void ClientAccount::prop_sync_compare(const GValue& v) {
     auto client_len = encoder.get_offset();
     ASSERT_LOG(server_len == client_len, "server_len.%d != client_len.%d\n", server_len, client_len);
 
-    ASSERT_LOG(memcmp(v.as_bin().buf, encoder.get_buf(), v.as_bin().size) == 0, "server buf != client buf\n");
+    if (memcmp(v.as_bin().buf, encoder.get_buf(), server_len) != 0) {
+        byte_print(v.as_bin().buf, server_len);
+        byte_print(encoder.get_buf(), client_len);
+        ASSERT_LOG(false, "server buf != client buf\n");
+    }
 
     INFO_LOG("prop syc compare %d.%d\n", server_len, client_len);
 }
@@ -50,5 +54,5 @@ void ClientAccount::on_ready() {
 }
 
 void ClientAccount::on_prop_sync_from_server() {
-    //avatar_data_print(get_prop("avatar_datas"));
+    //avatar_datas_print(get_prop("avatar_datas"));
 }

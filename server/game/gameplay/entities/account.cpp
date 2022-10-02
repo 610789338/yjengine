@@ -47,15 +47,15 @@ void BaseAccount::account_timer_test(const GValue& arg1) {
 
 void BaseAccount::property_test() {
     property_create();
-    avatar_data_print(get_prop("avatar_datas"));
+    avatar_datas_print(get_prop("avatar_datas"));
     propertys_sync2client(false);
 
     property_update();
-    avatar_data_print(get_prop("avatar_datas"));
+    avatar_datas_print(get_prop("avatar_datas"));
     propertys_sync2client(false);
 
     property_delete();
-    avatar_data_print(get_prop("avatar_datas"));
+    avatar_datas_print(get_prop("avatar_datas"));
     propertys_sync2client(false);
 }
 

@@ -747,7 +747,7 @@ struct EntityPropertyMap : public EntityPropertyBase {
         }
     }
 
-    unordered_map<GString, TValue> propertys;
+    MAP<GString, TValue> propertys;
     unordered_set<GString> sync_tobe_delete;
 };
 
@@ -881,7 +881,7 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
         } \
     } \
 \
-    unordered_map<GString, EntityPropertySimple<T>> propertys; \
+    MAP<GString, EntityPropertySimple<T>> propertys; \
     unordered_set<GString> sync_tobe_delete; \
 };
 

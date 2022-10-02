@@ -5,16 +5,23 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 
 #include "utils.h"
 #include "log.h"
 
 using namespace std;
 
+#ifdef __USE_UNORDERED__
+    #define MAP unordered_map
+#else
+    #define MAP map
+#endif
+
 class GValue;
 typedef string GString;
 typedef vector<GValue> GArray;
-typedef unordered_map<GString, GValue> GDict;
+typedef MAP<GString, GValue> GDict;
 
 struct GBin {
 public:

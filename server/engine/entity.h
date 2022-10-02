@@ -70,7 +70,7 @@ public:
     GString uuid = "";
     GString class_name = "";
 
-    unordered_map<GString, EntityPropertyBase*> propertys;
+    MAP<GString, EntityPropertyBase*> propertys;
     unordered_map<EntityPropertyBase*, GString> propertys_turn;
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
