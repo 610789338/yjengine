@@ -25,8 +25,8 @@ public:
     void start(const GString& host, const GString& port);
     void close();
 
-    GString get_local_addr();
-    GString get_remote_addr();
+    GString& get_local_addr();
+    GString& get_remote_addr();
 
     template<class ...T>
     void remote_rpc_call(const GString& rpc_name, const T&... args) {

@@ -20,8 +20,8 @@ public:
     void start();
     void close();
 
-    GString get_local_addr();
-    GString get_remote_addr();
+    GString& get_local_addr();
+    GString& get_remote_addr();
 
     template<class ...T>
     void remote_rpc_call(const GString& rpc_name, const T&... args) {
@@ -105,10 +105,11 @@ public:
 
     void do_accept();
 
-    GString get_listen_addr();
+    GString& get_listen_addr();
 
 private:
     tcp::acceptor m_acceptor;
+    GString m_listen_addr = "";
 };
 
 extern boost::asio::io_context io_context;

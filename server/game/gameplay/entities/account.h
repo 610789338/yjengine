@@ -23,11 +23,16 @@ public:
     void msg_from_client(const GValue& msg);
     void account_timer_test(const GValue& arg1);
 
+    // migrate
+    void account_migrate_timer();
+
+    // property
     void property_test();
     void property_create();
     void property_delete();
     void property_update();
 
+    // property sync
     void property_sync_test();
     void property_sync_test_create();
     void property_sync_test_clear();
@@ -41,6 +46,7 @@ private:
 
 private:
     TimerID test_timer;
+    TimerID migrate_timer;
 };
 
 class CellAccount : public CellEntityWithClient {

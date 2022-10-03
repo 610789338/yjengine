@@ -54,5 +54,5 @@ void ClientAccount::on_ready() {
 }
 
 void ClientAccount::on_prop_sync_from_server() {
-    //avatar_datas_print(get_prop("avatar_datas"));
+    avatar_datas_print(get_prop("avatar_datas"));
 }

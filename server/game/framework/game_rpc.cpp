@@ -57,21 +57,23 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
 }
 
 void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
+    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
 
     GDict create_data;
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
-    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+    entity->on_create(create_data);
 }
 
 void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr) {
+    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
 
     GDict create_data;
     create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
     create_data.insert(make_pair("base_addr", base_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
     create_data.insert(make_pair("client_addr", client_addr));
-    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+    entity->on_create(create_data);
 }
 
 void call_base_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& inner_rpc) {
@@ -106,6 +108,8 @@ void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, cons
     iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 
+extern void migrate_rpc_handle_regist();
+
 void rpc_handle_regist() {
 
     RPC_REGISTER(connect_from_client);
@@ -119,4 +123,6 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(call_base_entity, bool(), GString(), GBin());
     RPC_REGISTER(call_cell_entity, bool(), GString(), GBin());
+
+    migrate_rpc_handle_regist();
 }

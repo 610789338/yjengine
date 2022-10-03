@@ -62,13 +62,14 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
 }
 
 void create_client_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
+    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
 
     GDict create_data;
     create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
     create_data.insert(make_pair("base_addr", base_addr));
     create_data.insert(make_pair("cell_entity_uuid", cell_entity_uuid));
     create_data.insert(make_pair("cell_addr", cell_addr));
-    create_entity(entity_class_name.as_string(), gen_uuid(), create_data);
+    entity->on_create(create_data);
 }
 
 void call_client_entity(const GValue& entity_uuid, const GValue& inner_rpc) {

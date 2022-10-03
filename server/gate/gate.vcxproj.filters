@@ -11,6 +11,9 @@
     <ClCompile Include="framework\gate_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="framework\migrate_rpc.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="gate.ini" />

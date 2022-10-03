@@ -12,8 +12,8 @@
 
 using namespace std;
 
-#define __PROP_SYNC_TEST__
 
+// #define __PROP_SYNC_TEST__
 #ifdef __PROP_SYNC_TEST__
     #define MAP map
 #else

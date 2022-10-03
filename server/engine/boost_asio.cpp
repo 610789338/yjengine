@@ -78,7 +78,7 @@ void Session::close() {
     m_socket.close();
 }
 
-GString Session::get_local_addr() {
+GString& Session::get_local_addr() {
     if (m_local_addr.empty()) {
         auto ip = m_socket.local_endpoint().address().to_string();
         auto port = m_socket.local_endpoint().port();
@@ -87,7 +87,7 @@ GString Session::get_local_addr() {
     return m_local_addr;
 }
 
-GString Session::get_remote_addr() {
+GString& Session::get_remote_addr() {
     if (m_remote_addr.empty()) {
         auto ip = m_socket.remote_endpoint().address().to_string();
         auto port = m_socket.remote_endpoint().port();
@@ -190,10 +190,13 @@ void Server::do_accept() {
     });
 }
 
-GString Server::get_listen_addr() {
-    auto ip = m_acceptor.local_endpoint().address().to_string();
-    auto port = m_acceptor.local_endpoint().port();
-    return ip + ":" + std::to_string(port);
+GString& Server::get_listen_addr() {
+    if (m_listen_addr.empty()) {
+        auto ip = m_acceptor.local_endpoint().address().to_string();
+        auto port = m_acceptor.local_endpoint().port();
+        m_listen_addr = ip + ":" + std::to_string(port);
+    }
+    return m_listen_addr;
 }
 
 

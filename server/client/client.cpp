@@ -60,7 +60,7 @@ int main(int argc, char* args[]) {
     //connect_gate();
     //connect_gate();
 
-    // linuxä¸‹boost asioå…ˆrunå†connectä¼šé˜»å¡...
+    // linuxÏÂboost asioÏÈrunÔÙconnect»á×èÈû...
     engine_init();
 
     INFO_LOG("main tick start\n");

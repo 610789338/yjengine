@@ -12,6 +12,7 @@
 
 using namespace std;
 
+
 enum PropType : int8_t {
     NONE = 0x00,
 

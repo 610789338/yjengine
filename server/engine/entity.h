@@ -44,6 +44,7 @@ public:
     virtual void on_tick() {}
 
     virtual void on_create(const GDict& create_data) = 0;
+    virtual void on_migrate_create(const GDict& create_data) { ASSERT(false); }
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
@@ -66,6 +67,11 @@ public:
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
     void ready();
     virtual void on_ready() {}
+    virtual void propertys_unserialize(Decoder& decoder) { ASSERT(false); }
+
+    // migrate
+    virtual void on_migrate_in() { ASSERT(false); }
+    virtual void on_migrate_out() { ASSERT(false); }
 
     GString uuid = "";
     GString class_name = "";
@@ -114,6 +120,10 @@ public:
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
+    // migrate
+    virtual void migrate_req_from_cell();
+    virtual void new_cell_migrate_in(const GValue& new_cell_addr);
+
     GString cell_class_name;
     CellMailBox cell;
 };
@@ -160,6 +170,11 @@ public:
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
+
+    void new_cell_migrate_in(const GValue& new_cell_addr);
+
+    // migrate
+    void migrate_req_from_cell() { BaseEntityWithCell::migrate_req_from_cell(); }
 };
 
 
@@ -171,16 +186,29 @@ public:
     };
 
 public:
-    CellEntity() {
-        base.set_owner(this);
-    }
+    CellEntity() { base.set_owner(this); }
     virtual ~CellEntity() {}
 
     virtual void on_create(const GDict& create_data) {}
+    virtual void on_migrate_create(const GDict& create_data) {}
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
+    void propertys_unserialize(Decoder& decoder);
+
+    // migrate
+    virtual void begin_migrate(const GValue& new_addr);
+    virtual void migrate_reqack_from_base(const GValue& is_ok);
+    virtual void real_begin_migrate();
+    virtual void migrate_engity_property();
+
+    virtual void on_migrate_in();
+    virtual void on_new_cell_migrate_finish();
+    void destroy_self();
+
     BaseMailBox base;
+    GString new_cell_addr = "";
+    bool is_reqack_from_base = false;
 };
 
 class CellEntityWithClient : public CellEntity {
@@ -196,12 +224,23 @@ public:
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
+    virtual void on_migrate_create(const GDict& create_data);
     virtual void on_client_create(const GValue& client_entity_uuid);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
+    // migrate
+    virtual void begin_migrate(const GValue& new_addr);
+    virtual void migrate_reqack_from_base(const GValue& is_ok);
+    virtual void migrate_reqack_from_client(const GValue& is_ok);
+    virtual void real_begin_migrate();
+    virtual void migrate_engity_property();
+    virtual void on_migrate_in();
+    virtual void on_new_cell_migrate_finish();
+
     ClientMailBox client;
+    bool is_reqack_from_client = false;
 };
 
 // ------------------------------- client ------------------------------- //
@@ -230,6 +269,10 @@ public:
     void prop_sync_from_cell(const GValue& bin);
     void propertys_unserialize(Decoder& decoder);
     virtual void on_prop_sync_from_server() {}
+
+    // migrate
+    void migrate_req_from_cell();
+    void new_cell_migrate_in(const GValue& new_cell_addr);
 
     BaseMailBox base;
     CellMailBox cell;
@@ -269,4 +312,5 @@ PropertyTree TCLASS::property_tree(property_manager.propertys);
 
 extern unordered_map<GString, Entity*> g_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
-extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid, const GDict& create_data);
+extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid);
+extern void destroy_entity(const GString& entity_uuid);

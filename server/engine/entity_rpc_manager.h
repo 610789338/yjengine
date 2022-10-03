@@ -56,9 +56,36 @@ public:
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell",     &ClientEntity::prop_sync_from_cell, GBin());
         }
 
+        regist_migrate_rpc(entity_type);
         regist_entity_creator(entity_class_name, creator);
 
         EntityClassType::rpc_method_define();
+    }
+
+    void regist_migrate_rpc(enum EntityType entity_type) {
+        if (entity_type == EntityType::EntityType_BaseWithCell) {
+            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCell::migrate_req_from_cell);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCell::new_cell_migrate_in, GString());
+        }
+        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) {
+            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCellAndClient::migrate_req_from_cell);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCellAndClient::new_cell_migrate_in, GString());
+        }
+        else if (entity_type == EntityType::EntityType_Cell) {
+            entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntity::begin_migrate, GString());
+            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntity::migrate_reqack_from_base, bool());
+            entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntity::on_new_cell_migrate_finish);
+        }
+        else if (entity_type == EntityType::EntityType_CellWithClient) {
+            entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntityWithClient::begin_migrate, GString());
+            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntityWithClient::migrate_reqack_from_base, bool());
+            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_client", &CellEntityWithClient::migrate_reqack_from_client, bool());
+            entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntityWithClient::on_new_cell_migrate_finish);
+        }
+        else if (entity_type == EntityType::EntityType_Client) {
+            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &ClientEntity::migrate_req_from_cell);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &ClientEntity::new_cell_migrate_in, GString());
+        }
     }
 
     template<class TEntity, class... T, class... T2>
@@ -82,6 +109,8 @@ public:
 
     template<class TEntity, class... T>
     void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T...)) {
+        ASSERT_LOG(sizeof...(T) == 0, "rpc(%s) formal param size(%zu) != 0\n", rpc_name.c_str(), sizeof...(T));
+
         EntityRpcMethod<TEntity, T...>* method = new EntityRpcMethod<TEntity, T...>;
         method->cb = cb;
         method->type = entity_rpc_type;

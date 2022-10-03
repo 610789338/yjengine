@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "ini.h"
 #include "entity_property_manager.h"
+#include "boost_asio.h"
 
 using namespace std;
 
@@ -133,4 +134,8 @@ void main_tick(const int64_t ms_pertick = 100) {
 
         ++loop_num;
     }
+}
+
+string get_listen_addr() {
+    return server->get_listen_addr();
 }

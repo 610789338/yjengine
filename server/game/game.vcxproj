@@ -77,6 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\boost\boost_1_78_0;..\</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framework\game_rpc.cpp" />
+    <ClCompile Include="framework\migrate_rpc.cpp" />
     <ClCompile Include="gameplay\components\create_avatar_component.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />
     <ClCompile Include="game_app.cpp" />

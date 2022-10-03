@@ -104,6 +104,7 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("create_cell_entity", idx++));
     m_l2s.insert(make_pair("call_base_entity", idx++));
     m_l2s.insert(make_pair("call_cell_entity", idx++));
+    m_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
 
     // gate
     m_l2s.insert(make_pair("on_remote_connected", idx++));

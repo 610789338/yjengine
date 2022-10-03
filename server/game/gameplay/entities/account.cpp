@@ -1,3 +1,5 @@
+#include "engine/utils.h"
+
 #include "account.h"
 #include "common/prop_def/account_prop_def.h"
 
@@ -27,6 +29,7 @@ void BaseAccount::on_ready() {
     client.call("msg_from_base", "hello, i am base");
 
     test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
+    migrate_timer = RETIST_TIMER(0, 1, false, &BaseAccount::account_migrate_timer, "1 second");
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -43,6 +46,19 @@ void BaseAccount::msg_from_client(const GValue& msg) {
 
 void BaseAccount::account_timer_test(const GValue& arg1) {
     INFO_LOG("[Base] this is timer test arg1.%s\n", arg1.as_string().c_str());
+}
+
+void BaseAccount::account_migrate_timer() {
+    GArray addrs;
+    addrs.push_back(get_listen_addr());
+    addrs.push_back(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
+
+    if (cell.get_addr() == addrs[0].as_string()) {
+        cell.call("begin_migrate", addrs[1].as_string());
+    }
+    else {
+        cell.call("begin_migrate", addrs[0].as_string());
+    }
 }
 
 void BaseAccount::property_test() {

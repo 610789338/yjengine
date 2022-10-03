@@ -77,6 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\boost\boost_1_78_0;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="framework\gate_rpc.cpp" />
+    <ClCompile Include="framework\migrate_rpc.cpp" />
     <ClCompile Include="gate_app.cpp" />
   </ItemGroup>
   <ItemGroup>

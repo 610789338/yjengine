@@ -153,6 +153,8 @@ void avatar_data_print(EntityPropertyBase* avatar_data) {
 }
 
 void avatar_datas_print(EntityPropertyBase* avatar_datas) {
+    return;
+
     auto keys = avatar_datas->keys();
     for (auto iter = keys.begin(); iter != keys.end(); ++iter) {
         auto avatar_data = avatar_datas->get(*iter);

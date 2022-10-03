@@ -15,14 +15,14 @@ extern shared_ptr<RpcImp> g_cur_imp;
 void on_remote_connected() {
     auto remote = g_cur_imp->get_remote();
     g_remote_mgr.on_remote_connected(remote);
-    INFO_LOG("on_game_connected %s\n", remote->get_remote_addr().c_str());
+    INFO_LOG("on game connected %s\n", remote->get_remote_addr().c_str());
     
     REMOTE_RPC_CALL(remote, "regist_from_gate");
 }
 
 void on_remote_disconnected(const GValue& remote_addr) {
     g_remote_mgr.on_remote_disconnected(remote_addr.as_string());
-    INFO_LOG("on_game_disconnected %s\n", remote_addr.as_string().c_str());
+    INFO_LOG("on game disconnected %s\n", remote_addr.as_string().c_str());
 }
 
 GArray g_game_entity_rpc_names;
@@ -95,7 +95,8 @@ void create_base_entity(const GValue& entity_class_name) {
     INFO_LOG("create_base_entity %s\n", entity_class_name.as_string().c_str());
 
     auto session = g_cur_imp->get_session();
-    REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/remote->get_local_addr());
+    //REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/remote->get_local_addr());
+    REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/get_listen_addr());
 }
 
 void create_cell_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& gate_addr, const GValue& client_addr) {
@@ -155,6 +156,8 @@ void call_client_entity(const GValue& client_addr, const GValue& entity_uuid, co
     REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid.as_string(), inner_rpc.as_bin());
 }
 
+extern void migrate_rpc_handle_regist();
+
 void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
@@ -175,4 +178,6 @@ void rpc_handle_regist() {
     RPC_REGISTER(call_base_entity, GString(), GString(), GBin());
     RPC_REGISTER(call_cell_entity, GString(), GString(), GBin());
     RPC_REGISTER(call_client_entity, GString(), GString(), GBin());
+
+    migrate_rpc_handle_regist();
 }

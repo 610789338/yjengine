@@ -95,7 +95,7 @@ void Remote::close() {
     m_socket.close();
 }
 
-GString Remote::get_local_addr() {
+GString& Remote::get_local_addr() {
     if (m_local_addr.empty()) {
         auto ip = m_socket.local_endpoint().address().to_string();
         auto port = m_socket.local_endpoint().port();
@@ -104,7 +104,7 @@ GString Remote::get_local_addr() {
     return m_local_addr;
 }
 
-GString Remote::get_remote_addr() {
+GString& Remote::get_remote_addr() {
     if (m_remote_addr.empty()) {
         auto ip = m_socket.remote_endpoint().address().to_string();
         auto port = m_socket.remote_endpoint().port();

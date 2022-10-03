@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <queue>
 
 #include "gvalue.h"
 #include "log.h"
@@ -45,7 +46,7 @@ public:
     void call(GString rpc_name, T... args) {
 
         Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
-        GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
+        GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
@@ -53,13 +54,12 @@ public:
             }
 
             auto gate = m_session_cache;
-            //auto gate = g_session_mgr.get_rand_session();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, innner_rpc);
+            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
         } 
         else if (m_side == "client") {
             if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
@@ -67,13 +67,12 @@ public:
             }
 
             auto gate = m_remote_cache;
-            //auto gate = g_remote_mgr.get_rand_remote();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, innner_rpc);
+            REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
         }
     }
 
@@ -93,21 +92,29 @@ public:
     void call(GString rpc_name, T... args) {
 
         Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
-        GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
+        GBin* inner_rpc = new GBin(encoder.get_buf(), encoder.get_offset());
+        if (is_rpc_cache) {
+            m_inner_rpc_cache.push(inner_rpc);
+        }
+        else {
+            send_rpc(inner_rpc);
+            delete inner_rpc;
+        }
+    }
 
+    void send_rpc(GBin* inner_rpc) {
         if (m_side == "server") {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
                 m_session_cache = g_session_mgr.get_fixed_session(m_addr);
             }
 
             auto gate = m_session_cache;
-            //auto gate = g_session_mgr.get_rand_session();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, innner_rpc);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, *inner_rpc);
         }
         else if (m_side == "client") {
             if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
@@ -115,19 +122,36 @@ public:
             }
 
             auto gate = m_remote_cache;
-            //auto gate = g_remote_mgr.get_rand_remote();
             if (nullptr == gate) {
                 WARN_LOG("gate empty\n");
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, innner_rpc);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, *inner_rpc);
         }
+    }
+
+    void start_cache_rpc() {
+        is_rpc_cache = true;
+    }
+
+    void stop_cache_rpc() {
+        // send cached rpc
+        while (!m_inner_rpc_cache.empty()) {
+            auto inner_rpc = m_inner_rpc_cache.front();
+            send_rpc(inner_rpc);
+            delete inner_rpc;
+            m_inner_rpc_cache.pop();
+        }
+        is_rpc_cache = false;
     }
 
 private:
     shared_ptr<Session> m_session_cache = nullptr;
     shared_ptr<Remote> m_remote_cache = nullptr;
+
+    bool is_rpc_cache = false;
+    queue<GBin*> m_inner_rpc_cache;
 };
 
 class ClientMailBox : public MailBox {
@@ -141,7 +165,7 @@ public:
     void call(GString rpc_name, T... args) {
 
         Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
-        GBin innner_rpc(encoder.get_buf(), encoder.get_offset());
+        GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
 
         auto gate = g_session_mgr.get_session(m_gate_addr);
         if (nullptr == gate) {
@@ -149,10 +173,13 @@ public:
             return;
         }
 
-        REMOTE_RPC_CALL(gate, "call_client_entity", m_addr, m_entity_uuid, innner_rpc);
+        REMOTE_RPC_CALL(gate, "call_client_entity", m_addr, m_entity_uuid, inner_rpc);
     }
 
-    void set_gate_addr(const GString& gate_addr) { m_gate_addr = gate_addr; }
+    void set_gate_addr(const GString& gate_addr) { 
+        m_gate_addr = gate_addr; 
+    }
+    GString& get_gate_addr() { return m_gate_addr; }
 
     GString m_gate_addr;
 };

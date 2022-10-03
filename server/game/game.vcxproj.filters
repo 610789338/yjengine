@@ -28,6 +28,9 @@
     <ClCompile Include="gameplay\entities\account.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
+    <ClCompile Include="framework\migrate_rpc.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
