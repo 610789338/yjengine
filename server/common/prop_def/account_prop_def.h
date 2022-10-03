@@ -162,14 +162,12 @@ void avatar_datas_print(EntityPropertyBase* avatar_datas) {
     INFO_LOG("############################ END ############################\n\n");
 }
 
-bool use_property_sync_test = true;
-
 template<class TEntity>
 void account_property_define() {
-    if (!use_property_sync_test) {
-        account_property_test<TEntity>();
-    }
-    else {
-        account_property_sync_test<TEntity>();
-    }
+
+#ifdef __PROP_SYNC_TEST__
+    account_property_sync_test<TEntity>();
+#else
+    account_property_test<TEntity>();
+#endif
 }

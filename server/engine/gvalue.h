@@ -12,16 +12,18 @@
 
 using namespace std;
 
-#ifdef __USE_UNORDERED__
-    #define MAP unordered_map
-#else
+#define __PROP_SYNC_TEST__
+
+#ifdef __PROP_SYNC_TEST__
     #define MAP map
+#else
+    #define MAP unordered_map
 #endif
 
 class GValue;
 typedef string GString;
 typedef vector<GValue> GArray;
-typedef MAP<GString, GValue> GDict;
+typedef unordered_map<GString, GValue> GDict;
 
 struct GBin {
 public:

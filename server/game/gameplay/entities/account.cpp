@@ -28,9 +28,9 @@ void BaseAccount::on_ready() {
 
     test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
 
-    if (!use_property_sync_test) {
-        property_test();
-    }
+#ifndef __PROP_SYNC_TEST__
+    property_test();
+#endif
 }
 
 void BaseAccount::msg_from_cell(const GValue& msg) { 
@@ -118,9 +118,9 @@ void BaseAccount::property_update() {
 }
 
 void BaseAccount::on_tick() {
-    if (use_property_sync_test) {
-        property_sync_test();
-    }
+#ifdef __PROP_SYNC_TEST__
+    property_sync_test();
+#endif
 }
 
 void BaseAccount::property_sync_test() {
