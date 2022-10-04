@@ -87,10 +87,19 @@ public:
     shared_ptr<Session> get_rand_session();
     shared_ptr<Session> get_fixed_session(const GString& input);
 
+    // partial for gate
+    void add_gate(const GString& session_addr, const GString& gate_addr);
+    void remove_gate(const GString& session_addr);
+    shared_ptr<Session> get_gate(const GString& gate_addr);
+
 private:
     boost::shared_mutex m_mutex;
     unordered_map<GString, shared_ptr<Session>> m_sessions;
     unordered_map<shared_ptr<Session>, GString> m_sessions_turn;
+
+    // gate addr必须是集群唯一的，所以要用gate listen addr，不能用session remote addr
+    unordered_map<GString, GString> m_gates;  // gate addr/session addr
+    unordered_map<GString, GString> m_gates_turn; // session addr/gate addr
 };
 
 

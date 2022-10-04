@@ -117,6 +117,9 @@ void SessionManager::remove_session(const GString& session_addr) {
     auto iter = m_sessions.find(session_addr);
     m_sessions_turn.erase(iter->second);
     m_sessions.erase(iter);
+
+    // partial for gate
+    remove_gate(session_addr);
 }
 
 bool SessionManager::is_valid_session(const shared_ptr<Session>& session) {
@@ -168,6 +171,26 @@ shared_ptr<Session> SessionManager::get_fixed_session(const GString& input) {
     }
 
     return nullptr;
+}
+
+void SessionManager::add_gate(const GString& session_addr, const GString& gate_addr) {
+    m_gates.insert(make_pair(gate_addr, session_addr));
+    m_gates_turn.insert(make_pair(session_addr, gate_addr));
+}
+
+void SessionManager::remove_gate(const GString& session_addr) {
+    auto iter = m_gates_turn.find(session_addr);
+    if (iter == m_gates_turn.end()) {
+        return;
+    }
+
+    m_gates.erase(iter->second);
+    m_gates_turn.erase(iter);
+}
+
+shared_ptr<Session> SessionManager::get_gate(const GString& gate_addr) {
+    auto session_addr = m_gates.at(gate_addr);
+    return m_sessions.at(session_addr);
 }
 
 

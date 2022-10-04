@@ -2,15 +2,19 @@
 
 using namespace boost::property_tree;
 
-GIni* g_ini = nullptr;
+
+GIni* get_ini() {
+    static GIni _ini;
+    return &_ini;
+}
 
 void GIni::parser_ini(const char* file_name) {
     ini_parser::read_ini(file_name, m_root_node);
 }
 
-int GIni::get_int(const char* node_name, const char* child_name) {
+int32_t GIni::get_int(const char* node_name, const char* child_name) {
     ptree child_node = m_root_node.get_child(node_name);
-    return child_node.get<int>(child_name);
+    return child_node.get<int32_t>(child_name);
 }
 
 GString GIni::get_string(const char* node_name, const char* child_name) {
@@ -18,19 +22,22 @@ GString GIni::get_string(const char* node_name, const char* child_name) {
     return child_node.get<GString>(child_name);
 }
 
-int ini_get_int(const char* node_name, const char* child_name) {
-    if (g_ini == nullptr) {
-        g_ini = new GIni;
+int32_t ini_get_int(const char* node_name, const char* child_name, int32_t _default/* = 0xF0F00F0F */) {
+    try {
+        return get_ini()->get_int(node_name, child_name);
     }
-
-    return g_ini->get_int(node_name, child_name);
+    catch (...) { // TODO
+        if (_default == 0xF0F00F0F) ASSERT(false);
+        return _default;
+    }
 }
 
-GString ini_get_string(const char* node_name, const char* child_name) {
-    if (g_ini == nullptr) {
-        g_ini = new GIni;
+GString ini_get_string(const char* node_name, const char* child_name, GString _default/* = "" */) {
+    try {
+        return get_ini()->get_string(node_name, child_name);
     }
-
-    return g_ini->get_string(node_name, child_name);
+    catch (...) { // TODO
+        if (_default == "") ASSERT(false);
+        return _default;
+    }
 }
-

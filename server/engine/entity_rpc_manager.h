@@ -21,7 +21,7 @@ struct EntityRpcMethod : public RpcMethodBase {
     CBType cb;
 };
 
-extern GArray* g_local_entity_rpc_names;
+extern GArray* get_local_entity_rpc_names();
 extern unordered_map<GString, uint16_t> g_entity_rpc_name_l2s;
 extern unordered_map<uint16_t, GString> g_entity_rpc_name_s2l;
 
@@ -100,11 +100,7 @@ public:
         RpcFormalParamsCheck<T...>();
         add_rpc_method(rpc_name, method);
 
-        // g_local_entity_rpc_names如果是全局变量，那么构造函数调用的时机可能在这之后
-        // 会导致push_back之后构造函数又clear的情况，所以要用new确保在push_back之前构造
-        if (g_local_entity_rpc_names == nullptr)
-            g_local_entity_rpc_names = new GArray;
-        g_local_entity_rpc_names->push_back(rpc_name);
+        get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
     template<class TEntity, class... T>
@@ -116,9 +112,7 @@ public:
         method->type = entity_rpc_type;
         add_rpc_method(rpc_name, method);
 
-        if (g_local_entity_rpc_names == nullptr)
-            g_local_entity_rpc_names = new GArray;
-        g_local_entity_rpc_names->push_back(rpc_name);
+        get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
     GString rpc_name_decode(Decoder& decoder) {

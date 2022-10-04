@@ -200,7 +200,6 @@ void rpc_imp_input_tick() {
 
         if (g_rpc_manager.imp_queue_empty())
             return;
-
     }
 }
 

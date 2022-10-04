@@ -104,13 +104,14 @@ public:
     }
 
     template<class... T, class... T2>
-    TimerID regist_timer(TEntity* entity, float start, float interval, bool repeat, void(TEntity::*cb)(T...), T2... args) {
+    TimerID regist_timer(TEntity* entity, double start, double interval, bool repeat, void(TEntity::*cb)(T...), T2... args) {
+        ASSERT_LOG(!repeat || interval > 0.0999, "can't create repeat timer with interval < 0.1");
 
         int64_t start_time = nowms_timestamp() + int64_t(start * 1000);
 
         auto timer = new Timer<TEntity, T...>(entity);
         timer->m_id = ++g_timer_id;
-        timer->m_interval = interval;
+        timer->m_interval = (float)interval;
         timer->m_repeat = repeat;
         timer->m_start_time = start_time;
         timer->m_expiration = start_time;

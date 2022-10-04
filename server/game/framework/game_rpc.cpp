@@ -20,13 +20,16 @@ void disconnect_from_client(GValue session_addr) {
     INFO_LOG("on_disconnect_from_gate %s\n", session_addr.as_string().c_str());
 }
 
-void regist_from_gate() {
-    
+void regist_from_gate(const GValue& gate_listen_addr) {
+
     auto session = g_cur_imp->get_session();
     session->set_verify(true);
+
+    g_session_mgr.add_gate(session->get_remote_addr(), gate_listen_addr.as_string());
+
     INFO_LOG("regist from gate@%s\n", session->get_remote_addr().c_str());
 
-    REMOTE_RPC_CALL(session, "regist_ack_from_game", session->get_local_addr(), true, *g_local_entity_rpc_names);
+    REMOTE_RPC_CALL(session, "regist_ack_from_game", session->get_local_addr(), true, *get_local_entity_rpc_names());
 
     REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
 }
@@ -42,8 +45,8 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
     g_entity_rpc_name_l2s.clear();
     g_entity_rpc_name_s2l.clear();
 
-    for (size_t i = 0; i < g_local_entity_rpc_names->size(); ++i) {
-        g_entity_rpc_name_l2s.insert(make_pair((*g_local_entity_rpc_names)[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
+    for (size_t i = 0; i < get_local_entity_rpc_names()->size(); ++i) {
+        g_entity_rpc_name_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
     }
 
     auto& client_rpc_name_array = client_rpc_names.as_array();
@@ -88,7 +91,7 @@ void call_base_entity(const GValue& from_client, const GValue& entity_uuid, cons
     auto const pkg_len = decoder.read_uint16();
     auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
 
-    INFO_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
+    DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
     iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 
@@ -104,7 +107,7 @@ void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, cons
     auto const pkg_len = decoder.read_uint16();
     auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
 
-    INFO_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
+    DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
     iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
 }
 
@@ -114,7 +117,7 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(connect_from_client);
     RPC_REGISTER(disconnect_from_client, GString());
-    RPC_REGISTER(regist_from_gate);
+    RPC_REGISTER(regist_from_gate, GString());
 
     RPC_REGISTER(get_client_entity_rpc_names_ack, GArray());
 

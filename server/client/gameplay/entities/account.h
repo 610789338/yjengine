@@ -22,4 +22,10 @@ public:
     void prop_sync_compare(const GValue& v);
 
     void on_prop_sync_from_server();
+
+    // migrate
+    void account_migrate_timer();
+
+private:
+    TimerID migrate_timer;
 };

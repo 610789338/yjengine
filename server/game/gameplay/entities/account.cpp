@@ -15,6 +15,8 @@ void BaseAccount::regist_components() {
 void BaseAccount::rpc_method_define() {
     RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell, GString());
     RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+
+    RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
 }
 
 void BaseAccount::property_define() {
@@ -29,7 +31,7 @@ void BaseAccount::on_ready() {
     client.call("msg_from_base", "hello, i am base");
 
     test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
-    migrate_timer = RETIST_TIMER(0, 1, false, &BaseAccount::account_migrate_timer, "1 second");
+    migrate_timer = RETIST_TIMER(0, 1, true, &BaseAccount::account_migrate_timer, "0.1 second");
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -59,6 +61,10 @@ void BaseAccount::account_migrate_timer() {
     else {
         cell.call("begin_migrate", addrs[0].as_string());
     }
+}
+
+void BaseAccount::add_migrate_int_from_client() {
+    cell.call("add_migrate_int_from_base");
 }
 
 void BaseAccount::property_test() {
@@ -320,6 +326,9 @@ void CellAccount::regist_components() {
 void CellAccount::rpc_method_define() {
     RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base, GString());
     RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+
+    RPC_METHOD(RpcType::SERVER_ONLY, add_migrate_int_from_base);
+    RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
 }
 
 void CellAccount::property_define() {
@@ -327,11 +336,25 @@ void CellAccount::property_define() {
 }
 
 void CellAccount::msg_from_base(const GValue& msg) {
-    INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str()); 
+    INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str());
 }
 
 void CellAccount::msg_from_client(const GValue& msg) {
-    INFO_LOG("[cell] msg.%s from client\n", msg.as_string().c_str()); 
+    INFO_LOG("[cell] msg.%s from client\n", msg.as_string().c_str());
+}
+
+void CellAccount::add_migrate_int_from_base() {
+    auto old_migrate_int = get_prop("migrate_int")->as_int32();
+    get_prop("migrate_int")->update(old_migrate_int + 1);
+
+    INFO_LOG("add_migrate_int_from_base %d\n", get_prop("migrate_int")->as_int32());
+}
+
+void CellAccount::add_migrate_int_from_client() {
+    auto old_migrate_int = get_prop("migrate_int")->as_int32();
+    get_prop("migrate_int")->update(old_migrate_int + 1);
+
+    INFO_LOG("add_migrate_int_from_client %d\n", get_prop("migrate_int")->as_int32());
 }
 
 void CellAccount::on_ready() {

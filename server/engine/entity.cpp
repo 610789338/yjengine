@@ -125,7 +125,7 @@ void BaseEntityWithClient::on_create(const GDict& create_data) {
 
 void BaseEntityWithClient::create_client() {
     // game -> gate -> client
-    auto gate = g_session_mgr.get_session(client.m_gate_addr);
+    auto gate = g_session_mgr.get_gate(client.m_gate_addr);
     REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
         /*base entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
@@ -165,7 +165,7 @@ void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid,
 
 void BaseEntityWithCellAndClient::create_client() {
     // game -> gate -> client
-    auto gate = g_session_mgr.get_session(client.m_gate_addr);
+    auto gate = g_session_mgr.get_gate(client.m_gate_addr);
     REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
         /*base entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
@@ -183,22 +183,29 @@ void BaseEntityWithCellAndClient::new_cell_migrate_in(const GValue& new_cell_add
     BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
 }
 
-void CellEntity::begin_migrate(const GValue& new_addr) {
-    if (new_addr.as_string() == server->get_listen_addr()) {
-        // new cell addr == old cell addr
-        return;
-    }
-
-    new_cell_addr = new_addr.as_string();
-    base.call("migrate_req_from_cell"); 
-}
-
 void CellEntity::propertys_unserialize(Decoder& decoder) {
     while (!decoder.is_finish()) {
         auto idx = decoder.read_int16();
         const GString& prop_name = prop_int2str(idx);
         propertys.at(prop_name)->unserialize(decoder);
     }
+}
+
+void CellEntity::begin_migrate(const GValue& new_addr) {
+    if (new_addr.as_string() == server->get_listen_addr()) {
+        // new cell addr == old cell addr
+        WARN_LOG("");
+        return;
+    }
+
+    if (is_migrating) {
+        return;
+    }
+
+    is_migrating = true;
+
+    new_cell_addr = new_addr.as_string();
+    base.call("migrate_req_from_cell"); 
 }
 
 void CellEntity::migrate_reqack_from_base(const GValue& is_ok) { 
@@ -234,7 +241,7 @@ void CellEntity::destroy_self() {
 
 void CellEntityWithClient::on_create(const GDict& create_data) {
     base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    client.set_entity_and_addr("", create_data.at("client_addr").as_string());
+    client.set_entity_and_addr("", create_data.at("client_addr").as_string()); // client entity uuid will set on client create
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 
     base.call("on_cell_create", uuid, server->get_listen_addr());
@@ -242,7 +249,7 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
 
 void CellEntityWithClient::on_migrate_create(const GDict& create_data) {
     base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    client.set_entity_and_addr("", create_data.at("client_addr").as_string());
+    client.set_entity_and_addr(create_data.at("client_entity_uuid").as_string(), create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 }
 
@@ -302,8 +309,9 @@ void CellEntityWithClient::migrate_engity_property() {
 
     if (encoder.anything()) {
         GDict create_data;
-        create_data.insert(make_pair("cell_entity_uuid", uuid));
         create_data.insert(make_pair("base_entity_uuid", base.get_entity_uuid()));
+        create_data.insert(make_pair("cell_entity_uuid", uuid));
+        create_data.insert(make_pair("client_entity_uuid", client.get_entity_uuid()));
         create_data.insert(make_pair("base_addr", base.get_addr()));
         create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
         create_data.insert(make_pair("client_addr", client.get_addr()));
@@ -368,20 +376,19 @@ void ClientEntity::new_cell_migrate_in(const GValue& new_cell_addr) {
 }
 
 unordered_map<GString, Entity*> g_entities; // uuid -> entity
-typedef unordered_map<GString, function<Entity*()>> CreatorMap;
-CreatorMap* g_entity_creator = nullptr;
+typedef unordered_map<GString, function<Entity*()>> EntityCreatorMap;
+EntityCreatorMap* get_entity_creator_map() {
+    static EntityCreatorMap _entity_creator;
+    return &_entity_creator;
+}
 
 void regist_entity_creator(const GString& entity_class_name, const function<Entity*()>& creator) {
-    if (g_entity_creator == nullptr)
-        //g_entity_creator = make_shared<CreatorMap>();
-        g_entity_creator = new CreatorMap;
-
-    g_entity_creator->insert(make_pair(entity_class_name, creator));
+    get_entity_creator_map()->insert(make_pair(entity_class_name, creator));
 }
 
 function<Entity*()> get_entity_creator(const GString& entity_class_name) {
-    auto iter = g_entity_creator->find(entity_class_name);
-    if (iter == g_entity_creator->end()) {
+    auto iter = get_entity_creator_map()->find(entity_class_name);
+    if (iter == get_entity_creator_map()->end()) {
         return nullptr;
     }
 
@@ -400,7 +407,7 @@ Entity* create_entity(const GString& entity_class_name, const GString& entity_uu
     entity->class_name = entity_class_name;
     g_entities.insert(make_pair(entity->uuid, entity));
 
-    INFO_LOG("create_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+    DEBUG_LOG("create_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
 
     return entity;
 }

@@ -29,10 +29,6 @@ string gen_uuid() {
     return boost::uuids::to_string(random_u);
 }
 
-string get_proc_name() {
-    return ini_get_string("Common", "name");
-}
-
 static const boost::posix_time::ptime timestamp0 = boost::posix_time::time_from_string("1970-01-01 08:00:00");
 static boost::posix_time::ptime now_cache = boost::posix_time::microsec_clock::local_time();
 

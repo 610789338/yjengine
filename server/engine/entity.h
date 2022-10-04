@@ -207,6 +207,8 @@ public:
     void destroy_self();
 
     BaseMailBox base;
+
+    bool is_migrating = false;
     GString new_cell_addr = "";
     bool is_reqack_from_base = false;
 };

@@ -25,7 +25,6 @@ public:
 extern void byte_print(const char* buf, uint16_t length);
 extern string gen_uuid();
 
-extern string get_proc_name();
 
 extern void update_time_now_cache();
 extern string now_format(bool use_cache = false);

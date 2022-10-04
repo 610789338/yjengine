@@ -39,7 +39,7 @@ public:
     virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, const GArray& params) = 0;
 };
 
-extern GArray* g_local_entity_rpc_names;
+extern GArray* get_local_entity_rpc_names();
 
 // entity component manager
 template<class EntityClassType>
@@ -85,9 +85,7 @@ public:
         RpcFormalParamsCheck<T...>();
         rpc_mgr->add_rpc_method(rpc_name, method);
 
-        if (g_local_entity_rpc_names == nullptr)
-            g_local_entity_rpc_names = new GArray;
-        g_local_entity_rpc_names->push_back(rpc_name);
+        get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
     template<class TEntityComp, class... T>
@@ -98,9 +96,7 @@ public:
         method->type = entity_rpc_type;
         rpc_mgr->add_rpc_method(rpc_name, method);
 
-        if (g_local_entity_rpc_names == nullptr)
-            g_local_entity_rpc_names = new GArray;
-        g_local_entity_rpc_names->push_back(rpc_name);
+        get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
     void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, const GArray& params) {

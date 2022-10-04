@@ -17,7 +17,7 @@ void on_remote_connected() {
     g_remote_mgr.on_remote_connected(remote);
     INFO_LOG("on game connected %s\n", remote->get_remote_addr().c_str());
     
-    REMOTE_RPC_CALL(remote, "regist_from_gate");
+    REMOTE_RPC_CALL(remote, "regist_from_gate", get_listen_addr());
 }
 
 void on_remote_disconnected(const GValue& remote_addr) {

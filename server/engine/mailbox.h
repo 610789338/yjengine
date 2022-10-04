@@ -167,7 +167,7 @@ public:
         Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
         GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
 
-        auto gate = g_session_mgr.get_session(m_gate_addr);
+        auto gate = g_session_mgr.get_gate(m_gate_addr);
         if (nullptr == gate) {
             ERROR_LOG("client mailbox address(%s) error\n", m_gate_addr.c_str());
             return;

@@ -51,8 +51,21 @@ void ClientAccount::on_ready() {
     cell.call("msg_from_client", "hello, i am client");
 
     base.call("component_rpc_test", "hello, my cute component");
+
+    migrate_timer = RETIST_TIMER(0, 0.1, true, &ClientAccount::account_migrate_timer, "0.1 second");
 }
 
 void ClientAccount::on_prop_sync_from_server() {
     avatar_datas_print(get_prop("avatar_datas"));
+}
+
+void ClientAccount::account_migrate_timer() {
+    static int32_t max_call = 1000;
+    if (max_call <= 0) {
+        return;
+    }
+
+    base.call("add_migrate_int_from_client");
+    cell.call("add_migrate_int_from_client");
+    --max_call;
 }
