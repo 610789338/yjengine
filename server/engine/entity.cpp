@@ -192,9 +192,9 @@ void CellEntity::propertys_unserialize(Decoder& decoder) {
 }
 
 void CellEntity::begin_migrate(const GValue& new_addr) {
-    if (new_addr.as_string() == server->get_listen_addr()) {
+    if (new_addr.as_string() == get_listen_addr()) {
         // new cell addr == old cell addr
-        WARN_LOG("");
+        WARN_LOG("ignore migrate to local game\n");
         return;
     }
 
@@ -273,8 +273,13 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
 }
 
 void CellEntityWithClient::begin_migrate(const GValue& new_addr) {
-    if (new_addr.as_string() == server->get_listen_addr()) {
+    if (new_addr.as_string() == get_listen_addr()) {
         // new cell addr == old cell addr
+        WARN_LOG("ignore migrate to local game\n");
+        return;
+    }
+
+    if (is_migrating) {
         return;
     }
 

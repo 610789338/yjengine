@@ -30,7 +30,7 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
+    //test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
     migrate_timer = RETIST_TIMER(0, 1, true, &BaseAccount::account_migrate_timer, "0.1 second");
 
 #ifndef __PROP_SYNC_TEST__

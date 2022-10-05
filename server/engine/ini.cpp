@@ -1,3 +1,4 @@
+//#include "boost/exception/detail/exception_ptr.hpp"
 #include "ini.h"
 
 using namespace boost::property_tree;
@@ -26,8 +27,10 @@ int32_t ini_get_int(const char* node_name, const char* child_name, int32_t _defa
     try {
         return get_ini()->get_int(node_name, child_name);
     }
-    catch (...) { // TODO
-        if (_default == 0xF0F00F0F) ASSERT(false);
+    catch (std::exception& e) {
+        if (_default == 0xF0F00F0F) {
+            ASSERT_LOG(false, "%s\n", e.what());
+        }
         return _default;
     }
 }
@@ -36,8 +39,10 @@ GString ini_get_string(const char* node_name, const char* child_name, GString _d
     try {
         return get_ini()->get_string(node_name, child_name);
     }
-    catch (...) { // TODO
-        if (_default == "") ASSERT(false);
+    catch (std::exception& e) {
+        if (_default == "") {
+            ASSERT_LOG(false, "%s\n", e.what());
+        }
         return _default;
     }
 }

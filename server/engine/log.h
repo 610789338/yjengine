@@ -20,22 +20,32 @@ static unordered_map<string, int8_t> log_levels{
 extern int32_t ini_get_int(const char* node_name, const char* child_name, int32_t _defaul);
 extern string ini_get_string(const char* node_name, const char* child_name, string _default);
 
-// window debug模式下打印一条日志的平均耗时是300 micro second = 0.3 ms，待优化（TODO）
+// window debug模式下打印一条日志的平均耗时是800 micro second = 0.8ms
+// 两次ini_get_string耗时0.4ms，改成static
+// 一次now_format耗时0.2ms，改成每帧开始时cache一次 - TODO
+// 一次printf耗时0.2ms，终极解决方案是挪到子线程中 - TODO
+// 最终大概可以优化到0.02ms/条
 template<class... T>
 void LOG(const char* level, T... args) {
 
-    static string ini_log_level;
-    ini_log_level = ini_get_string("Common", "log_level", "DEBUG");
-    if (log_levels.at(level) > log_levels.at(ini_log_level)) {
+    static string ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    if (ini_log_level == "unknown") {
+        ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    }
+
+    if (ini_log_level != "unknown" && log_levels.at(level) > log_levels.at(ini_log_level)) {
         return;
     }
 
-    static string proc_name;
-    proc_name = ini_get_string("Common", "name", "unknown");
+    static string proc_name = ini_get_string("Common", "name", "unknown");
+    if (proc_name == "unknown") {
+        proc_name = ini_get_string("Common", "name", "unknown");
+    }
 
     static char body[1024] = {0};
     snprintf(body, sizeof(body), args...);
 
+    // TODO - child thread print
     if (strcmp(level, "ERROR") == 0 || strcmp(level, "DEBUG") == 0) {
         printf("%s - [%s] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
     }
