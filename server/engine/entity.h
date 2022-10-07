@@ -17,6 +17,8 @@ class RpcManagerBase;
 class ComponentManagerBase;
 class EntityComponentBase;
 struct EntityPropertyBase;
+class TimerBase;
+class TimerManagerBase;
 
 enum EntityType {
     EntityType_Base,
@@ -44,7 +46,6 @@ public:
     virtual void on_tick() {}
 
     virtual void on_create(const GDict& create_data) = 0;
-    virtual void on_migrate_create(const GDict& create_data) { ASSERT(false); }
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
@@ -70,8 +71,9 @@ public:
     virtual void propertys_unserialize(Decoder& decoder) { ASSERT(false); }
 
     // migrate
-    virtual void on_migrate_in() { ASSERT(false); }
-    virtual void on_migrate_out() { ASSERT(false); }
+    virtual void on_migrate_in(const GDict& create_data) { ASSERT(false); }
+    virtual void on_migrate_out(GDict& create_data) { ASSERT(false); }
+    void on_timer_create(TimerBase* timer);
 
     GString uuid = "";
     GString class_name = "";
@@ -80,6 +82,8 @@ public:
     unordered_map<EntityPropertyBase*, GString> propertys_turn;
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
+
+    unordered_map<GString, TimerBase*> timers;
 
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
@@ -190,7 +194,6 @@ public:
     virtual ~CellEntity() {}
 
     virtual void on_create(const GDict& create_data) {}
-    virtual void on_migrate_create(const GDict& create_data) {}
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
@@ -200,11 +203,13 @@ public:
     virtual void begin_migrate(const GValue& new_addr);
     virtual void migrate_reqack_from_base(const GValue& is_ok);
     virtual void real_begin_migrate();
-    virtual void migrate_engity_property();
-
-    virtual void on_migrate_in();
+    virtual void migrate_entity();
+    virtual void on_migrate_out(GDict& create_data);
+    virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
     void destroy_self();
+
+    virtual TimerManagerBase* get_timer_manager() { ASSERT(false); return nullptr; }
 
     BaseMailBox base;
 
@@ -226,7 +231,6 @@ public:
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_migrate_create(const GDict& create_data);
     virtual void on_client_create(const GValue& client_entity_uuid);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
@@ -237,8 +241,8 @@ public:
     virtual void migrate_reqack_from_base(const GValue& is_ok);
     virtual void migrate_reqack_from_client(const GValue& is_ok);
     virtual void real_begin_migrate();
-    virtual void migrate_engity_property();
-    virtual void on_migrate_in();
+    virtual void on_migrate_out(GDict& create_data);
+    virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
 
     ClientMailBox client;
@@ -291,9 +295,10 @@ public: \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
     RPC_CALL_DEFINE(TCLASS) \
-    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
     static EntityComponentManager<TCLASS> component_manager; \
+    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
     static TimerManager<TCLASS> timer_manager; \
+    TimerManagerBase* get_timer_manager() { return &timer_manager; } \
     static PropertyTree property_tree; \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \

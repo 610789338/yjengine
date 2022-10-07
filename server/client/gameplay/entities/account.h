@@ -14,6 +14,7 @@ public:
     static void regist_components();
     static void rpc_method_define();
     static void property_define();
+    static void timer_cb_store() {}
 
     void on_ready(); // call by engine
 
@@ -25,7 +26,9 @@ public:
 
     // migrate
     void account_migrate_timer();
+    void account_migrate_print_timer();
 
 private:
     TimerID migrate_timer;
+    TimerID migrate_print_timer;
 };

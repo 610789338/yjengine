@@ -13,6 +13,9 @@ using namespace std;
 
 typedef int TimerID;
 
+class Encoder;
+class Decoder;
+
 class TimerBase {
 public:
     TimerBase() {};
@@ -34,7 +37,10 @@ public:
     void params_parse() {
     }
 
-    vector<GValue> m_params_t;
+    void serialize(Encoder& encoder);
+    void unserialize(Decoder& decoder);
+
+    GArray m_params_t;
 
     TimerID m_id = 0;
     float m_interval = 0.0f;
@@ -43,6 +49,8 @@ public:
     int64_t m_start_time = 0;
     int32_t m_fire_num = 0;
     int64_t m_expiration = 0; // ms timestamp
+
+    GString m_cb_name = ""; // for migrate
 };
 
 class TimerCompare {
@@ -71,12 +79,45 @@ public:
     TEntity* __this;
 };
 
+class TimerCBStoreBase {
+public:
+    TimerCBStoreBase() {}
+    virtual ~TimerCBStoreBase() {}
+
+    template<class T, class ...T2>
+    void params_parse(const T& t, const T2&... rest) {
+        m_params_t.push_back(t);
+        params_parse(rest...);
+    }
+    template<class T>
+    void params_parse(const T& t) {
+        m_params_t.push_back(t);
+    }
+    void params_parse() {
+    }
+
+    GArray m_params_t;
+};
+
+template<class TEntity, class... T>
+class TimerCBStore : public TimerCBStoreBase {
+
+    typedef void(TEntity::*CBType)(T... args);
+
+public:
+    TimerCBStore() {}
+    ~TimerCBStore() {}
+
+    CBType m_cb;
+};
+
 class TimerManagerBase {
 public:
     void cancel_timer(TimerID time_id);
     void tick();
 
     virtual void timer_callback(TimerBase* timer) = 0;
+    virtual void restore_timer(void* _entity, const GString& cb_name, const GBin& timer_bin) {}
 
 protected:
     void _insert(TimerBase* timer);
@@ -98,13 +139,53 @@ public:
             timer_mgr_set = new set<TimerManagerBase*>;
         }
         timer_mgr_set->insert(this);
+        TEntity::timer_cb_store();
     }
     ~TimerManager() {
         timer_mgr_set->erase(this);
+        for (auto iter = timer_cbs_store.begin(); iter != timer_cbs_store.end(); ++iter) {
+            delete iter->second;
+        }
+    }
+
+    void restore_timer(void* _entity, const GString& cb_name, const GBin& timer_bin) {
+        auto iter = timer_cbs_store.find(cb_name);
+        if (iter == timer_cbs_store.end()) {
+            return;
+        }
+
+        TEntity* entity = (TEntity*)_entity;
+        TimerBase* timer = nullptr;
+        switch (iter->second->m_params_t.size()) {
+        case 0: {
+            timer = new Timer<TEntity>(entity);
+            ((Timer<TEntity>*)timer)->m_cb = ((TimerCBStore<TEntity>*)iter->second)->m_cb;
+            break;
+            }
+        case 1: {
+            timer = new Timer<TEntity, GValue>(entity);
+            ((Timer<TEntity, GValue>*)timer)->m_cb = ((TimerCBStore<TEntity, GValue>*)iter->second)->m_cb;
+            break;
+            }
+        case 2: {
+            timer = new Timer<TEntity, GValue, GValue>(entity);
+            ((Timer<TEntity, GValue, GValue>*)timer)->m_cb = ((TimerCBStore<TEntity, GValue, GValue>*)iter->second)->m_cb;
+            break;
+            }
+        }
+
+        Decoder decoder(timer_bin.buf, timer_bin.size);
+        decoder.read_int16(); // skip pkg len offset
+        timer->unserialize(decoder);
+        timer->m_id = ++g_timer_id;
+
+        _insert(timer);
+        entity->on_timer_create(timer);
     }
 
     template<class... T, class... T2>
-    TimerID regist_timer(TEntity* entity, double start, double interval, bool repeat, void(TEntity::*cb)(T...), T2... args) {
+    TimerID regist_timer(TEntity* entity, double start, double interval, bool repeat, const GString& cb_name, void(TEntity::*cb)(T...), T2... args) {
+        ASSERT_LOG(sizeof...(T) == sizeof...(args), "timer formal param size(%zu) != real param size(%zu)\n", sizeof...(T), sizeof...(args));
         ASSERT_LOG(!repeat || interval > 0.0999, "can't create repeat timer with interval < 0.1");
 
         int64_t start_time = nowms_timestamp() + int64_t(start * 1000);
@@ -117,10 +198,12 @@ public:
         timer->m_expiration = start_time;
         timer->m_cb = cb;
         timer->params_parse(args...);
+        timer->m_cb_name = cb_name;
 
         DEBUG_LOG("regist_timer.%d \n", timer->m_id);
 
         _insert(timer);
+        entity->on_timer_create(timer);
 
         return timer->m_id;
     }
@@ -146,7 +229,21 @@ public:
             }
         }
     }
+
+    template<class... T, class... T2>
+    void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T...), T2... args) {
+        ASSERT_LOG(sizeof...(T) == sizeof...(args), "timer formal param size(%zu) != real param size(%zu)\n", sizeof...(T), sizeof...(args));
+
+        auto timer_cb_store = new TimerCBStore<TEntity, T...>();
+        timer_cb_store->m_cb = cb;
+        timer_cb_store->params_parse(args...);
+        timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
+    }
+
+    unordered_map<GString, TimerCBStoreBase*> timer_cbs_store;
 };
 
-#define RETIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, cb, __VA_ARGS__);
-#define CANCELL_TIMER(timer_id) timer_manager.cancel_timer(timer_id);
+#define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &cb, ##__VA_ARGS__);
+#define CANCELL_TIMER(timer_id) get_timer_manager()->cancel_timer(timer_id);
+#define STORE_TIMER_CB_FOR_MIGRATE(cb, ...) timer_manager.store_timer_cb_for_migrate(#cb, &cb, ##__VA_ARGS__);
+#define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin);

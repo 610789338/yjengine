@@ -52,7 +52,8 @@ void ClientAccount::on_ready() {
 
     base.call("component_rpc_test", "hello, my cute component");
 
-    migrate_timer = RETIST_TIMER(0, 0.1, true, &ClientAccount::account_migrate_timer, "0.1 second");
+    //migrate_timer = REGIST_TIMER(0, 0.1, true, ClientAccount::account_migrate_timer);
+    //migrate_print_timer = REGIST_TIMER(0, 1, true, ClientAccount::account_migrate_print_timer);
 }
 
 void ClientAccount::on_prop_sync_from_server() {
@@ -68,4 +69,8 @@ void ClientAccount::account_migrate_timer() {
     base.call("add_migrate_int_from_client");
     cell.call("add_migrate_int_from_client");
     --max_call;
+}
+
+void ClientAccount::account_migrate_print_timer() {
+    INFO_LOG("account_migrate_print_timer %d\n", get_prop("migrate_int")->as_int32());
 }

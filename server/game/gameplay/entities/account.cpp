@@ -30,8 +30,8 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    //test_timer = RETIST_TIMER(5, 60, true, &BaseAccount::account_timer_test, "1 minutes");
-    migrate_timer = RETIST_TIMER(0, 1, true, &BaseAccount::account_migrate_timer, "0.1 second");
+    //test_timer = RETIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
+    migrate_timer = REGIST_TIMER(0, 10, true, BaseAccount::account_migrate_timer);
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -335,6 +335,10 @@ void CellAccount::property_define() {
     account_property_define<CellAccount>();
 }
 
+void CellAccount::timer_cb_store() {
+    STORE_TIMER_CB_FOR_MIGRATE(CellAccount::account_timer_test, GString());
+}
+
 void CellAccount::msg_from_base(const GValue& msg) {
     INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str());
 }
@@ -364,7 +368,7 @@ void CellAccount::on_ready() {
     base.call("msg_from_cell", "hello, i am cell");
     client.call("msg_from_cell", "hello, i am cell");
 
-    test_timer = RETIST_TIMER(0, 60 * 60, true, &CellAccount::account_timer_test, "60 minutes");
+    test_timer = REGIST_TIMER(0, 1, true, CellAccount::account_timer_test, "arg1");
 }
 
 void CellAccount::account_timer_test(const GValue& arg1) {

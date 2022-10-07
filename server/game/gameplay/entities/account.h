@@ -14,6 +14,7 @@ public:
     static void regist_components();
     static void rpc_method_define();
     static void property_define();
+    static void timer_cb_store() {}
 
     void on_tick();
 
@@ -61,6 +62,7 @@ public:
     static void regist_components();
     static void rpc_method_define();
     static void property_define();
+    static void timer_cb_store();
 
     void on_ready(); // call by engine
 

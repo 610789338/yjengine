@@ -84,6 +84,10 @@ void Entity::ready() {
     on_ready();
 }
 
+void Entity::on_timer_create(TimerBase* timer) {
+    timers.insert(make_pair(timer->m_cb_name, timer));
+}
+
 void BaseEntity::on_create(const GDict& create_data) {
     ready();
 }
@@ -202,6 +206,10 @@ void CellEntity::begin_migrate(const GValue& new_addr) {
         return;
     }
 
+    if (!is_ready) {
+        return;
+    }
+
     is_migrating = true;
 
     new_cell_addr = new_addr.as_string();
@@ -218,17 +226,33 @@ void CellEntity::real_begin_migrate() {
         return;
     }
 
-    migrate_engity_property();
+    migrate_entity();
     is_reqack_from_base = false;
 }
 
-void CellEntity::migrate_engity_property() {
-    // TODO
+void CellEntity::migrate_entity() {
+    Encoder encoder;
+    serialize2client(encoder, true);
+    encoder.write_end();
+
+    GDict create_data;
+    on_migrate_out(create_data);
+
+    auto session = g_session_mgr.get_rand_session();
+    REMOTE_RPC_CALL(session, "entity_property_migrate_from_oldcell",
+        /*new cell addr*/new_cell_addr,
+        /*old cell addr*/get_listen_addr(),
+        /*entity class name*/class_name,
+        /*create data*/create_data,
+        /*entity property*/GBin(encoder.get_buf(), encoder.get_offset()));
+}
+
+void CellEntity::on_migrate_out(GDict& create_data) {
     ASSERT(false);
 }
 
-void CellEntity::on_migrate_in() {
-    base.call("new_cell_migrate_in", server->get_listen_addr());
+void CellEntity::on_migrate_in(const GDict& create_data) {
+    ASSERT(false);
 }
 
 void CellEntity::on_new_cell_migrate_finish() {
@@ -245,12 +269,6 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 
     base.call("on_cell_create", uuid, server->get_listen_addr());
-}
-
-void CellEntityWithClient::on_migrate_create(const GDict& create_data) {
-    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    client.set_entity_and_addr(create_data.at("client_entity_uuid").as_string(), create_data.at("client_addr").as_string());
-    client.set_gate_addr(create_data.at("gate_addr").as_string());
 }
 
 void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
@@ -283,6 +301,12 @@ void CellEntityWithClient::begin_migrate(const GValue& new_addr) {
         return;
     }
 
+    if (!is_ready) {
+        return;
+    }
+
+    is_migrating = true;
+
     new_cell_addr = new_addr.as_string();
     base.call("migrate_req_from_cell");
     client.call("migrate_req_from_cell");
@@ -303,37 +327,44 @@ void CellEntityWithClient::real_begin_migrate() {
         return;
     }
 
-    migrate_engity_property();
+    migrate_entity();
+    is_reqack_from_base = false;
     is_reqack_from_client = false;
 }
 
-void CellEntityWithClient::migrate_engity_property() {
-    Encoder encoder;
-    serialize2client(encoder, true);
-    encoder.write_end();
+void CellEntityWithClient::on_migrate_out(GDict& create_data) {
+    create_data.insert(make_pair("base_entity_uuid", base.get_entity_uuid()));
+    create_data.insert(make_pair("cell_entity_uuid", uuid));
+    create_data.insert(make_pair("client_entity_uuid", client.get_entity_uuid()));
+    create_data.insert(make_pair("base_addr", base.get_addr()));
+    create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
+    create_data.insert(make_pair("client_addr", client.get_addr()));
 
-    if (encoder.anything()) {
-        GDict create_data;
-        create_data.insert(make_pair("base_entity_uuid", base.get_entity_uuid()));
-        create_data.insert(make_pair("cell_entity_uuid", uuid));
-        create_data.insert(make_pair("client_entity_uuid", client.get_entity_uuid()));
-        create_data.insert(make_pair("base_addr", base.get_addr()));
-        create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
-        create_data.insert(make_pair("client_addr", client.get_addr()));
-
-        auto session = g_session_mgr.get_rand_session();
-        REMOTE_RPC_CALL(session, "entity_property_migrate_from_oldcell",
-            /*new cell addr*/new_cell_addr,
-            /*old cell addr*/server->get_listen_addr(),
-            /*entity class name*/class_name,
-            /*create data*/ create_data,
-            /*entity property*/ GBin(encoder.get_buf(), encoder.get_offset()));
+    GDict _timers;
+    for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
+        Encoder encoder;
+        iter->second->serialize(encoder);
+        encoder.write_end();
+        _timers.insert(make_pair(iter->first, GBin(encoder.get_buf(), encoder.get_offset()) ));
+        CANCELL_TIMER(iter->second->m_id);
     }
+    create_data.insert(make_pair("timers", _timers));
 }
 
-void CellEntityWithClient::on_migrate_in() {
-    base.call("new_cell_migrate_in", server->get_listen_addr());
-    client.call("new_cell_migrate_in", server->get_listen_addr());
+void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
+    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
+    client.set_entity_and_addr(create_data.at("client_entity_uuid").as_string(), create_data.at("client_addr").as_string());
+    client.set_gate_addr(create_data.at("gate_addr").as_string());
+
+    auto _timers = create_data.at("timers").as_dict();
+    for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
+        RESTORE_TIMER(iter->first, iter->second.as_bin());
+    }
+
+    base.call("new_cell_migrate_in", get_listen_addr());
+    client.call("new_cell_migrate_in", get_listen_addr());
+
+    is_ready = true;
 }
 
 void CellEntityWithClient::on_new_cell_migrate_finish() {
