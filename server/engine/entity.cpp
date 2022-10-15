@@ -12,8 +12,8 @@ void Entity::tick() {
         return;
     }
 
-    on_tick();
     propertys_sync2client();
+    timer_tick();  // 处理当前帧创建的立即触发的timer
 }
 
 void Entity::release_component() {
@@ -30,8 +30,26 @@ void Entity::release_property() {
     propertys.clear();
 }
 
+void Entity::release_timer() {
+    vector<TimerID> _timer_ids;
+    for (auto iter = timer_ids.begin(); iter != timer_ids.end(); ++iter) {
+        _timer_ids.push_back(iter->first);
+    }
+
+    for (auto iter = _timer_ids.begin(); iter != _timer_ids.end(); ++iter) {
+        CANCELL_TIMER(*iter);
+    }
+}
+
 void Entity::propertys_sync2client(bool force_all) {
     // do nothing
+}
+
+void Entity::serialize_all(Encoder& encoder) {
+    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+        encoder.write_uint16(prop_str2int(iter->first));
+        iter->second->serialize_all(encoder);
+    }
 }
 
 void Entity::serialize2client(Encoder& encoder, bool force_all) {
@@ -84,8 +102,57 @@ void Entity::ready() {
     on_ready();
 }
 
-void Entity::on_timer_create(TimerBase* timer) {
-    timers.insert(make_pair(timer->m_cb_name, timer));
+void Entity::timer_tick() {
+
+    auto now = nowms_timestamp();
+
+    if (class_name == "BaseAccount") {
+        INFO_LOG("Enity::timer_tick %u\n", timers.size());
+    }
+
+    vector<TimerBase*> timer_fired;
+    for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
+        const auto& timer = *iter;
+        if (timer->m_expiration <= now) {
+            ++timer->m_fire_num;
+            get_timer_manager()->timer_callback(timer);
+            timer_fired.push_back(timer);
+        }
+        else {
+            break;
+        }
+    }
+
+    for (auto iter = timer_fired.begin(); iter != timer_fired.end(); ++iter) {
+        const auto& timer = *iter;
+
+        remove_timer(timer);
+
+        if (timer->m_repeat) {
+            timer->m_expiration = timer->m_start_time + int64_t(timer->m_fire_num * timer->m_interval * 1000);
+            add_timer(timer);
+        }
+    }
+}
+
+void Entity::cancel_timer(TimerID timer_id) {
+    auto iter = timer_ids.find(timer_id);
+    if (iter == timer_ids.end())
+        return;
+
+    TimerBase* timer = iter->second;
+    remove_timer(timer);
+    delete timer;
+}
+
+void Entity::add_timer(TimerBase* timer) {
+    timers.insert(timer);
+    timer_ids.insert(make_pair(timer->m_id, timer));
+}
+
+void Entity::remove_timer(TimerBase* timer) {
+    timers.erase(timer);
+    timer_ids.erase(timer->m_id);
 }
 
 void BaseEntity::on_create(const GDict& create_data) {
@@ -232,7 +299,7 @@ void CellEntity::real_begin_migrate() {
 
 void CellEntity::migrate_entity() {
     Encoder encoder;
-    serialize2client(encoder, true);
+    serialize_all(encoder);
     encoder.write_end();
 
     GDict create_data;
@@ -340,15 +407,19 @@ void CellEntityWithClient::on_migrate_out(GDict& create_data) {
     create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
     create_data.insert(make_pair("client_addr", client.get_addr()));
 
+    //INFO_LOG("entity.%s on_migrate_out\n", uuid.c_str());s
+
     GDict _timers;
     for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
+        TimerBase* timer = *iter;
         Encoder encoder;
-        iter->second->serialize(encoder);
+        timer->serialize(encoder);
         encoder.write_end();
-        _timers.insert(make_pair(iter->first, GBin(encoder.get_buf(), encoder.get_offset()) ));
-        CANCELL_TIMER(iter->second->m_id);
+        _timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset()) ));
     }
     create_data.insert(make_pair("timers", _timers));
+    create_data.insert(make_pair("next_timer_id", next_timer_id));
+    release_timer();
 }
 
 void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
@@ -356,10 +427,13 @@ void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
     client.set_entity_and_addr(create_data.at("client_entity_uuid").as_string(), create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 
+    //INFO_LOG("entity.%s on_migrate_in\n", uuid.c_str());
+
     auto _timers = create_data.at("timers").as_dict();
     for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
         RESTORE_TIMER(iter->first, iter->second.as_bin());
     }
+    next_timer_id = create_data.at("next_timer_id").as_int32();
 
     base.call("new_cell_migrate_in", get_listen_addr());
     client.call("new_cell_migrate_in", get_listen_addr());

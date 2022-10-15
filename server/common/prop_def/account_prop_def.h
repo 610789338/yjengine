@@ -56,6 +56,7 @@ void account_property_test() {
     PROPERTY_MAP(PropType::BASE_AND_CLIENT, avatar_datas, AvatarData);
 
     PROPERTY_SIMPLE(PropType::CELL_AND_CLIENT, migrate_int, int32_t, 0);
+    PROPERTY_SIMPLE(PropType::CELL_PRIVATE, test_timer, int32_t, 0);
 }
 
 template<class TEntity>

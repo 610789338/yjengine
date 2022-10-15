@@ -30,8 +30,11 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    //test_timer = RETIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
-    migrate_timer = REGIST_TIMER(0, 10, true, BaseAccount::account_migrate_timer);
+    //test_timer = REGIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
+    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
+    //INFO_LOG("BaseAccount::on_ready 1 %u\n", timers.size());
+    prop_timer = REGIST_TIMER(0, 1, true, BaseAccount::account_timer_prop_sync);
+    //INFO_LOG("BaseAccount::on_ready 2 %u\n", timers.size());
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -139,7 +142,7 @@ void BaseAccount::property_update() {
     get_prop("avatar_datas")->get("102")->get("avatar_horses")->update("horse_3", avatar_horse);
 }
 
-void BaseAccount::on_tick() {
+void BaseAccount::account_timer_prop_sync() {
 #ifdef __PROP_SYNC_TEST__
     property_sync_test();
 #endif
@@ -368,9 +371,11 @@ void CellAccount::on_ready() {
     base.call("msg_from_cell", "hello, i am cell");
     client.call("msg_from_cell", "hello, i am cell");
 
-    test_timer = REGIST_TIMER(0, 1, true, CellAccount::account_timer_test, "arg1");
+    get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, CellAccount::account_timer_test, "arg1"));
 }
 
 void CellAccount::account_timer_test(const GValue& arg1) {
-    INFO_LOG("[Cell] @@@@@@ this is timer test arg1.%s\n", arg1.as_string().c_str());
+    INFO_LOG("[Cell] @@@@@@ this is timer test arg1.%s next_timer_id.%d\n", arg1.as_string().c_str(), get_prop("test_timer")->as_int32());
+
+    get_prop("test_timer")->update(REGIST_TIMER(3, 0, false, CellAccount::account_timer_test, "arg1"));
 }

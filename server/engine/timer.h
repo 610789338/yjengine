@@ -11,7 +11,7 @@
 
 using namespace std;
 
-typedef int TimerID;
+typedef int32_t TimerID;
 
 class Encoder;
 class Decoder;
@@ -113,36 +113,18 @@ public:
 
 class TimerManagerBase {
 public:
-    void cancel_timer(TimerID time_id);
-    void tick();
-
     virtual void timer_callback(TimerBase* timer) = 0;
     virtual void restore_timer(void* _entity, const GString& cb_name, const GBin& timer_bin) {}
-
-protected:
-    void _insert(TimerBase* timer);
-    void _remove(TimerBase* timer);
-
-    set<TimerBase*, TimerCompare> m_timers;
-    unordered_map<TimerID, TimerBase*> m_timer_ids;
 };
-
-extern TimerID g_timer_id;
-extern set<TimerManagerBase*>* timer_mgr_set;
 
 template<class TEntity>
 class TimerManager : public TimerManagerBase {
 
 public:
     TimerManager() {
-        if (timer_mgr_set == nullptr) {
-            timer_mgr_set = new set<TimerManagerBase*>;
-        }
-        timer_mgr_set->insert(this);
         TEntity::timer_cb_store();
     }
     ~TimerManager() {
-        timer_mgr_set->erase(this);
         for (auto iter = timer_cbs_store.begin(); iter != timer_cbs_store.end(); ++iter) {
             delete iter->second;
         }
@@ -177,10 +159,8 @@ public:
         Decoder decoder(timer_bin.buf, timer_bin.size);
         decoder.read_int16(); // skip pkg len offset
         timer->unserialize(decoder);
-        timer->m_id = ++g_timer_id;
 
-        _insert(timer);
-        entity->on_timer_create(timer);
+        entity->add_timer(timer);
     }
 
     template<class... T, class... T2>
@@ -191,7 +171,7 @@ public:
         int64_t start_time = nowms_timestamp() + int64_t(start * 1000);
 
         auto timer = new Timer<TEntity, T...>(entity);
-        timer->m_id = ++g_timer_id;
+        timer->m_id = entity->next_timer_id++;
         timer->m_interval = (float)interval;
         timer->m_repeat = repeat;
         timer->m_start_time = start_time;
@@ -200,10 +180,9 @@ public:
         timer->params_parse(args...);
         timer->m_cb_name = cb_name;
 
-        DEBUG_LOG("regist_timer.%d \n", timer->m_id);
+        entity->add_timer(timer);
 
-        _insert(timer);
-        entity->on_timer_create(timer);
+        //INFO_LOG("entity.%s regist_timer.%d cb_name.%s timer addr.%lld\n", entity->uuid.c_str(), timer->m_id, cb_name.c_str(), (long long)timer);
 
         return timer->m_id;
     }
@@ -243,7 +222,7 @@ public:
     unordered_map<GString, TimerCBStoreBase*> timer_cbs_store;
 };
 
-#define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &cb, ##__VA_ARGS__);
-#define CANCELL_TIMER(timer_id) get_timer_manager()->cancel_timer(timer_id);
-#define STORE_TIMER_CB_FOR_MIGRATE(cb, ...) timer_manager.store_timer_cb_for_migrate(#cb, &cb, ##__VA_ARGS__);
-#define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin);
+#define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &cb, ##__VA_ARGS__)
+#define CANCELL_TIMER(timer_id) cancel_timer(timer_id)
+#define STORE_TIMER_CB_FOR_MIGRATE(cb, ...) timer_manager.store_timer_cb_for_migrate(#cb, &cb, ##__VA_ARGS__)
+#define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)

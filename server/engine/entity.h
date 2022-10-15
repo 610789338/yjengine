@@ -40,10 +40,13 @@ public:
 
 public:
     Entity() {}
-    virtual ~Entity() { release_component(); }
+    virtual ~Entity() { 
+        release_component(); 
+        release_property(); 
+        release_timer(); 
+    }
 
     void tick();
-    virtual void on_tick() {}
 
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
@@ -58,9 +61,11 @@ public:
 
     void release_component();
     void release_property();
+    void release_timer();
 
     // proppertys
     virtual void propertys_sync2client(bool force_all = false);
+    void serialize_all(Encoder& encoder);
     void serialize2client(Encoder& encoder, bool force_all = false);
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
@@ -70,10 +75,16 @@ public:
     virtual void on_ready() {}
     virtual void propertys_unserialize(Decoder& decoder) { ASSERT(false); }
 
+    // timer
+    virtual TimerManagerBase* get_timer_manager() { ASSERT(false); return nullptr; }
+    void timer_tick();
+    void cancel_timer(TimerID time_id);
+    void add_timer(TimerBase* timer);
+    void remove_timer(TimerBase* timer);
+
     // migrate
     virtual void on_migrate_in(const GDict& create_data) { ASSERT(false); }
     virtual void on_migrate_out(GDict& create_data) { ASSERT(false); }
-    void on_timer_create(TimerBase* timer);
 
     GString uuid = "";
     GString class_name = "";
@@ -83,7 +94,9 @@ public:
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
 
-    unordered_map<GString, TimerBase*> timers;
+    set<TimerBase*, TimerCompare> timers;
+    TimerID next_timer_id = 1;
+    unordered_map<TimerID, TimerBase*> timer_ids;
 
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
@@ -208,8 +221,6 @@ public:
     virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
     void destroy_self();
-
-    virtual TimerManagerBase* get_timer_manager() { ASSERT(false); return nullptr; }
 
     BaseMailBox base;
 

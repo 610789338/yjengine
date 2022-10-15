@@ -16,8 +16,6 @@ public:
     static void property_define();
     static void timer_cb_store() {}
 
-    void on_tick();
-
     void on_ready(); // call by engine
 
     void msg_from_cell(const GValue& msg);
@@ -31,6 +29,7 @@ public:
     void property_update();
 
     // property sync
+    void account_timer_prop_sync();
     void property_sync_test();
     void property_sync_test_create();
     void property_sync_test_clear();
@@ -48,6 +47,7 @@ private:
 
 private:
     TimerID test_timer;
+    TimerID prop_timer;
     TimerID migrate_timer;
 };
 
@@ -72,7 +72,4 @@ public:
 
     void add_migrate_int_from_base();
     void add_migrate_int_from_client();
-
-private:
-    TimerID test_timer;
 };
