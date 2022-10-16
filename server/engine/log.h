@@ -26,7 +26,7 @@ extern string ini_get_string(const char* node_name, const char* child_name, stri
 // 一次printf耗时0.2ms，终极解决方案是挪到子线程中 - TODO
 // 最终大概可以优化到0.02ms/条
 template<class... T>
-void LOG(const char* level, T... args) {
+void LOG_s(const char* level, T... args) {
 
     static string ini_log_level = ini_get_string("Common", "log_level", "unknown");
     if (ini_log_level == "unknown") {
@@ -46,16 +46,11 @@ void LOG(const char* level, T... args) {
     snprintf(body, sizeof(body), args...);
 
     // TODO - child thread print
-    if (strcmp(level, "ERROR") == 0 || strcmp(level, "DEBUG") == 0) {
-        printf("%s - [%s] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
-    }
-    else {
-        printf("%s - [%s ] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
-    }
+    printf("%s - [%s ] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
 }
 
 template<class T>
-void LOG(const char* level, T body) {
+void LOG_s(const char* level, T body) {
 
     static string ini_log_level;
     ini_log_level = ini_get_string("Common", "log_level", "DEBUG");
@@ -66,15 +61,49 @@ void LOG(const char* level, T body) {
     static string proc_name;
     proc_name = ini_get_string("Common", "name", "unknown");
 
-    if (strcmp(level, "ERROR") == 0 || strcmp(level, "DEBUG") == 0) {
-        printf("%s - [%s] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
-    }
-    else {
-        printf("%s - [%s ] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
-    }
+    printf("%s - [%s ] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
 }
 
-#define ERROR_LOG(...) {LOG("ERROR", __VA_ARGS__);}
-#define WARN_LOG(...)  {LOG("WARN",  __VA_ARGS__);}
-#define INFO_LOG(...)  {LOG("INFO",  __VA_ARGS__);}
-#define DEBUG_LOG(...) {LOG("DEBUG", __VA_ARGS__);}
+template<class... T>
+void LOG_l(const char* level, T... args) {
+
+    static string ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    if (ini_log_level == "unknown") {
+        ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    }
+
+    if (ini_log_level != "unknown" && log_levels.at(level) > log_levels.at(ini_log_level)) {
+        return;
+    }
+
+    static string proc_name = ini_get_string("Common", "name", "unknown");
+    if (proc_name == "unknown") {
+        proc_name = ini_get_string("Common", "name", "unknown");
+    }
+
+    static char body[1024] = {0};
+    snprintf(body, sizeof(body), args...);
+
+    // TODO - child thread print
+    printf("%s - [%s] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
+}
+
+template<class T>
+void LOG_l(const char* level, T body) {
+
+    static string ini_log_level;
+    ini_log_level = ini_get_string("Common", "log_level", "DEBUG");
+    if (log_levels.at(level) > log_levels.at(ini_log_level)) {
+        return;
+    }
+
+    static string proc_name;
+    proc_name = ini_get_string("Common", "name", "unknown");
+
+    printf("%s - [%s] - [%s] - %s", now_format().c_str(), level, proc_name.c_str(), body);
+}
+
+#define ERROR_LOG(...) {LOG_l("ERROR", __VA_ARGS__);}
+#define WARN_LOG(...)  {LOG_s("WARN",  __VA_ARGS__);}
+#define INFO_LOG(...)  {LOG_s("INFO",  __VA_ARGS__);}
+#define DEBUG_LOG(...) {LOG_l("DEBUG", __VA_ARGS__);}

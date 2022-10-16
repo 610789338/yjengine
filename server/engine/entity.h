@@ -94,7 +94,7 @@ public:
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
 
-    set<TimerBase*, TimerCompare> timers;
+    multiset<TimerBase*, TimerCompare> timers;  // 不能用set，否则过期时间一样会被认为是重复key
     TimerID next_timer_id = 1;
     unordered_map<TimerID, TimerBase*> timer_ids;
 

@@ -80,6 +80,9 @@ clean_engine:
 game_rpc.o: $(GAME_DIR)/framework/game_rpc.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/framework/game_rpc.cpp -o $(GAME_OUT_DIR)/game_rpc.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
+migrate_rpc_game.o: $(GAME_DIR)/framework/migrate_rpc.cpp
+	g++ -fPIC -g -c $(GAME_DIR)/framework/migrate_rpc.cpp -o $(GAME_OUT_DIR)/migrate_rpc_game.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
 create_avatar_component.o: $(GAME_DIR)/gameplay/components/create_avatar_component.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/gameplay/components/create_avatar_component.cpp -o $(GAME_OUT_DIR)/create_avatar_component.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
@@ -89,7 +92,7 @@ account.o: $(GAME_DIR)/gameplay/entities/account.cpp
 game_app.o: $(GAME_DIR)/game_app.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/game_app.cpp -o $(GAME_OUT_DIR)/game_app.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-game: game_rpc.o create_avatar_component.o account.o game_app.o
+game: game_rpc.o migrate_rpc_game.o create_avatar_component.o account.o game_app.o
 	g++ -fPIC -g $(GAME_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/game
 
 clean_game:
@@ -99,10 +102,13 @@ clean_game:
 gate_rpc.o: $(GATE_DIR)/framework/gate_rpc.cpp
 	g++ -fPIC -g -c $(GATE_DIR)/framework/gate_rpc.cpp -o $(GATE_OUT_DIR)/gate_rpc.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
+migrate_rpc_gate.o: $(GATE_DIR)/framework/migrate_rpc.cpp
+	g++ -fPIC -g -c $(GATE_DIR)/framework/migrate_rpc.cpp -o $(GATE_OUT_DIR)/migrate_rpc_gate.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
 gate_app.o: $(GATE_DIR)/gate_app.cpp
 	g++ -fPIC -g -c $(GATE_DIR)/gate_app.cpp -o $(GATE_OUT_DIR)/gate_app.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-gate: gate_rpc.o gate_app.o
+gate: gate_rpc.o migrate_rpc_gate.o gate_app.o
 	g++ -fPIC -g $(GATE_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/gate
 
 clean_gate:

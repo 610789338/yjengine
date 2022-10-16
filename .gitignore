@@ -44,9 +44,9 @@
 *.exe
 *.out
 *.app
+server/linux/bin/game
+server/linux/bin/gate
+server/linux/bin/client
+
 server/.vs/server/v15/Solution.VC.db-shm
 server/.vs/server/v15/Solution.VC.db-wal
-game
-gate
-client
-

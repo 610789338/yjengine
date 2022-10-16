@@ -204,4 +204,4 @@ void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) {
     } \
 }
 
-#define RPC_METHOD(rpc_type, rpc_name, ...) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &decltype(rpc_manager.tclass)::rpc_name, __VA_ARGS__)
+#define RPC_METHOD(rpc_type, rpc_name, ...) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &decltype(rpc_manager.tclass)::rpc_name, ##__VA_ARGS__)

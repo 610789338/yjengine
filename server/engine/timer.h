@@ -8,6 +8,7 @@
 
 #include "gvalue.h"
 #include "log.h"
+#include "decode.h"
 
 using namespace std;
 

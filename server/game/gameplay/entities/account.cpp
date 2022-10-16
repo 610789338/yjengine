@@ -31,10 +31,8 @@ void BaseAccount::on_ready() {
     client.call("msg_from_base", "hello, i am base");
 
     //test_timer = REGIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
-    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
-    //INFO_LOG("BaseAccount::on_ready 1 %u\n", timers.size());
     prop_timer = REGIST_TIMER(0, 1, true, BaseAccount::account_timer_prop_sync);
-    //INFO_LOG("BaseAccount::on_ready 2 %u\n", timers.size());
+    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
