@@ -32,7 +32,7 @@ void BaseAccount::on_ready() {
 
     //test_timer = REGIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
     prop_timer = REGIST_TIMER(0, 1, true, BaseAccount::account_timer_prop_sync);
-    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
+    //migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -149,7 +149,7 @@ void BaseAccount::account_timer_prop_sync() {
 void BaseAccount::property_sync_test() {
 
     Encoder encoder;
-    serialize2client(encoder, true);
+    serialize_client(encoder, true);
     encoder.write_end();
 
     if (encoder.anything()) {

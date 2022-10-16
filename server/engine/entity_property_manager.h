@@ -174,6 +174,7 @@ struct EntityPropertyBase {
     EntityPropertyBase* parent = nullptr;
 
     bool need_sync2client();
+    bool need_sync2db();
     virtual void serialize(Encoder& encoder) { ASSERT(false); }
     virtual void serialize_all(Encoder& encoder) { ASSERT(false); }
     virtual void serialize_dirty(Encoder& encoder) { ASSERT(false); }

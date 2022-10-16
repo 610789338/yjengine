@@ -45,6 +45,10 @@ void Entity::propertys_sync2client(bool force_all) {
     // do nothing
 }
 
+double Entity::get_db_save_interval() {
+    return 10.0;
+}
+
 void Entity::serialize_all(Encoder& encoder) {
     for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
         encoder.write_uint16(prop_str2int(iter->first));
@@ -52,7 +56,19 @@ void Entity::serialize_all(Encoder& encoder) {
     }
 }
 
-void Entity::serialize2client(Encoder& encoder, bool force_all) {
+void Entity::serialize_db(Encoder& encoder) {
+    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+
+        if (!iter->second->need_sync2db()) {
+            continue;
+        }
+
+        encoder.write_uint16(prop_str2int(iter->first));
+        iter->second->serialize_all(encoder);
+    }
+}
+
+void Entity::serialize_client(Encoder& encoder, bool force_all) {
 
     if (force_all) {
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
@@ -99,16 +115,23 @@ void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_p
 void Entity::ready() {
     is_ready = true;
     propertys_sync2client(true);
+
+    if (need_create_save_timer()) {
+        create_dbsave_timer();
+    }
     on_ready();
+}
+
+bool Entity::need_create_save_timer() {
+    if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient) {
+        return true;
+    }
+    return false;
 }
 
 void Entity::timer_tick() {
 
     auto now = nowms_timestamp();
-
-    if (class_name == "BaseAccount") {
-        INFO_LOG("Enity::timer_tick %u\n", timers.size());
-    }
 
     vector<TimerBase*> timer_fired;
     for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
@@ -214,7 +237,7 @@ void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
 void BaseEntityWithClient::propertys_sync2client(bool force_all) {
     
     Encoder encoder;
-    serialize2client(encoder, force_all);
+    serialize_client(encoder, force_all);
     encoder.write_end();
 
     if (encoder.anything()) {
@@ -248,6 +271,14 @@ void BaseEntityWithCellAndClient::create_client() {
 void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
     cell.call("on_client_create", client_entity_uuid.as_string());
+}
+
+void BaseEntityWithCellAndClient::real_time_to_save() {
+    // rpc to cell
+    Encoder encoder;
+    serialize_db(encoder);
+    encoder.write_end();
+    cell.call("cell_real_time_to_save", GBin(encoder.get_buf(), encoder.get_offset()));
 }
 
 void BaseEntityWithCellAndClient::new_cell_migrate_in(const GValue& new_cell_addr) {
@@ -349,7 +380,7 @@ void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
 void CellEntityWithClient::propertys_sync2client(bool force_all) {
 
     Encoder encoder;
-    serialize2client(encoder, force_all);
+    serialize_client(encoder, force_all);
     encoder.write_end();
 
     if (encoder.anything()) {
@@ -443,6 +474,31 @@ void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
 
 void CellEntityWithClient::on_new_cell_migrate_finish() {
     destroy_self();
+}
+
+void CellEntityWithClient::cell_real_time_to_save(const GValue& base_bin) {
+    Encoder encoder;
+    serialize_db(encoder);
+    encoder.write_end();
+
+    GBin cell_bin(encoder.get_buf(), encoder.get_offset());
+
+    Encoder bin;
+    bin.write_bin(base_bin.as_bin());
+    bin.write_bin(cell_bin);
+    bin.write_end();
+
+    // TODO - move to child thread
+    string db_file_name = "./db/" + uuid + ".bin";
+    auto fp = fopen(db_file_name.c_str(), "wb");
+    if (fp == nullptr) {
+        ERROR_LOG("open db file %s error\n", db_file_name.c_str());
+        return;
+    }
+
+    fwrite(bin.get_buf(), bin.get_offset(), 1, fp);
+    fclose(fp);
+    return;
 }
 
 

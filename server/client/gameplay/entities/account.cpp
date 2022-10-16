@@ -28,7 +28,7 @@ void ClientAccount::msg_from_cell(const GValue& msg) {
 void ClientAccount::prop_sync_compare(const GValue& v) {
     
     Encoder encoder;
-    serialize2client(encoder, true);
+    serialize_client(encoder, true);
     encoder.write_end();
 
     auto server_len = v.as_bin().size;

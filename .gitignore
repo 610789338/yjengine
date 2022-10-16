@@ -48,5 +48,7 @@ server/linux/bin/game
 server/linux/bin/gate
 server/linux/bin/client
 
+# Other
 server/.vs/server/v15/Solution.VC.db-shm
 server/.vs/server/v15/Solution.VC.db-wal
+*.bin

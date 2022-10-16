@@ -48,6 +48,7 @@ public:
 
     void tick();
 
+    virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
     virtual void on_create(const GDict& create_data) = 0;
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
@@ -66,9 +67,14 @@ public:
     // proppertys
     virtual void propertys_sync2client(bool force_all = false);
     void serialize_all(Encoder& encoder);
-    void serialize2client(Encoder& encoder, bool force_all = false);
+    void serialize_client(Encoder& encoder, bool force_all = false);
+    void serialize_db(Encoder& encoder);
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
+    bool need_create_save_timer();
+    virtual void create_dbsave_timer() { ASSERT(false); }
+    double get_db_save_interval();
+    virtual void real_time_to_save() {}
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
     void ready();
@@ -188,6 +194,8 @@ public:
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
 
+    virtual void real_time_to_save();
+
     void new_cell_migrate_in(const GValue& new_cell_addr);
 
     // migrate
@@ -256,6 +264,9 @@ public:
     virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
 
+    // db save
+    void cell_real_time_to_save(const GValue& base_bin);
+
     ClientMailBox client;
     bool is_reqack_from_client = false;
 };
@@ -301,6 +312,7 @@ public:
 
 #define GENERATE_ENTITY_INNER(TCLASS) \
 public: \
+    EntityType get_entity_type() { return (EntityType)TCLASS::ENTITY_TYPE; } \
     static EntityPropertyManager<TCLASS> property_manager; \
     static EntityRpcManager<TCLASS> rpc_manager; \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
@@ -313,7 +325,9 @@ public: \
     static PropertyTree property_tree; \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
-    GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); }
+    GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
+    void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, TCLASS::time_to_save); } \
+    void time_to_save() { real_time_to_save(); }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
