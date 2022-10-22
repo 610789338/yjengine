@@ -56,7 +56,13 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
 
     static bool is_call_create = false;
     if (!is_call_create) {
-        REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount");
+        const GString& base_uuid = ini_get_string("Entity", "uuid", "empty");
+        if (base_uuid == "empty") {
+            REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount", "");
+        }
+        else {
+            REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount", base_uuid);
+        }
         is_call_create = true;
     }
 }

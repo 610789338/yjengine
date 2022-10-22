@@ -59,17 +59,57 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
     }
 }
 
-void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
-    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
 
     GDict create_data;
+
+    Entity* entity = nullptr;
+    if (!entity_uuid.as_string().empty()) {
+        entity = create_entity(entity_class_name.as_string(), entity_uuid.as_string());
+
+        GString db_file_name = "./db/" + entity_uuid.as_string() + ".bin";
+        auto fp = fopen(db_file_name.c_str(), "rb");
+        if (fp == nullptr) {
+            ASSERT_LOG("load - open db file %s error\n", db_file_name.c_str());
+            return;
+        }
+
+        char buf[65535] = { 0 };
+        fread(buf, sizeof(buf), 1, fp);
+
+        Decoder db(buf, sizeof(buf));
+        db.read_int16(); // skip pkg len offset
+        const GString& base_uuid = db.read_string(); // base_uuid
+        const GBin& base_bin = db.read_bin(); // base_bin
+        Decoder base_db(base_bin.buf, base_bin.size);
+        base_db.read_int16(); // skip pkg len offset
+        entity->propertys_unserialize(base_db);
+
+        const GString& cell_uuid = db.read_string(); // cell_uuid
+        const GBin& cell_bin = db.read_bin(); // cell_bin
+        create_data.insert(make_pair("cell_uuid", cell_uuid));
+        create_data.insert(make_pair("cell_bin", cell_bin));
+    }
+    else {
+        entity = create_entity(entity_class_name.as_string(), gen_uuid());
+        create_data.insert(make_pair("cell_uuid", gen_uuid()));
+        create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
+    }
+
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
     entity->on_create(create_data);
 }
 
-void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr) {
-    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr, const GValue& cell_uuid, const GValue& bin) {
+    Entity* entity = create_entity(entity_class_name.as_string(), cell_uuid.as_string());
+
+    const GBin& cell_bin = bin.as_bin();
+    if (cell_bin.size != 0) {
+        Decoder cell_db(cell_bin.buf, cell_bin.size);
+        cell_db.read_int16(); // skip pk len offset
+        entity->propertys_unserialize(cell_db);
+    }
 
     GDict create_data;
     create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
@@ -121,8 +161,8 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(get_client_entity_rpc_names_ack, GArray());
 
-    RPC_REGISTER(create_base_entity, GString(), GString(), GString());
-    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_base_entity, GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString(), GString(), GBin());
 
     RPC_REGISTER(call_base_entity, bool(), GString(), GBin());
     RPC_REGISTER(call_cell_entity, bool(), GString(), GBin());

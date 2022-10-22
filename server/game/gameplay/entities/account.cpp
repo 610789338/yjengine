@@ -77,9 +77,9 @@ void BaseAccount::property_test() {
     avatar_datas_print(get_prop("avatar_datas"));
     propertys_sync2client(false);
 
-    property_delete();
-    avatar_datas_print(get_prop("avatar_datas"));
-    propertys_sync2client(false);
+    //property_delete();
+    //avatar_datas_print(get_prop("avatar_datas"));
+    //propertys_sync2client(false);
 }
 
 void BaseAccount::property_create() {

@@ -29,10 +29,16 @@ struct GBin {
 public:
     GBin() = default;
     GBin(const char* _buf, int16_t _size) : size(_size) { 
+        if (size == 0) {
+            return;
+        }
         buf = new char[size];
         memmove(buf, _buf, size);
     }
     GBin(const GBin& other) : size(other.size) {
+        if (size == 0) {
+            return;
+        }
         buf = new char[other.size];
         memmove(buf, other.buf, size);
     }
@@ -42,13 +48,20 @@ public:
     }
 
     GBin& operator=(const GBin& other) {
-        buf = new char[other.size];
+        release();
+
         size = other.size;
+        if (size == 0) {
+            return *this;
+        }
+        buf = new char[size];
         memmove(buf, other.buf, size);
         return *this;
     }
 
     GBin& operator=(GBin&& other) {
+        release();
+
         buf = other.buf;
         size = other.size;
         other.buf = nullptr;
@@ -56,7 +69,14 @@ public:
         return *this;
     }
 
-    ~GBin() { if (buf != nullptr) delete []buf; }
+    ~GBin() { release(); }
+
+    void release() {
+        if (buf != nullptr) {
+            delete[]buf;
+            buf = nullptr;
+        }
+    }
 
     char* buf = nullptr;
     uint16_t size = 0;

@@ -49,7 +49,7 @@ public:
         }
         else if (entity_type == EntityType::EntityType_CellWithClient) {
             entity_rpc_regist(RpcType::EXPOSED,     "on_client_create",        &CellEntityWithClient::on_client_create, GString());
-            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save",  &CellEntityWithClient::cell_real_time_to_save, GBin());
+            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save",  &CellEntityWithClient::cell_real_time_to_save, GString(), GBin());
             
         }
         else if (entity_type == EntityType::EntityType_Client) {

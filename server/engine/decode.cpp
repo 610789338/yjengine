@@ -8,19 +8,9 @@ Decoder::Decoder(const char* buf, uint16_t max_offset) {
     m_buf = buf;
     m_max_offset = max_offset;
     m_offset = 0;
-    m_need_release_buf = false;
-
-    if (nullptr == m_buf) {
-        m_buf = new char[max_offset];
-        m_need_release_buf = true;
-    }
 }
 
 Decoder::~Decoder() {
-    if (true == m_need_release_buf && m_buf != nullptr) {
-        delete[] m_buf;
-    }
-
     m_buf = nullptr;
 }
 

@@ -86,20 +86,20 @@ void get_game_entity_rpc_names_from_client(const GValue& client_addr) {
     REMOTE_RPC_CALL(session, "get_game_entity_rpc_names_ack", g_game_entity_rpc_names);
 }
 
-void create_base_entity(const GValue& entity_class_name) {
+void create_base_entity(const GValue& entity_class_name, const GValue& entity_uuid) {
     auto remote = g_remote_mgr.get_rand_remote();
     if ( nullptr == remote ) {
         return;
     }
 
-    INFO_LOG("create_base_entity %s\n", entity_class_name.as_string().c_str());
+    INFO_LOG("create_base_entity %s uuid %s\n", entity_class_name.as_string().c_str(), entity_uuid.as_string().c_str());
 
     auto session = g_cur_imp->get_session();
     //REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/remote->get_local_addr());
-    REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/get_listen_addr());
+    REMOTE_RPC_CALL(remote, "create_base_entity", entity_class_name.as_string(), /*client_addr*/session->get_remote_addr(), /*gate_addr*/get_listen_addr(), /*entity_uuid*/ entity_uuid.as_string());
 }
 
-void create_cell_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& gate_addr, const GValue& client_addr) {
+void create_cell_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& gate_addr, const GValue& client_addr, const GValue& cell_uuid, const GValue& cell_bin) {
     auto remote = g_remote_mgr.get_rand_remote();
     if (nullptr == remote) {
         return;
@@ -107,7 +107,7 @@ void create_cell_entity(const GValue& entity_class_name, const GValue& base_enti
 
     INFO_LOG("create_cell_entity %s\n", entity_class_name.as_string().c_str());
 
-    REMOTE_RPC_CALL(remote, "create_cell_entity", entity_class_name.as_string(), base_entity_uuid.as_string(), base_addr.as_string(), gate_addr.as_string(), client_addr.as_string());
+    REMOTE_RPC_CALL(remote, "create_cell_entity", entity_class_name.as_string(), base_entity_uuid.as_string(), base_addr.as_string(), gate_addr.as_string(), client_addr.as_string(), cell_uuid.as_string(), cell_bin.as_bin());
 }
 
 void create_client_entity(const GValue& client_addr, const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
@@ -171,8 +171,8 @@ void rpc_handle_regist() {
     RPC_REGISTER(get_client_entity_rpc_names_from_game, GString());
     RPC_REGISTER(get_game_entity_rpc_names_from_client, GString());
 
-    RPC_REGISTER(create_base_entity, GString());
-    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_base_entity, GString(), GString());
+    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString(), GString(), GBin());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString(), GString());
 
     RPC_REGISTER(call_base_entity, GString(), GString(), GBin());

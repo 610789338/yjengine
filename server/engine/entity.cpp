@@ -122,6 +122,14 @@ void Entity::ready() {
     on_ready();
 }
 
+void Entity::propertys_unserialize(Decoder& decoder) {
+    while (!decoder.is_finish()) {
+        auto idx = decoder.read_int16();
+        const GString& prop_name = prop_int2str(idx);
+        propertys.at(prop_name)->unserialize(decoder);
+    }
+}
+
 bool Entity::need_create_save_timer() {
     if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient) {
         return true;
@@ -191,10 +199,12 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
     // game -> gate -> game
     auto const& session = g_session_mgr.get_rand_session();
     REMOTE_RPC_CALL(session, "create_cell_entity", cell_class_name, 
-        /*base entity addr*/ uuid,
+        /*base entity uuid*/ uuid,
         /*base addr*/ session->get_local_addr(),
         /*gate addr*/ create_data.at("gate_addr").as_string(),
-        /*client addr*/ create_data.at("client_addr").as_string());
+        /*client addr*/ create_data.at("client_addr").as_string(),
+        /*cell uuid*/ create_data.at("cell_uuid").as_string(),
+        /*cell bin*/ create_data.at("cell_bin").as_bin());
 }
 
 void BaseEntityWithCell::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
@@ -275,22 +285,14 @@ void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_u
 
 void BaseEntityWithCellAndClient::real_time_to_save() {
     // rpc to cell
-    Encoder encoder;
-    serialize_db(encoder);
-    encoder.write_end();
-    cell.call("cell_real_time_to_save", GBin(encoder.get_buf(), encoder.get_offset()));
+    Encoder base_db;
+    serialize_db(base_db);
+    base_db.write_end();
+    cell.call("cell_real_time_to_save", uuid, GBin(base_db.get_buf(), base_db.get_offset()));
 }
 
 void BaseEntityWithCellAndClient::new_cell_migrate_in(const GValue& new_cell_addr) {
     BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
-}
-
-void CellEntity::propertys_unserialize(Decoder& decoder) {
-    while (!decoder.is_finish()) {
-        auto idx = decoder.read_int16();
-        const GString& prop_name = prop_int2str(idx);
-        propertys.at(prop_name)->unserialize(decoder);
-    }
 }
 
 void CellEntity::begin_migrate(const GValue& new_addr) {
@@ -476,27 +478,28 @@ void CellEntityWithClient::on_new_cell_migrate_finish() {
     destroy_self();
 }
 
-void CellEntityWithClient::cell_real_time_to_save(const GValue& base_bin) {
-    Encoder encoder;
-    serialize_db(encoder);
-    encoder.write_end();
+void CellEntityWithClient::cell_real_time_to_save(const GValue& base_uuid, const GValue& base_bin) {
+    Encoder cell_db;
+    serialize_db(cell_db);
+    cell_db.write_end();
 
-    GBin cell_bin(encoder.get_buf(), encoder.get_offset());
+    GBin cell_bin(cell_db.get_buf(), cell_db.get_offset());
 
-    Encoder bin;
-    bin.write_bin(base_bin.as_bin());
-    bin.write_bin(cell_bin);
-    bin.write_end();
+    Encoder db;
+    db.write_string(base_uuid.as_string());
+    db.write_bin(base_bin.as_bin());
+    db.write_string(uuid);
+    db.write_bin(cell_bin);
+    db.write_end();
 
     // TODO - move to child thread
-    string db_file_name = "./db/" + uuid + ".bin";
+    GString db_file_name = "./db/" + base_uuid.as_string() + ".bin";
     auto fp = fopen(db_file_name.c_str(), "wb");
     if (fp == nullptr) {
-        ERROR_LOG("open db file %s error\n", db_file_name.c_str());
+        ERROR_LOG("save - open db file %s error\n", db_file_name.c_str());
         return;
     }
-
-    fwrite(bin.get_buf(), bin.get_offset(), 1, fp);
+    fwrite(db.get_buf(), db.get_offset(), 1, fp);
     fclose(fp);
     return;
 }
@@ -521,14 +524,6 @@ void ClientEntity::prop_sync_from_cell(const GValue& v) {
     decoder.read_int16(); // skip pkg len offset
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
-}
-
-void ClientEntity::propertys_unserialize(Decoder& decoder) {
-    while (!decoder.is_finish()) {
-        auto idx = decoder.read_int16();
-        const GString& prop_name = prop_int2str(idx);
-        propertys.at(prop_name)->unserialize(decoder);
-    }
 }
 
 void ClientEntity::migrate_req_from_cell() {

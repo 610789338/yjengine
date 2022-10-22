@@ -74,12 +74,12 @@ public:
     bool need_create_save_timer();
     virtual void create_dbsave_timer() { ASSERT(false); }
     double get_db_save_interval();
-    virtual void real_time_to_save() {}
+    virtual void real_time_to_save() { ASSERT(false); }
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
     void ready();
     virtual void on_ready() {}
-    virtual void propertys_unserialize(Decoder& decoder) { ASSERT(false); }
+    virtual void propertys_unserialize(Decoder& decoder);
 
     // timer
     virtual TimerManagerBase* get_timer_manager() { ASSERT(false); return nullptr; }
@@ -218,8 +218,6 @@ public:
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
-    void propertys_unserialize(Decoder& decoder);
-
     // migrate
     virtual void begin_migrate(const GValue& new_addr);
     virtual void migrate_reqack_from_base(const GValue& is_ok);
@@ -265,7 +263,7 @@ public:
     virtual void on_new_cell_migrate_finish();
 
     // db save
-    void cell_real_time_to_save(const GValue& base_bin);
+    void cell_real_time_to_save(const GValue& base_uuid, const GValue& base_bin);
 
     ClientMailBox client;
     bool is_reqack_from_client = false;
@@ -295,7 +293,6 @@ public:
     virtual void on_destroy() {}
     void prop_sync_from_base(const GValue& bin);
     void prop_sync_from_cell(const GValue& bin);
-    void propertys_unserialize(Decoder& decoder);
     virtual void on_prop_sync_from_server() {}
 
     // migrate
