@@ -310,6 +310,7 @@ void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_u
 
 void BaseEntityWithCellAndClient::on_client_reconnect_success(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+    propertys_sync2client(true);
     cell.call("on_client_reconnect_success", client_entity_uuid.as_string(), client.get_addr(), client.get_gate_addr());
 }
 
@@ -471,11 +472,11 @@ void CellEntityWithClient::real_begin_migrate() {
 
 void CellEntityWithClient::on_migrate_out(GDict& create_data) {
     create_data.insert(make_pair("base_entity_uuid", base.get_entity_uuid()));
+    create_data.insert(make_pair("base_addr", base.get_addr()));
     create_data.insert(make_pair("cell_entity_uuid", uuid));
     create_data.insert(make_pair("client_entity_uuid", client.get_entity_uuid()));
-    create_data.insert(make_pair("base_addr", base.get_addr()));
-    create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
     create_data.insert(make_pair("client_addr", client.get_addr()));
+    create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
 
     //INFO_LOG("entity.%s on_migrate_out\n", uuid.c_str());s
 
