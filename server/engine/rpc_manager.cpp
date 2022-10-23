@@ -114,6 +114,7 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("get_client_entity_rpc_names_from_game", idx++));
     m_l2s.insert(make_pair("get_game_entity_rpc_names_from_client", idx++));
     m_l2s.insert(make_pair("create_client_entity", idx++));
+    m_l2s.insert(make_pair("create_client_entity_onreconnect", idx++));
     m_l2s.insert(make_pair("call_client_entity", idx++));
 
     // client

@@ -121,6 +121,17 @@ void create_client_entity(const GValue& client_addr, const GValue& entity_class_
     REMOTE_RPC_CALL(session, "create_client_entity", entity_class_name.as_string(), base_entity_uuid.as_string(), base_addr.as_string(), cell_entity_uuid.as_string(), cell_addr.as_string());
 }
 
+void create_client_entity_onreconnect(const GValue& client_addr, const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
+    auto session = g_session_mgr.get_session(client_addr.as_string());
+    if (nullptr == session) {
+        return;
+    }
+
+    INFO_LOG("create_client_entity_onreconnect %s\n", entity_class_name.as_string().c_str());
+
+    REMOTE_RPC_CALL(session, "create_client_entity_onreconnect", entity_class_name.as_string(), base_entity_uuid.as_string(), base_addr.as_string(), cell_entity_uuid.as_string(), cell_addr.as_string());
+}
+
 void call_base_entity(const GValue& base_addr, const GValue& entity_uuid, const GValue& inner_rpc) {
     auto remote = g_remote_mgr.get_remote(base_addr.as_string());
     if (nullptr == remote) {
@@ -174,6 +185,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_base_entity, GString(), GString());
     RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString(), GString(), GBin());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_client_entity_onreconnect, GString(), GString(), GString(), GString(), GString(), GString());
 
     RPC_REGISTER(call_base_entity, GString(), GString(), GBin());
     RPC_REGISTER(call_cell_entity, GString(), GString(), GBin());

@@ -78,6 +78,17 @@ void create_client_entity(const GValue& entity_class_name, const GValue& base_en
     entity->on_create(create_data);
 }
 
+void create_client_entity_onreconnect(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
+    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+
+    GDict create_data;
+    create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
+    create_data.insert(make_pair("base_addr", base_addr));
+    create_data.insert(make_pair("cell_entity_uuid", cell_entity_uuid));
+    create_data.insert(make_pair("cell_addr", cell_addr));
+    entity->on_reconnect_success(create_data);
+}
+
 void call_client_entity(const GValue& entity_uuid, const GValue& inner_rpc) {
 
     auto iter = g_entities.find(entity_uuid.as_string());
@@ -100,6 +111,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(on_remote_disconnected, GString());
     RPC_REGISTER(regist_ack_from_gate, GString(), bool());
     RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_client_entity_onreconnect, GString(), GString(), GString(), GString(), GString());
 
     RPC_REGISTER(get_game_entity_rpc_names_ack, GArray());
 

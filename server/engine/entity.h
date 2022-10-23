@@ -50,6 +50,8 @@ public:
 
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
     virtual void on_create(const GDict& create_data) = 0;
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) { ASSERT(false); }
+    virtual void on_reconnect_success(const GDict& create_data) { ASSERT(false); }
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
 
@@ -165,8 +167,10 @@ public:
     virtual ~BaseEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void create_client();
     virtual void on_client_create(const GValue& client_entity_uuid);
+    virtual void on_client_reconnect_success(const GValue& client_entity_uuid);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
@@ -187,9 +191,11 @@ public:
     virtual ~BaseEntityWithCellAndClient() {}
 
     virtual void on_create(const GDict& create_data);
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
     virtual void create_client();
     virtual void on_client_create(const GValue& client_entity_uuid);
+    virtual void on_client_reconnect_success(const GValue& client_entity_uuid);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
@@ -249,6 +255,7 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void on_client_create(const GValue& client_entity_uuid);
+    virtual void on_client_reconnect_success(const GValue& client_entity_uuid, const GValue& client_addr, const GValue& gate_addr);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
@@ -289,6 +296,7 @@ public:
     virtual ~ClientEntity() {}
 
     virtual void on_create(const GDict& create_data);
+    virtual void on_reconnect_success(const GDict& create_data);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     void prop_sync_from_base(const GValue& bin);

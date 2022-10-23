@@ -227,6 +227,11 @@ void BaseEntityWithClient::on_create(const GDict& create_data) {
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 }
 
+void BaseEntityWithClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
+    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
+    client.set_gate_addr(gate_addr);
+}
+
 void BaseEntityWithClient::create_client() {
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.m_gate_addr);
@@ -242,6 +247,12 @@ void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
     client.call("ready");
     ready();
+}
+
+void BaseEntityWithClient::on_client_reconnect_success(const GValue& client_entity_uuid) {
+    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+    propertys_sync2client(true);
+    client.call("ready");
 }
 
 void BaseEntityWithClient::propertys_sync2client(bool force_all) {
@@ -262,6 +273,20 @@ void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
     create_cell(create_data);
 }
 
+void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
+    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
+    client.set_gate_addr(gate_addr);
+
+    // game -> gate -> client
+    auto gate = g_session_mgr.get_gate(client.get_gate_addr());
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), client_class_name,
+        /*base entity uuid*/ uuid,
+        /*base addr*/ gate->get_local_addr(),
+        /*cell entity uuid*/ cell.get_entity_uuid(),
+        /*cell addr*/ cell.get_addr()
+    );
+}
+
 void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
     cell.set_entity_and_addr(cell_entity_uuid.as_string(), cell_addr.as_string());
     create_client();
@@ -269,7 +294,7 @@ void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid,
 
 void BaseEntityWithCellAndClient::create_client() {
     // game -> gate -> client
-    auto gate = g_session_mgr.get_gate(client.m_gate_addr);
+    auto gate = g_session_mgr.get_gate(client.get_gate_addr());
     REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
         /*base entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
@@ -281,6 +306,11 @@ void BaseEntityWithCellAndClient::create_client() {
 void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_uuid) {
     client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
     cell.call("on_client_create", client_entity_uuid.as_string());
+}
+
+void BaseEntityWithCellAndClient::on_client_reconnect_success(const GValue& client_entity_uuid) {
+    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+    cell.call("on_client_reconnect_success", client_entity_uuid.as_string(), client.get_addr(), client.get_gate_addr());
 }
 
 void BaseEntityWithCellAndClient::real_time_to_save() {
@@ -377,6 +407,13 @@ void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
     base.call("ready");
     client.call("ready");
     ready();
+}
+
+void CellEntityWithClient::on_client_reconnect_success(const GValue& client_entity_uuid, const GValue& client_addr, const GValue& gate_addr) {
+    client.set_entity_and_addr(client_entity_uuid.as_string(), client_addr.as_string());
+    client.set_gate_addr(gate_addr.as_string());
+    propertys_sync2client(true);
+    client.call("ready");
 }
 
 void CellEntityWithClient::propertys_sync2client(bool force_all) {
@@ -510,6 +547,13 @@ void ClientEntity::on_create(const GDict& create_data) {
     cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
 
     base.call("on_client_create", uuid);
+}
+
+void ClientEntity::on_reconnect_success(const GDict& create_data) {
+    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
+    cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
+
+    base.call("on_client_reconnect_success", uuid);
 }
 
 void ClientEntity::prop_sync_from_base(const GValue& v) {

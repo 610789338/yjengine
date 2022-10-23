@@ -59,46 +59,68 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
     }
 }
 
-void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
+void create_base_entity_new(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
+
+    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+    GDict create_data;
+    create_data.insert(make_pair("cell_uuid", gen_uuid()));
+    create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
+    create_data.insert(make_pair("client_addr", client_addr));
+    create_data.insert(make_pair("gate_addr", gate_addr));
+    entity->on_create(create_data);;
+}
+
+void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
+
+    Entity* entity = create_entity(entity_class_name.as_string(), entity_uuid.as_string());
+
+    // TODO - move to child thread
+    GString db_file_name = "./db/" + entity_uuid.as_string() + ".bin";
+    auto fp = fopen(db_file_name.c_str(), "rb");
+    if (fp == nullptr) {
+        ASSERT_LOG("load - open db file %s error\n", db_file_name.c_str());
+        return;
+    }
+
+    char buf[65535] = { 0 };
+    fread(buf, sizeof(buf), 1, fp);
+
+    Decoder db(buf, sizeof(buf));
+    db.read_int16(); // skip pkg len offset
+    const GString& base_uuid = db.read_string(); // base_uuid
+    const GBin& base_bin = db.read_bin(); // base_bin
+    Decoder base_db(base_bin.buf, base_bin.size);
+    base_db.read_int16(); // skip pkg len offset
+    entity->propertys_unserialize(base_db);
+
+    const GString& cell_uuid = db.read_string(); // cell_uuid
+    const GBin& cell_bin = db.read_bin(); // cell_bin
 
     GDict create_data;
-
-    Entity* entity = nullptr;
-    if (!entity_uuid.as_string().empty()) {
-        entity = create_entity(entity_class_name.as_string(), entity_uuid.as_string());
-
-        GString db_file_name = "./db/" + entity_uuid.as_string() + ".bin";
-        auto fp = fopen(db_file_name.c_str(), "rb");
-        if (fp == nullptr) {
-            ASSERT_LOG("load - open db file %s error\n", db_file_name.c_str());
-            return;
-        }
-
-        char buf[65535] = { 0 };
-        fread(buf, sizeof(buf), 1, fp);
-
-        Decoder db(buf, sizeof(buf));
-        db.read_int16(); // skip pkg len offset
-        const GString& base_uuid = db.read_string(); // base_uuid
-        const GBin& base_bin = db.read_bin(); // base_bin
-        Decoder base_db(base_bin.buf, base_bin.size);
-        base_db.read_int16(); // skip pkg len offset
-        entity->propertys_unserialize(base_db);
-
-        const GString& cell_uuid = db.read_string(); // cell_uuid
-        const GBin& cell_bin = db.read_bin(); // cell_bin
-        create_data.insert(make_pair("cell_uuid", cell_uuid));
-        create_data.insert(make_pair("cell_bin", cell_bin));
-    }
-    else {
-        entity = create_entity(entity_class_name.as_string(), gen_uuid());
-        create_data.insert(make_pair("cell_uuid", gen_uuid()));
-        create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
-    }
-
+    create_data.insert(make_pair("cell_uuid", cell_uuid));
+    create_data.insert(make_pair("cell_bin", cell_bin));
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
     entity->on_create(create_data);
+}
+
+void entity_reconnect_fromclient(Entity* entity, const GValue& client_addr, const GValue& gate_addr) {
+    entity->on_reconnect_fromclient(client_addr.as_string(), gate_addr.as_string());
+}
+
+void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
+    if (entity_uuid.as_string().empty()) {
+        create_base_entity_new(entity_class_name, client_addr, gate_addr);
+    }
+    else {
+        auto iter = g_entities.find(entity_uuid.as_string());
+        if (iter == g_entities.end()) {
+            create_base_entity_fromdb(entity_class_name, client_addr, gate_addr, entity_uuid);
+        }
+        else {
+            entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+        }
+    }
 }
 
 void create_cell_entity(const GValue& entity_class_name, const GValue&  base_entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr, const GValue& cell_uuid, const GValue& bin) {
