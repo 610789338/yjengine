@@ -34,31 +34,25 @@ public:
     EntityRpcManager(enum EntityType entity_type, const GString& entity_class_name, const function<Entity*()>& creator) {
 
         // entity base rpc
-        if (entity_type == EntityType::EntityType_Base) {
-        }
-        else if (entity_type == EntityType::EntityType_BaseWithCell) {
+        if (entity_type == EntityType::EntityType_BaseWithCell) {
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create",     &BaseEntityWithCell::on_cell_create, GString());
-        }
-        else if (entity_type == EntityType::EntityType_BaseWithClient) {
-            entity_rpc_regist(RpcType::EXPOSED,     "on_client_create",             &BaseEntityWithClient::on_client_create);
-            entity_rpc_regist(RpcType::EXPOSED,     "on_client_reconnect_success",  &BaseEntityWithClient::on_client_reconnect_success);
         }
         else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) {
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create",               &BaseEntityWithCellAndClient::on_cell_create, GString());
-            entity_rpc_regist(RpcType::EXPOSED,     "on_client_create",             &BaseEntityWithCellAndClient::on_client_create);
             entity_rpc_regist(RpcType::EXPOSED,     "on_client_reconnect_success",  &BaseEntityWithCellAndClient::on_client_reconnect_success);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "ready",                        &BaseEntityWithCellAndClient::ready);
+            entity_rpc_regist(RpcType::EXPOSED,     "ready",                        &BaseEntityWithCellAndClient::ready);
         }
         else if (entity_type == EntityType::EntityType_CellWithClient) {
-            entity_rpc_regist(RpcType::EXPOSED,     "on_client_create",             &CellEntityWithClient::on_client_create);
-            entity_rpc_regist(RpcType::EXPOSED,     "on_client_reconnect_success",  &CellEntityWithClient::on_client_reconnect_success, GString(), GString());
+            entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient",      &CellEntityWithClient::on_reconnect_fromclient, GString(), GString());
+            entity_rpc_regist(RpcType::SERVER_ONLY, "on_client_reconnect_success",  &CellEntityWithClient::on_client_reconnect_success);
             entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save",       &CellEntityWithClient::cell_real_time_to_save, GString(), GBin());
-            
+            entity_rpc_regist(RpcType::SERVER_ONLY, "ready",                        &CellEntityWithClient::ready);
         }
         else if (entity_type == EntityType::EntityType_Client) {
-            entity_rpc_regist(RpcType::CLIENT, "ready",                   &ClientEntity::ready);
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base",     &ClientEntity::prop_sync_from_base, GBin());
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell",     &ClientEntity::prop_sync_from_cell, GBin());
+            entity_rpc_regist(RpcType::CLIENT, "ready",                   &ClientEntity::ready);
+            entity_rpc_regist(RpcType::CLIENT, "on_kick",                 &ClientEntity::on_kick);
         }
 
         regist_migrate_rpc(entity_type);

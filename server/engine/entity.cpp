@@ -221,66 +221,10 @@ void BaseEntityWithCell::new_cell_migrate_in(const GValue& new_cell_addr) {
     cell.stop_cache_rpc();
 }
 
-void BaseEntityWithClient::on_create(const GDict& create_data) {
-    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
-    client.set_gate_addr(create_data.at("gate_addr").as_string());
-}
-
-void BaseEntityWithClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
-    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
-    client.set_gate_addr(gate_addr);
-}
-
-void BaseEntityWithClient::create_client() {
-    // game -> gate -> client
-    auto gate = g_session_mgr.get_gate(client.m_gate_addr);
-    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
-        /*entity uuid*/ uuid,
-        /*base addr*/ gate->get_local_addr(),
-        /*cell entity uuid*/ GString(),
-        /*cell addr*/ GString()
-    );
-}
-
-void BaseEntityWithClient::on_client_create() {
-    client.call("ready");
-    ready();
-}
-
-void BaseEntityWithClient::on_client_reconnect_success() {
-    propertys_sync2client(true);
-    client.call("ready");
-}
-
-void BaseEntityWithClient::propertys_sync2client(bool force_all) {
-    
-    Encoder encoder;
-    serialize_client(encoder, force_all);
-    encoder.write_end();
-
-    if (encoder.anything()) {
-        //byte_print(encoder.get_buf(), encoder.get_offset()); // TODO delete
-        client.call("prop_sync_from_base", GBin(encoder.get_buf(), encoder.get_offset()));
-    }
-}
-
 void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
     client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
     create_cell(create_data);
-}
-
-void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
-    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
-    client.set_gate_addr(gate_addr);
-
-    // game -> gate -> client
-    auto gate = g_session_mgr.get_gate(client.get_gate_addr());
-    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
-        /*uuid*/ uuid,
-        /*base addr*/ gate->get_local_addr(),
-        /*cell addr*/ cell.get_addr()
-    );
 }
 
 void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_addr) {
@@ -298,13 +242,40 @@ void BaseEntityWithCellAndClient::create_client() {
     );
 }
 
-void BaseEntityWithCellAndClient::on_client_create() {
-    cell.call("on_client_create");
+void BaseEntityWithCellAndClient::ready() {
+    Entity::ready();
+    cell.call("ready");
+}
+
+void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
+    // kick old client
+    kick_client();
+
+    // recover client mailbox
+    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
+    client.set_gate_addr(gate_addr);
+    cell.call("on_reconnect_fromclient", client_addr, gate_addr);
 }
 
 void BaseEntityWithCellAndClient::on_client_reconnect_success() {
     propertys_sync2client(true);
-    cell.call("on_client_reconnect_success", client.get_addr(), client.get_gate_addr());
+    cell.call("on_client_reconnect_success");
+}
+
+void BaseEntityWithCellAndClient::propertys_sync2client(bool force_all) {
+
+    Encoder encoder;
+    serialize_client(encoder, force_all);
+    encoder.write_end();
+
+    if (encoder.anything()) {
+        //byte_print(encoder.get_buf(), encoder.get_offset()); // TODO delete
+        client.call("prop_sync_from_base", GBin(encoder.get_buf(), encoder.get_offset()));
+    }
+}
+
+void BaseEntityWithCellAndClient::kick_client() {
+    client.call("on_kick");
 }
 
 void BaseEntityWithCellAndClient::real_time_to_save() {
@@ -395,15 +366,26 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
     base.call("on_cell_create", server->get_listen_addr());
 }
 
-void CellEntityWithClient::on_client_create() {
-    base.call("ready");
+void CellEntityWithClient::ready() {
+    Entity::ready();
     client.call("ready");
-    ready();
 }
 
-void CellEntityWithClient::on_client_reconnect_success(const GValue& client_addr, const GValue& gate_addr) {
+void CellEntityWithClient::on_reconnect_fromclient(const GValue& client_addr, const GValue& gate_addr) {
+    // recover client mailbox
     client.set_entity_and_addr(uuid, client_addr.as_string());
     client.set_gate_addr(gate_addr.as_string());
+
+    // create new client
+    auto gate = g_session_mgr.get_gate(gate_addr.as_string());
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
+        /*uuid*/ uuid,
+        /*base addr*/ base.get_addr(),
+        /*cell addr*/ gate->get_local_addr()
+    );
+}
+
+void CellEntityWithClient::on_client_reconnect_success() {
     propertys_sync2client(true);
     client.call("ready");
 }
@@ -534,7 +516,7 @@ void ClientEntity::on_create(const GDict& create_data) {
     base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
     cell.set_entity_and_addr(uuid, create_data.at("cell_addr").as_string());
 
-    base.call("on_client_create");
+    base.call("ready");
 }
 
 void ClientEntity::on_reconnect_success(const GDict& create_data) {
@@ -556,6 +538,10 @@ void ClientEntity::prop_sync_from_cell(const GValue& v) {
     decoder.read_int16(); // skip pkg len offset
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
+}
+
+void ClientEntity::on_kick() {
+    INFO_LOG("on kick\n");
 }
 
 void ClientEntity::migrate_req_from_cell() {

@@ -60,7 +60,6 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
 }
 
 void create_base_entity_new(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
-
     Entity* entity = create_local_base_entity(entity_class_name.as_string(), gen_uuid());
     GDict create_data;
     create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
@@ -71,13 +70,11 @@ void create_base_entity_new(const GValue& entity_class_name, const GValue& clien
 
 void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
 
-    Entity* entity = create_local_base_entity(entity_class_name.as_string(), entity_uuid.as_string());
-
-    // TODO - move to child thread
+    // load from db - TODO: move to child thread
     GString db_file_name = "./db/" + entity_uuid.as_string() + ".bin";
     auto fp = fopen(db_file_name.c_str(), "rb");
     if (fp == nullptr) {
-        ASSERT_LOG(false, "load - open db file %s error\n", db_file_name.c_str());
+        ERROR_LOG("load - open db file %s error\n", db_file_name.c_str());
         return;
     }
 
@@ -90,6 +87,8 @@ void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& cl
     const GBin& base_bin = db.read_bin(); // base_bin
     Decoder base_db(base_bin.buf, base_bin.size);
     base_db.read_int16(); // skip pkg len offset
+
+    Entity* entity = create_local_base_entity(entity_class_name.as_string(), entity_uuid.as_string());
     entity->propertys_unserialize(base_db);
 
     const GBin& cell_bin = db.read_bin(); // cell_bin

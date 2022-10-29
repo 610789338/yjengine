@@ -17,7 +17,6 @@ bool prop_regist_check(int8_t t, enum PropType type) {
     switch (EntityType(t)) {
     case EntityType::EntityType_Base:
     case EntityType::EntityType_BaseWithCell:
-    case EntityType::EntityType_BaseWithClient:
     case EntityType::EntityType_BaseWithCellAndClient: {
         if (type == PropType::ALL ||
             type == PropType::BASE_PRIVATE ||

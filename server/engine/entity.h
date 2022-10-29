@@ -21,13 +21,12 @@ class TimerBase;
 class TimerManagerBase;
 
 enum EntityType {
-    EntityType_Base,
+    EntityType_Base,  // stub
     EntityType_BaseWithCell,  // monster
-    EntityType_BaseWithClient,
     EntityType_BaseWithCellAndClient,  // player
     EntityType_Cell,  // monster
     EntityType_CellWithClient,  // player
-    EntityType_Client,
+    EntityType_Client,  // player
 
     EntityType_None
 };
@@ -126,16 +125,14 @@ public:
     virtual void on_destroy() {}
 };
 
-class BaseEntityWithCell : virtual public BaseEntity {
+class BaseEntityWithCell : public BaseEntity {
 public:
     enum {
         ENTITY_TYPE = EntityType::EntityType_BaseWithCell
     };
 
 public:
-    BaseEntityWithCell() {
-        cell.set_owner(this);
-    }
+    BaseEntityWithCell() { cell.set_owner(this); }
     virtual ~BaseEntityWithCell() {}
 
     virtual void on_create(const GDict& create_data);
@@ -151,49 +148,25 @@ public:
     CellMailBox cell;
 };
 
-class BaseEntityWithClient : virtual public BaseEntity {
-public:
-    enum {
-        ENTITY_TYPE = EntityType::EntityType_BaseWithClient
-    };
-
-public:
-    BaseEntityWithClient() {
-        client.set_owner(this);
-    }
-    virtual ~BaseEntityWithClient() {}
-
-    virtual void on_create(const GDict& create_data);
-    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
-    virtual void create_client();
-    virtual void on_client_create();
-    virtual void on_client_reconnect_success();
-    virtual void ready() { Entity::ready(); } // must exist
-    virtual void on_destroy() {}
-    virtual void propertys_sync2client(bool force_all);
-
-    ClientMailBox client;
-};
-
-class BaseEntityWithCellAndClient : public BaseEntityWithCell, public BaseEntityWithClient {
+class BaseEntityWithCellAndClient : public BaseEntityWithCell {
 public:
     enum {
         ENTITY_TYPE = EntityType::EntityType_BaseWithCellAndClient
     };
 
 public:
-    BaseEntityWithCellAndClient() {}
+    BaseEntityWithCellAndClient() { client.set_owner(this); }
     virtual ~BaseEntityWithCellAndClient() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void on_cell_create(const GValue& cell_addr);
     virtual void create_client();
-    virtual void on_client_create();
+    virtual void ready(); // must exist
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void on_client_reconnect_success();
-    virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
-    virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
+    virtual void propertys_sync2client(bool force_all);
+    virtual void kick_client();
 
     virtual void real_time_to_save();
 
@@ -201,6 +174,8 @@ public:
 
     // migrate
     void migrate_req_from_cell() { BaseEntityWithCell::migrate_req_from_cell(); }
+
+    ClientMailBox client;
 };
 
 
@@ -249,9 +224,9 @@ public:
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_client_create();
-    virtual void on_client_reconnect_success(const GValue& client_addr, const GValue& gate_addr);
-    virtual void ready() { Entity::ready(); } // must exist
+    virtual void ready(); // must exist
+    virtual void on_reconnect_fromclient(const GValue& client_addr, const GValue& gate_addr);
+    virtual void on_client_reconnect_success();
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
@@ -297,6 +272,7 @@ public:
     void prop_sync_from_base(const GValue& bin);
     void prop_sync_from_cell(const GValue& bin);
     virtual void on_prop_sync_from_server() {}
+    virtual void on_kick();
 
     // migrate
     void migrate_req_from_cell();
