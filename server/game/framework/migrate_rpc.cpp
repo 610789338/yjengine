@@ -4,10 +4,10 @@
 
 void entity_property_migrate_from_oldcell(const GValue& old_cell_addr, const GValue& entity_class_name, const GValue& _create_data, const GValue& v) {
     GDict& create_data = _create_data.as_dict();
-    GString cell_entity_uuid = create_data.at("cell_entity_uuid").as_string();
-    create_data.erase("cell_entity_uuid");
+    GString entity_uuid = create_data.at("entity_uuid").as_string();
+    create_data.erase("entity_uuid");
 
-    Entity* entity = create_entity(entity_class_name.as_string(), cell_entity_uuid);
+    Entity* entity = create_local_cell_entity(entity_class_name.as_string(), entity_uuid);
     Decoder decoder(v.as_bin().buf, v.as_bin().size);
     decoder.read_int16(); // skip pkg len offset
     entity->propertys_unserialize(decoder);
@@ -16,7 +16,7 @@ void entity_property_migrate_from_oldcell(const GValue& old_cell_addr, const GVa
     // notify old cell destroy
     CellMailBox old_cell;
     old_cell.set_side("server");
-    old_cell.set_entity_and_addr(cell_entity_uuid, old_cell_addr.as_string());
+    old_cell.set_entity_and_addr(entity_uuid, old_cell_addr.as_string());
     old_cell.set_owner(entity);
     old_cell.call("on_new_cell_migrate_finish");
 }

@@ -22,11 +22,11 @@ class TimerManagerBase;
 
 enum EntityType {
     EntityType_Base,
-    EntityType_BaseWithCell,
+    EntityType_BaseWithCell,  // monster
     EntityType_BaseWithClient,
-    EntityType_BaseWithCellAndClient,
-    EntityType_Cell,
-    EntityType_CellWithClient,
+    EntityType_BaseWithCellAndClient,  // player
+    EntityType_Cell,  // monster
+    EntityType_CellWithClient,  // player
     EntityType_Client,
 
     EntityType_None
@@ -133,15 +133,14 @@ public:
     };
 
 public:
-    BaseEntityWithCell() = delete;
-    BaseEntityWithCell(const GString& cell_class) : cell_class_name(cell_class) {
+    BaseEntityWithCell() {
         cell.set_owner(this);
     }
     virtual ~BaseEntityWithCell() {}
 
     virtual void on_create(const GDict& create_data);
     virtual void create_cell(const GDict& create_data);
-    virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
+    virtual void on_cell_create(const GValue& cell_addr);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
@@ -149,7 +148,6 @@ public:
     virtual void migrate_req_from_cell();
     virtual void new_cell_migrate_in(const GValue& new_cell_addr);
 
-    GString cell_class_name;
     CellMailBox cell;
 };
 
@@ -160,8 +158,7 @@ public:
     };
 
 public:
-    BaseEntityWithClient() = delete;
-    BaseEntityWithClient(const GString& client_class) : client_class_name(client_class) {
+    BaseEntityWithClient() {
         client.set_owner(this);
     }
     virtual ~BaseEntityWithClient() {}
@@ -169,13 +166,12 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void create_client();
-    virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_client_reconnect_success(const GValue& client_entity_uuid);
+    virtual void on_client_create();
+    virtual void on_client_reconnect_success();
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
-    GString client_class_name;
     ClientMailBox client;
 };
 
@@ -186,16 +182,15 @@ public:
     };
 
 public:
-    BaseEntityWithCellAndClient() = delete;
-    BaseEntityWithCellAndClient(const GString& cell_class, const GString& client_class) : BaseEntityWithCell(cell_class), BaseEntityWithClient(client_class) {}
+    BaseEntityWithCellAndClient() {}
     virtual ~BaseEntityWithCellAndClient() {}
 
     virtual void on_create(const GDict& create_data);
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
-    virtual void on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr);
+    virtual void on_cell_create(const GValue& cell_addr);
     virtual void create_client();
-    virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_client_reconnect_success(const GValue& client_entity_uuid);
+    virtual void on_client_create();
+    virtual void on_client_reconnect_success();
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all) { BaseEntityWithClient::propertys_sync2client(force_all); }
@@ -254,8 +249,8 @@ public:
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_client_create(const GValue& client_entity_uuid);
-    virtual void on_client_reconnect_success(const GValue& client_entity_uuid, const GValue& client_addr, const GValue& gate_addr);
+    virtual void on_client_create();
+    virtual void on_client_reconnect_success(const GValue& client_addr, const GValue& gate_addr);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
@@ -347,7 +342,13 @@ TimerManager<TCLASS> TCLASS::timer_manager; \
 PropertyTree TCLASS::property_tree(property_manager.propertys);
 
 
-extern unordered_map<GString, Entity*> g_entities;
+extern unordered_map<GString, Entity*> g_base_entities;
+extern unordered_map<GString, Entity*> g_cell_entities;
+extern unordered_map<GString, Entity*> g_client_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
-extern Entity* create_entity(const GString& entity_type, const GString& entity_uuid);
-extern void destroy_entity(const GString& entity_uuid);
+extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid);
+extern void destroy_local_base_entity(const GString& entity_uuid);
+extern void destroy_local_cell_entity(const GString& entity_uuid);
+extern void destroy_local_client_entity(const GString& entity_uuid);

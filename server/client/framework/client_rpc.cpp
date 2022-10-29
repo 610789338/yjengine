@@ -58,41 +58,37 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
     if (!is_call_create) {
         const GString& base_uuid = ini_get_string("Entity", "uuid", "empty");
         if (base_uuid == "empty") {
-            REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount", "");
+            REMOTE_RPC_CALL(remote, "create_base_entity", "Account", "");
         }
         else {
-            REMOTE_RPC_CALL(remote, "create_base_entity", "BaseAccount", base_uuid);
+            REMOTE_RPC_CALL(remote, "create_base_entity", "Account", base_uuid);
         }
         is_call_create = true;
     }
 }
 
-void create_client_entity(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
-    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+void create_client_entity(const GValue& entity_class_name, const GValue& entity_uuid, const GValue& base_addr, const GValue& cell_addr) {
+    Entity* entity = create_local_client_entity(entity_class_name.as_string(), entity_uuid.as_string());
 
     GDict create_data;
-    create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
     create_data.insert(make_pair("base_addr", base_addr));
-    create_data.insert(make_pair("cell_entity_uuid", cell_entity_uuid));
     create_data.insert(make_pair("cell_addr", cell_addr));
     entity->on_create(create_data);
 }
 
-void create_client_entity_onreconnect(const GValue& entity_class_name, const GValue& base_entity_uuid, const GValue& base_addr, const GValue& cell_entity_uuid, const GValue& cell_addr) {
-    Entity* entity = create_entity(entity_class_name.as_string(), gen_uuid());
+void create_client_entity_onreconnect(const GValue& entity_class_name, const GValue& entity_uuid, const GValue& base_addr, const GValue& cell_addr) {
+    Entity* entity = create_local_client_entity(entity_class_name.as_string(), entity_uuid.as_string());
 
     GDict create_data;
-    create_data.insert(make_pair("base_entity_uuid", base_entity_uuid));
     create_data.insert(make_pair("base_addr", base_addr));
-    create_data.insert(make_pair("cell_entity_uuid", cell_entity_uuid));
     create_data.insert(make_pair("cell_addr", cell_addr));
     entity->on_reconnect_success(create_data);
 }
 
 void call_client_entity(const GValue& entity_uuid, const GValue& inner_rpc) {
 
-    auto iter = g_entities.find(entity_uuid.as_string());
-    if (iter == g_entities.end()) {
+    auto iter = g_client_entities.find(entity_uuid.as_string());
+    if (iter == g_client_entities.end()) {
         ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
         return;
     }
@@ -110,8 +106,8 @@ void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
     RPC_REGISTER(on_remote_disconnected, GString());
     RPC_REGISTER(regist_ack_from_gate, GString(), bool());
-    RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString(), GString());
-    RPC_REGISTER(create_client_entity_onreconnect, GString(), GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString());
+    RPC_REGISTER(create_client_entity_onreconnect, GString(), GString(), GString(), GString());
 
     RPC_REGISTER(get_game_entity_rpc_names_ack, GArray());
 

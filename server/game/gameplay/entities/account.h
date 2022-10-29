@@ -8,7 +8,7 @@ class BaseAccount : public BaseEntityWithCellAndClient {
     GENERATE_ENTITY_INNER(BaseAccount)
 
 public:
-    BaseAccount() : BaseEntityWithCellAndClient("CellAccount", "ClientAccount") {}
+    BaseAccount() {}
     ~BaseAccount() {}
 
     static void regist_components();

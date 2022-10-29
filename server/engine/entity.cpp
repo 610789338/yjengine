@@ -198,17 +198,16 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
     
     // game -> gate -> game
     auto const& session = g_session_mgr.get_rand_session();
-    REMOTE_RPC_CALL(session, "create_cell_entity", cell_class_name, 
-        /*base entity uuid*/ uuid,
+    REMOTE_RPC_CALL(session, "create_cell_entity", class_name, 
+        /*entity uuid*/ uuid,
         /*base addr*/ session->get_local_addr(),
         /*gate addr*/ create_data.at("gate_addr").as_string(),
         /*client addr*/ create_data.at("client_addr").as_string(),
-        /*cell uuid*/ create_data.at("cell_uuid").as_string(),
         /*cell bin*/ create_data.at("cell_bin").as_bin());
 }
 
-void BaseEntityWithCell::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
-    cell.set_entity_and_addr(cell_entity_uuid.as_string(), cell_addr.as_string());
+void BaseEntityWithCell::on_cell_create(const GValue& cell_addr) {
+    cell.set_entity_and_addr(uuid, cell_addr.as_string());
     ready();
 }
 
@@ -223,7 +222,7 @@ void BaseEntityWithCell::new_cell_migrate_in(const GValue& new_cell_addr) {
 }
 
 void BaseEntityWithClient::on_create(const GDict& create_data) {
-    client.set_entity_and_addr("", create_data.at("client_addr").as_string());
+    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 }
 
@@ -235,22 +234,20 @@ void BaseEntityWithClient::on_reconnect_fromclient(const GString& client_addr, c
 void BaseEntityWithClient::create_client() {
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.m_gate_addr);
-    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
-        /*base entity uuid*/ uuid,
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
+        /*entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
         /*cell entity uuid*/ GString(),
         /*cell addr*/ GString()
     );
 }
 
-void BaseEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+void BaseEntityWithClient::on_client_create() {
     client.call("ready");
     ready();
 }
 
-void BaseEntityWithClient::on_client_reconnect_success(const GValue& client_entity_uuid) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+void BaseEntityWithClient::on_client_reconnect_success() {
     propertys_sync2client(true);
     client.call("ready");
 }
@@ -268,7 +265,7 @@ void BaseEntityWithClient::propertys_sync2client(bool force_all) {
 }
 
 void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
-    client.set_entity_and_addr("", create_data.at("client_addr").as_string());
+    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
     create_cell(create_data);
 }
@@ -279,39 +276,35 @@ void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_
 
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.get_gate_addr());
-    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), client_class_name,
-        /*base entity uuid*/ uuid,
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
+        /*uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
-        /*cell entity uuid*/ cell.get_entity_uuid(),
         /*cell addr*/ cell.get_addr()
     );
 }
 
-void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_entity_uuid, const GValue& cell_addr) {
-    cell.set_entity_and_addr(cell_entity_uuid.as_string(), cell_addr.as_string());
+void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_addr) {
+    cell.set_entity_and_addr(uuid, cell_addr.as_string());
     create_client();
 }
 
 void BaseEntityWithCellAndClient::create_client() {
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.get_gate_addr());
-    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), client_class_name,
-        /*base entity uuid*/ uuid,
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
+        /*entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
-        /*cell entity uuid*/ cell.get_entity_uuid(),
         /*cell addr*/ cell.get_addr()
     );
 }
 
-void BaseEntityWithCellAndClient::on_client_create(const GValue& client_entity_uuid) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
-    cell.call("on_client_create", client_entity_uuid.as_string());
+void BaseEntityWithCellAndClient::on_client_create() {
+    cell.call("on_client_create");
 }
 
-void BaseEntityWithCellAndClient::on_client_reconnect_success(const GValue& client_entity_uuid) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
+void BaseEntityWithCellAndClient::on_client_reconnect_success() {
     propertys_sync2client(true);
-    cell.call("on_client_reconnect_success", client_entity_uuid.as_string(), client.get_addr(), client.get_gate_addr());
+    cell.call("on_client_reconnect_success", client.get_addr(), client.get_gate_addr());
 }
 
 void BaseEntityWithCellAndClient::real_time_to_save() {
@@ -391,27 +384,25 @@ void CellEntity::on_new_cell_migrate_finish() {
 }
 
 void CellEntity::destroy_self() {
-    destroy_entity(uuid);
+    destroy_local_cell_entity(uuid);
 }
 
 void CellEntityWithClient::on_create(const GDict& create_data) {
-    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    client.set_entity_and_addr("", create_data.at("client_addr").as_string()); // client entity uuid will set on client create
+    base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
+    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 
-    base.call("on_cell_create", uuid, server->get_listen_addr());
+    base.call("on_cell_create", server->get_listen_addr());
 }
 
-void CellEntityWithClient::on_client_create(const GValue& client_entity_uuid) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client.get_addr());
-
+void CellEntityWithClient::on_client_create() {
     base.call("ready");
     client.call("ready");
     ready();
 }
 
-void CellEntityWithClient::on_client_reconnect_success(const GValue& client_entity_uuid, const GValue& client_addr, const GValue& gate_addr) {
-    client.set_entity_and_addr(client_entity_uuid.as_string(), client_addr.as_string());
+void CellEntityWithClient::on_client_reconnect_success(const GValue& client_addr, const GValue& gate_addr) {
+    client.set_entity_and_addr(uuid, client_addr.as_string());
     client.set_gate_addr(gate_addr.as_string());
     propertys_sync2client(true);
     client.call("ready");
@@ -471,10 +462,8 @@ void CellEntityWithClient::real_begin_migrate() {
 }
 
 void CellEntityWithClient::on_migrate_out(GDict& create_data) {
-    create_data.insert(make_pair("base_entity_uuid", base.get_entity_uuid()));
+    create_data.insert(make_pair("entity_uuid", uuid));
     create_data.insert(make_pair("base_addr", base.get_addr()));
-    create_data.insert(make_pair("cell_entity_uuid", uuid));
-    create_data.insert(make_pair("client_entity_uuid", client.get_entity_uuid()));
     create_data.insert(make_pair("client_addr", client.get_addr()));
     create_data.insert(make_pair("gate_addr", client.get_gate_addr()));
 
@@ -494,8 +483,8 @@ void CellEntityWithClient::on_migrate_out(GDict& create_data) {
 }
 
 void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
-    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    client.set_entity_and_addr(create_data.at("client_entity_uuid").as_string(), create_data.at("client_addr").as_string());
+    base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
+    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
 
     //INFO_LOG("entity.%s on_migrate_in\n", uuid.c_str());
@@ -524,14 +513,12 @@ void CellEntityWithClient::cell_real_time_to_save(const GValue& base_uuid, const
     GBin cell_bin(cell_db.get_buf(), cell_db.get_offset());
 
     Encoder db;
-    db.write_string(base_uuid.as_string());
     db.write_bin(base_bin.as_bin());
-    db.write_string(uuid);
     db.write_bin(cell_bin);
     db.write_end();
 
     // TODO - move to child thread
-    GString db_file_name = "./db/" + base_uuid.as_string() + ".bin";
+    GString db_file_name = "./db/" + uuid + ".bin";
     auto fp = fopen(db_file_name.c_str(), "wb");
     if (fp == nullptr) {
         ERROR_LOG("save - open db file %s error\n", db_file_name.c_str());
@@ -544,17 +531,17 @@ void CellEntityWithClient::cell_real_time_to_save(const GValue& base_uuid, const
 
 
 void ClientEntity::on_create(const GDict& create_data) {
-    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
+    base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
+    cell.set_entity_and_addr(uuid, create_data.at("cell_addr").as_string());
 
-    base.call("on_client_create", uuid);
+    base.call("on_client_create");
 }
 
 void ClientEntity::on_reconnect_success(const GDict& create_data) {
-    base.set_entity_and_addr(create_data.at("base_entity_uuid").as_string(), create_data.at("base_addr").as_string());
-    cell.set_entity_and_addr(create_data.at("cell_entity_uuid").as_string(), create_data.at("cell_addr").as_string());
+    base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
+    cell.set_entity_and_addr(uuid, create_data.at("cell_addr").as_string());
 
-    base.call("on_client_reconnect_success", uuid);
+    base.call("on_client_reconnect_success");
 }
 
 void ClientEntity::prop_sync_from_base(const GValue& v) {
@@ -581,7 +568,9 @@ void ClientEntity::new_cell_migrate_in(const GValue& new_cell_addr) {
     cell.stop_cache_rpc();
 }
 
-unordered_map<GString, Entity*> g_entities; // uuid -> entity
+unordered_map<GString, Entity*> g_base_entities; // uuid -> entity
+unordered_map<GString, Entity*> g_cell_entities; // uuid -> entity
+unordered_map<GString, Entity*> g_client_entities; // uuid -> entity
 typedef unordered_map<GString, function<Entity*()>> EntityCreatorMap;
 EntityCreatorMap* get_entity_creator_map() {
     static EntityCreatorMap _entity_creator;
@@ -601,33 +590,91 @@ function<Entity*()> get_entity_creator(const GString& entity_class_name) {
     return iter->second;
 }
 
-Entity* create_entity(const GString& entity_class_name, const GString& entity_uuid) {
-    function<Entity*()> creator = get_entity_creator(entity_class_name);
+Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid) {\
+    function<Entity*()> creator = get_entity_creator("Base" + entity_class_name);
     if (!creator) {
-        ERROR_LOG("entity type(%s) error\n", entity_class_name.c_str());
+        ERROR_LOG("base entity type(%s) error\n", entity_class_name.c_str());
         return nullptr;
     }
 
     Entity* entity = creator();
     entity->uuid = entity_uuid;
     entity->class_name = entity_class_name;
-    g_entities.insert(make_pair(entity->uuid, entity));
+    g_base_entities.insert(make_pair(entity->uuid, entity));
 
-    DEBUG_LOG("create_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+    DEBUG_LOG("create_local_base_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
 
     return entity;
 }
 
-void destroy_entity(const GString& entity_uuid) {
-    auto iter = g_entities.find(entity_uuid);
-    if (iter == g_entities.end()) {
+Entity* create_local_cell_entity(const GString& entity_class_name, const GString& entity_uuid) {
+    function<Entity*()> creator = get_entity_creator("Cell" + entity_class_name);
+    if (!creator) {
+        ERROR_LOG("cell entity type(%s) error\n", entity_class_name.c_str());
+        return nullptr;
+    }
+
+    Entity* entity = creator();
+    entity->uuid = entity_uuid;
+    entity->class_name = entity_class_name;
+    g_cell_entities.insert(make_pair(entity->uuid, entity));
+
+    DEBUG_LOG("create_local_cell_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+
+    return entity;
+}
+
+Entity* create_local_client_entity(const GString& entity_class_name, const GString& entity_uuid) {
+    function<Entity*()> creator = get_entity_creator("Client" + entity_class_name);
+    if (!creator) {
+        ERROR_LOG("client entity type(%s) error\n", entity_class_name.c_str());
+        return nullptr;
+    }
+
+    Entity* entity = creator();
+    entity->uuid = entity_uuid;
+    entity->class_name = entity_class_name;
+    g_client_entities.insert(make_pair(entity->uuid, entity));
+
+    DEBUG_LOG("create_local_client_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+
+    return entity;
+}
+
+void destroy_local_base_entity(const GString& entity_uuid) {
+    auto iter = g_base_entities.find(entity_uuid);
+    if (iter == g_base_entities.end()) {
         return;
     }
 
     const auto& entity = iter->second;
     entity->on_destroy();
     delete entity;
-    g_entities.erase(iter);
+    g_base_entities.erase(iter);
+}
+
+void destroy_local_cell_entity(const GString& entity_uuid) {
+    auto iter = g_cell_entities.find(entity_uuid);
+    if (iter == g_cell_entities.end()) {
+        return;
+    }
+
+    const auto& entity = iter->second;
+    entity->on_destroy();
+    delete entity;
+    g_cell_entities.erase(iter);
+}
+
+void destroy_local_client_entity(const GString& entity_uuid) {
+    auto iter = g_client_entities.find(entity_uuid);
+    if (iter == g_client_entities.end()) {
+        return;
+    }
+
+    const auto& entity = iter->second;
+    entity->on_destroy();
+    delete entity;
+    g_client_entities.erase(iter);
 }
 
 RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
@@ -635,7 +682,15 @@ RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
 }
 
 void entity_tick() {
-    for (auto iter = g_entities.begin(); iter != g_entities.end(); ++iter) {
+    for (auto iter = g_base_entities.begin(); iter != g_base_entities.end(); ++iter) {
+        iter->second->tick();
+    }
+
+    for (auto iter = g_cell_entities.begin(); iter != g_cell_entities.end(); ++iter) {
+        iter->second->tick();
+    }
+
+    for (auto iter = g_client_entities.begin(); iter != g_client_entities.end(); ++iter) {
         iter->second->tick();
     }
 }
