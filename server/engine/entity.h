@@ -52,7 +52,7 @@ public:
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) { ASSERT(false); }
     virtual void on_reconnect_success(const GDict& create_data) { ASSERT(false); }
     virtual void on_destroy() = 0;
-    virtual void rpc_call(bool from_client, const GString& rpc_name, const GArray& params) = 0;
+    virtual void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
 
     virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
@@ -137,13 +137,13 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void create_cell(const GDict& create_data);
-    virtual void on_cell_create(const GValue& cell_addr);
+    virtual void on_cell_create(const GString& cell_addr);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
 
     // migrate
     virtual void migrate_req_from_cell();
-    virtual void new_cell_migrate_in(const GValue& new_cell_addr);
+    virtual void new_cell_migrate_in(const GString& new_cell_addr);
 
     CellMailBox cell;
 };
@@ -159,7 +159,7 @@ public:
     virtual ~BaseEntityWithCellAndClient() {}
 
     virtual void on_create(const GDict& create_data);
-    virtual void on_cell_create(const GValue& cell_addr);
+    virtual void on_cell_create(const GString& cell_addr);
     virtual void create_client();
     virtual void ready(); // must exist
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
@@ -170,7 +170,7 @@ public:
 
     virtual void real_time_to_save();
 
-    void new_cell_migrate_in(const GValue& new_cell_addr);
+    void new_cell_migrate_in(const GString& new_cell_addr);
 
     // migrate
     void migrate_req_from_cell() { BaseEntityWithCell::migrate_req_from_cell(); }
@@ -195,8 +195,8 @@ public:
     virtual void on_destroy() {}
 
     // migrate
-    virtual void begin_migrate(const GValue& new_addr);
-    virtual void migrate_reqack_from_base(const GValue& is_ok);
+    virtual void begin_migrate(const GString& new_addr);
+    virtual void migrate_reqack_from_base(bool is_ok);
     virtual void real_begin_migrate();
     virtual void migrate_entity();
     virtual void on_migrate_out(GDict& create_data);
@@ -225,22 +225,22 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void ready(); // must exist
-    virtual void on_reconnect_fromclient(const GValue& client_addr, const GValue& gate_addr);
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void on_client_reconnect_success();
     virtual void on_destroy() {}
     virtual void propertys_sync2client(bool force_all);
 
     // migrate
-    virtual void begin_migrate(const GValue& new_addr);
-    virtual void migrate_reqack_from_base(const GValue& is_ok);
-    virtual void migrate_reqack_from_client(const GValue& is_ok);
+    virtual void begin_migrate(const GString& new_addr);
+    virtual void migrate_reqack_from_base(bool is_ok);
+    virtual void migrate_reqack_from_client(bool is_ok);
     virtual void real_begin_migrate();
     virtual void on_migrate_out(GDict& create_data);
     virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
 
     // db save
-    void cell_real_time_to_save(const GValue& base_uuid, const GValue& base_bin);
+    void cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin);
 
     ClientMailBox client;
     bool is_reqack_from_client = false;
@@ -269,14 +269,14 @@ public:
     virtual void on_reconnect_success(const GDict& create_data);
     virtual void ready() { Entity::ready(); } // must exist
     virtual void on_destroy() {}
-    void prop_sync_from_base(const GValue& bin);
-    void prop_sync_from_cell(const GValue& bin);
+    void prop_sync_from_base(const GBin& bin);
+    void prop_sync_from_cell(const GBin& bin);
     virtual void on_prop_sync_from_server() {}
     virtual void on_kick();
 
     // migrate
     void migrate_req_from_cell();
-    void new_cell_migrate_in(const GValue& new_cell_addr);
+    void new_cell_migrate_in(const GString& new_cell_addr);
 
     BaseMailBox base;
     CellMailBox cell;

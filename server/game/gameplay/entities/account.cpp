@@ -13,8 +13,8 @@ void BaseAccount::regist_components() {
 }
 
 void BaseAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell, GString());
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
+    RPC_METHOD(RpcType::EXPOSED, msg_from_client);
 
     RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
 }
@@ -32,19 +32,19 @@ void BaseAccount::on_ready() {
 
     //test_timer = REGIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
     prop_timer = REGIST_TIMER(0, 1, true, BaseAccount::account_timer_prop_sync);
-    //migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
+    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
 #endif
 }
 
-void BaseAccount::msg_from_cell(const GValue& msg) { 
-    INFO_LOG("[base] msg.%s from cell\n", msg.as_string().c_str()); 
+void BaseAccount::msg_from_cell(const GString& msg) {
+    INFO_LOG("[base] msg.%s from cell\n", msg.c_str()); 
 }
 
-void BaseAccount::msg_from_client(const GValue& msg) { 
-    INFO_LOG("[base] msg.%s from client\n", msg.as_string().c_str()); 
+void BaseAccount::msg_from_client(const GString& msg) {
+    INFO_LOG("[base] msg.%s from client\n", msg.c_str()); 
 }
 
 void BaseAccount::account_timer_test(const GValue& arg1) {
@@ -325,8 +325,8 @@ void CellAccount::regist_components() {
 }
 
 void CellAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base, GString());
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client, GString());
+    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base);
+    RPC_METHOD(RpcType::EXPOSED, msg_from_client);
 
     RPC_METHOD(RpcType::SERVER_ONLY, add_migrate_int_from_base);
     RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
@@ -340,12 +340,12 @@ void CellAccount::timer_cb_store() {
     STORE_TIMER_CB_FOR_MIGRATE(CellAccount::account_timer_test, GString());
 }
 
-void CellAccount::msg_from_base(const GValue& msg) {
-    INFO_LOG("[cell] msg.%s from base\n", msg.as_string().c_str());
+void CellAccount::msg_from_base(const GString& msg) {
+    INFO_LOG("[cell] msg.%s from base\n", msg.c_str());
 }
 
-void CellAccount::msg_from_client(const GValue& msg) {
-    INFO_LOG("[cell] msg.%s from client\n", msg.as_string().c_str());
+void CellAccount::msg_from_client(const GString& msg) {
+    INFO_LOG("[cell] msg.%s from client\n", msg.c_str());
 }
 
 void CellAccount::add_migrate_int_from_base() {

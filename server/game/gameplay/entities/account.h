@@ -4,7 +4,7 @@
 
 
 class BaseAccount : public BaseEntityWithCellAndClient {
-    
+
     GENERATE_ENTITY_INNER(BaseAccount)
 
 public:
@@ -18,8 +18,8 @@ public:
 
     void on_ready(); // call by engine
 
-    void msg_from_cell(const GValue& msg);
-    void msg_from_client(const GValue& msg);
+    void msg_from_cell(const GString& msg);
+    void msg_from_client(const GString& msg);
     void account_timer_test(const GValue& arg1);
 
     // property
@@ -66,8 +66,8 @@ public:
 
     void on_ready(); // call by engine
 
-    void msg_from_base(const GValue& msg);
-    void msg_from_client(const GValue& msg);
+    void msg_from_base(const GString& msg);
+    void msg_from_client(const GString& msg);
     void account_timer_test(const GValue& arg1);
 
     void add_migrate_int_from_base();

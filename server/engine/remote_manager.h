@@ -43,9 +43,8 @@ public:
 
     template<class... T>
     void local_rpc_call(const GString& rpc_name, const T&... args) {
-        GArray rpc_params;
-        args2array(rpc_params, args...);
-        auto imp = make_shared<RpcImp>(rpc_name, rpc_params);
+        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        auto imp = g_rpc_manager.rpc_decode(encoder.get_buf() + 2, encoder.get_offset() - 2);
         imp->set_remote(shared_from_this());
         g_rpc_manager.imp_queue_push(imp);
     }

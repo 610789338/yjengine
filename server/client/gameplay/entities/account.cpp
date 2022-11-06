@@ -8,35 +8,35 @@ void ClientAccount::regist_components() {
 }
 
 void ClientAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::CLIENT, msg_from_base, GString());
-    RPC_METHOD(RpcType::CLIENT, msg_from_cell, GString());
-    RPC_METHOD(RpcType::CLIENT, prop_sync_compare, GBin());
+    RPC_METHOD(RpcType::CLIENT, msg_from_base);
+    RPC_METHOD(RpcType::CLIENT, msg_from_cell);
+    RPC_METHOD(RpcType::CLIENT, prop_sync_compare);
 }
 
 void ClientAccount::property_define() {
     account_property_define<ClientAccount>();
 }
 
-void ClientAccount::msg_from_base(const GValue& msg) { 
-    INFO_LOG("[client] msg.%s from base\n", msg.as_string().c_str()); 
+void ClientAccount::msg_from_base(const GString& msg) {
+    INFO_LOG("[client] msg.%s from base\n", msg.c_str()); 
 }
 
-void ClientAccount::msg_from_cell(const GValue& msg) { 
-    INFO_LOG("[client] msg.%s from cell\n", msg.as_string().c_str()); 
+void ClientAccount::msg_from_cell(const GString& msg) {
+    INFO_LOG("[client] msg.%s from cell\n", msg.c_str()); 
 }
 
-void ClientAccount::prop_sync_compare(const GValue& v) {
+void ClientAccount::prop_sync_compare(const GBin& v) {
     
     Encoder encoder;
     serialize_client(encoder, true);
     encoder.write_end();
 
-    auto server_len = v.as_bin().size;
+    auto server_len = v.size;
     auto client_len = encoder.get_offset();
     ASSERT_LOG(server_len == client_len, "server_len.%d != client_len.%d\n", server_len, client_len);
 
-    if (memcmp(v.as_bin().buf, encoder.get_buf(), server_len) != 0) {
-        byte_print(v.as_bin().buf, server_len);
+    if (memcmp(v.buf, encoder.get_buf(), server_len) != 0) {
+        byte_print(v.buf, server_len);
         byte_print(encoder.get_buf(), client_len);
         ASSERT_LOG(false, "server buf != client buf\n");
     }

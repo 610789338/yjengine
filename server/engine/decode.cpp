@@ -15,72 +15,96 @@ Decoder::~Decoder() {
 }
 
 bool Decoder::read_bool() {
+    if (is_finish()) return false;
+
     bool v = *(bool*)(m_buf + m_offset);
     m_offset += 1;
     return v;
 }
 
 int8_t Decoder::read_int8() {
+    if (is_finish()) return 0;
+
     int8_t v = *(int8_t*)(m_buf + m_offset);
     m_offset += 1;
     return v;
 }
 
 int16_t Decoder::read_int16() {
+    if (is_finish()) return 0;
+
     int16_t v = *(int16_t*)(m_buf + m_offset);
     m_offset += 2;
     return v;
 }
 
 int32_t Decoder::read_int32() {
+    if (is_finish()) return 0;
+
     int32_t v = *(int32_t*)(m_buf + m_offset);
     m_offset += 4;
     return v;
 }
 
 int64_t Decoder::read_int64() {
+    if (is_finish()) return 0;
+
     int64_t v = *(int64_t*)(m_buf + m_offset);
     m_offset += 8;
     return v;
 }
 
 uint8_t Decoder::read_uint8() {
+    if (is_finish()) return 0;
+
     uint8_t v = *(uint8_t*)(m_buf + m_offset);
     m_offset += 1;
     return v;
 }
 
 uint16_t Decoder::read_uint16() {
+    if (is_finish()) return 0;
+
     uint16_t v = *(uint16_t*)(m_buf + m_offset);
     m_offset += 2;
     return v;
 }
 
 uint32_t Decoder::read_uint32() {
+    if (is_finish()) return 0;
+
     uint32_t v = *(uint32_t*)(m_buf + m_offset);
     m_offset += 4;
     return v;
 }
 
 uint64_t Decoder::read_uint64() {
+    if (is_finish()) return 0;
+
     uint64_t v = *(uint64_t*)(m_buf + m_offset);
     m_offset += 8;
     return v;
 }
 
 float Decoder::read_float() {
+    if (is_finish()) return 0.0f;
+
     float v = *(float*)(m_buf + m_offset);
     m_offset += 4;
     return v;
 }
 
 double Decoder::read_double() {
+    if (is_finish()) return 0.0;
+
     double v = *(double*)(m_buf + m_offset);
     m_offset += 8;
     return v;
 }
 
 GString Decoder::read_string() {
+    if (is_finish()) return GString();
+
     int end = 0;
     for (; end < 16 * 1024; ++end) {
         if (m_buf[m_offset + end] == 0) break;
@@ -92,8 +116,9 @@ GString Decoder::read_string() {
 }
 
 GArray Decoder::read_array() {
-    GArray array;
+    if (is_finish()) return GArray();
 
+    GArray array;
     uint16_t len = read_uint16();
     for (auto i = 0; i < len; ++i) {
         array.push_back(read_gvalue());
@@ -103,6 +128,8 @@ GArray Decoder::read_array() {
 }
 
 GDict Decoder::read_dict() {
+    if (is_finish()) return GDict();
+
     GDict dict;
 
     uint16_t len = read_uint16();
@@ -116,6 +143,8 @@ GDict Decoder::read_dict() {
 }
 
 GBin Decoder::read_bin() {
+    if (is_finish()) return GBin(nullptr, 0);
+
     uint16_t size = read_uint16();
 
     GBin bin(m_buf + m_offset, size);

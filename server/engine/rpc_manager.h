@@ -4,6 +4,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "boost/thread.hpp"
 
@@ -14,29 +15,31 @@
 
 using namespace std;
 
+#define RMCVR(T) typename std::remove_cv<typename std::remove_reference<T>::type>::type 
+
 class Session;
 class Remote;
+struct RpcMethodBase;
 
 class RpcImp {
 public:
     RpcImp() = delete;
-    RpcImp(const GString& rpc_name) : m_rpc_name(std::move(rpc_name)) {}
-    RpcImp(const GString& rpc_name, vector<GValue>& rpc_params) 
-        : m_rpc_name(std::move(rpc_name)), m_rpc_params(std::move(rpc_params)) {}
-    
-    ~RpcImp() {}
+    RpcImp(const GString& rpc_name, RpcMethodBase* rpc_method) : m_rpc_name(std::move(rpc_name)), m_rpc_method(rpc_method) {}
+    ~RpcImp();
 
     GString& get_rpc_name() { return m_rpc_name; }
-    vector<GValue>& get_rpc_params() { return m_rpc_params; }
 
     void set_session(shared_ptr<Session> session) { m_session = session; }
     shared_ptr<Session> get_session() { return m_session; }
 
     void set_remote(shared_ptr<Remote> remote) { m_remote = remote; }
     shared_ptr<Remote> get_remote() { return m_remote; }
+
+    RpcMethodBase* get_rpc_method() { return m_rpc_method; }
+
 private:
     GString m_rpc_name;
-    vector<GValue> m_rpc_params;
+    RpcMethodBase* m_rpc_method = nullptr;
 
     shared_ptr<Session> m_session = nullptr;
     shared_ptr<Remote> m_remote = nullptr;
@@ -51,46 +54,142 @@ enum RpcType {
 
 // rpc method imp
 struct RpcMethodBase {
-
-    // 变参函数模板 - 可展开实参参数包
-    template<class T, class ...T2>
-    void rpc_real_params_parse(const T& t, const T2&... rest) {
-        m_params_t.push_back(GString(typeid(T).name()));
-        rpc_real_params_parse(rest...);
-    }
-    template<class T>
-    void rpc_real_params_parse(const T& t) {
-        m_params_t.push_back(GString(typeid(T).name()));
-    }
-    void rpc_real_params_parse() {
-    }
+    RpcMethodBase() {}
+    virtual ~RpcMethodBase() {}
 
     GString get_comp_name() { return component_name; }
     GString component_name = "";
 
-    vector<GString> m_params_t;
     RpcType type = RpcType::SERVER_ONLY;
+
+    virtual void decode(Decoder& decoder) {}
+    virtual void exec() {}
+    virtual void exec(void* _this) {}
+    virtual RpcMethodBase* create_self() { return nullptr; }
 };
 
-template<class... T>
-struct RpcMethod : public RpcMethodBase {
-    void(*cb)(T... args);
+struct RpcMethod0 : public RpcMethodBase {
+    typedef void(*CBType)();
+    RpcMethod0(CBType _cb) : cb(_cb) {}
+    CBType cb;
+
+    void decode(Decoder& decoder) {}
+    void exec() { cb(); }
+    RpcMethodBase* create_self() { return new RpcMethod0(cb); }
 };
 
-template<class T, class... T2>
-struct RpcFormalParamsCheck {
-    RpcFormalParamsCheck() {
-        ASSERT_LOG(GString(typeid(T).name()) == GString(typeid(GValue).name()), "formal param must be GValue\n");
+template<class T1>
+struct RpcMethod1 : public RpcMethodBase {
+    typedef void(*CBType)(T1);
+    RpcMethod1(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
 
-        RpcFormalParamsCheck<T2...>();
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
     }
+    void exec() { cb(t1); }
+    RpcMethodBase* create_self() { return new RpcMethod1(cb); }
 };
 
-template<class T>
-struct RpcFormalParamsCheck<T> {
-    RpcFormalParamsCheck() {
-        ASSERT_LOG(GString(typeid(T).name()) == GString(typeid(GValue).name()), "formal param must be GValue\n");
+template<class T1, class T2>
+struct RpcMethod2 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2);
+    RpcMethod2(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
+        t2 = decoder.read<RMCVR(T2)>();
     }
+    void exec() { cb(t1, t2); }
+    RpcMethodBase* create_self() { return new RpcMethod2(cb); }
+};
+
+template<class T1, class T2, class T3>
+struct RpcMethod3 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2, T3);
+    RpcMethod3(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
+        t2 = decoder.read<RMCVR(T2)>();
+        t3 = decoder.read<RMCVR(T3)>();
+    }
+    void exec() { cb(t1, t2, t3); }
+    RpcMethodBase* create_self() { return new RpcMethod3(cb); }
+};
+
+template<class T1, class T2, class T3, class T4>
+struct RpcMethod4 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2, T3, T4);
+    RpcMethod4(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
+        t2 = decoder.read<RMCVR(T2)>();
+        t3 = decoder.read<RMCVR(T3)>();
+        t4 = decoder.read<RMCVR(T4)>();
+    }
+    void exec() { cb(t1, t2, t3, t4); }
+    RpcMethodBase* create_self() { return new RpcMethod4(cb); }
+};
+
+template<class T1, class T2, class T3, class T4, class T5>
+struct RpcMethod5 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2, T3, T4, T5);
+    RpcMethod5(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
+        t2 = decoder.read<RMCVR(T2)>();
+        t3 = decoder.read<RMCVR(T3)>();
+        t4 = decoder.read<RMCVR(T4)>();
+        t5 = decoder.read<RMCVR(T5)>();
+    }
+    void exec() { cb(t1, t2, t3, t4, t5); }
+    RpcMethodBase* create_self() { return new RpcMethod5(cb); }
+};
+
+template<class T1, class T2, class T3, class T4, class T5, class T6>
+struct RpcMethod6 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2, T3, T4, T5, T6);
+    RpcMethod6(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder.read<RMCVR(T1)>();
+        t2 = decoder.read<RMCVR(T2)>();
+        t3 = decoder.read<RMCVR(T3)>();
+        t4 = decoder.read<RMCVR(T4)>();
+        t5 = decoder.read<RMCVR(T5)>();
+        t6 = decoder.read<RMCVR(T6)>();
+    }
+    void exec() { cb(t1, t2, t3, t4, t5, t6); }
+    RpcMethodBase* create_self() { return new RpcMethod6(cb); }
 };
 
 class RpcManagerBase {
@@ -101,8 +200,6 @@ public:
 
     shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
     virtual GString rpc_name_decode(Decoder& decoder) = 0;
-    void rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& m_params_t);
-
 
     template<class ...T>
     Encoder rpc_encode(const GString& rpc_name, const T&... args) {
@@ -143,43 +240,45 @@ public:
     GString rpc_name_decode(Decoder& decoder);
     void rpc_name_encode(Encoder& encoder, const GString& rpc_name_l);
 
-    // T(GValue list) != T2
-    template<class... T, class... T2>
-    void rpc_regist(const GString& rpc_name, void(*cb)(T...), T2... args) {
-        ASSERT_LOG(sizeof...(T) == sizeof...(args), "rpc(%s) formal param size(%zu) != real param size(%zu)\n", rpc_name.c_str(), sizeof...(T), sizeof...(args));
-
-        RpcMethod<T...>* method = new RpcMethod<T...>;
-        method->cb = cb;
-        method->rpc_real_params_parse(args...);
-
-        RpcFormalParamsCheck<T...>();
-
-        add_rpc_method(rpc_name, method);
-    }
-
-    template<class... T>
     void rpc_regist(const GString& rpc_name, void(*cb)()) {
-
-        RpcMethod<T...>* method = new RpcMethod<T...>;
-        method->cb = cb;
-
+        RpcMethodBase* method = new RpcMethod0(cb);
         add_rpc_method(rpc_name, method);
     }
 
-    template<class... T>
-    void rpc_call(const GString& rpc_name, T... args) {
-        auto method = find_rpc_method(rpc_name);
-        if (!method) {
-            ERROR_LOG("rpc.%s not exist", rpc_name.c_str());
-            return;
-        }
+    template<class T1>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1)) {
+        RpcMethodBase* method = new RpcMethod1<T1>(cb);
+        add_rpc_method(rpc_name, method);
+    }
 
-        if (sizeof...(args) != method->m_params_t.size()) {
-            ERROR_LOG("rpc.%s args num.%zd error, must be %zd\n", rpc_name.c_str(), sizeof...(args), method->m_params_t.size());
-            return;
-        }
+    template<class T1, class T2>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2)) {
+        RpcMethodBase* method = new RpcMethod2<T1, T2>(cb);
+        add_rpc_method(rpc_name, method);
+    }
 
-        ((RpcMethod<T...>*)method)->cb(args...);
+    template<class T1, class T2, class T3>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3)) {
+        RpcMethodBase* method = new RpcMethod3<T1, T2, T3>(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class T1, class T2, class T3, class T4>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4)) {
+        RpcMethodBase* method = new RpcMethod4<T1, T2, T3, T4>(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4, T5)) {
+        RpcMethodBase* method = new RpcMethod5<T1, T2, T3, T4, T5>(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5, class T6>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4, T5, T6)) {
+        RpcMethodBase* method = new RpcMethod6<T1, T2, T3, T4, T5, T6>(cb);
+        add_rpc_method(rpc_name, method);
     }
 
     uint16_t rpc_imp_generate(const char* buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote);
@@ -198,18 +297,6 @@ private:
 
 extern RpcManager g_rpc_manager;
 
-#define RPC_REGISTER(rpc_name, ...) g_rpc_manager.rpc_regist(#rpc_name, rpc_name, ##__VA_ARGS__)
+#define RPC_REGISTER(rpc_name) g_rpc_manager.rpc_regist(#rpc_name, rpc_name)
 #define REMOTE_RPC_CALL(r, rpc_name, ...) (r)->remote_rpc_call(rpc_name, ##__VA_ARGS__)
 #define LOCAL_RPC_CALL(r, rpc_name, ...) (r)->local_rpc_call(rpc_name, ##__VA_ARGS__)
-
-
-template<class T, class ...T2>
-void args2array(GArray& rpc_params, T arg, T2 ...args) {
-    rpc_params.push_back(arg);
-    args2array(rpc_params, args...);
-}
-template<class T>
-void args2array(GArray& rpc_params, T arg) {
-    rpc_params.push_back(arg);
-}
-extern void args2array(GArray& rpc_params);

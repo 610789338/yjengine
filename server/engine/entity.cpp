@@ -206,8 +206,8 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
         /*cell bin*/ create_data.at("cell_bin").as_bin());
 }
 
-void BaseEntityWithCell::on_cell_create(const GValue& cell_addr) {
-    cell.set_entity_and_addr(uuid, cell_addr.as_string());
+void BaseEntityWithCell::on_cell_create(const GString& cell_addr) {
+    cell.set_entity_and_addr(uuid, cell_addr);
     ready();
 }
 
@@ -216,8 +216,8 @@ void BaseEntityWithCell::migrate_req_from_cell() {
     cell.start_cache_rpc();
 }
 
-void BaseEntityWithCell::new_cell_migrate_in(const GValue& new_cell_addr) {
-    cell.set_entity_and_addr(cell.get_entity_uuid(), new_cell_addr.as_string());
+void BaseEntityWithCell::new_cell_migrate_in(const GString& new_cell_addr) {
+    cell.set_entity_and_addr(cell.get_entity_uuid(), new_cell_addr);
     cell.stop_cache_rpc();
 }
 
@@ -227,8 +227,8 @@ void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
     create_cell(create_data);
 }
 
-void BaseEntityWithCellAndClient::on_cell_create(const GValue& cell_addr) {
-    cell.set_entity_and_addr(uuid, cell_addr.as_string());
+void BaseEntityWithCellAndClient::on_cell_create(const GString& cell_addr) {
+    cell.set_entity_and_addr(uuid, cell_addr);
     create_client();
 }
 
@@ -286,12 +286,12 @@ void BaseEntityWithCellAndClient::real_time_to_save() {
     cell.call("cell_real_time_to_save", uuid, GBin(base_db.get_buf(), base_db.get_offset()));
 }
 
-void BaseEntityWithCellAndClient::new_cell_migrate_in(const GValue& new_cell_addr) {
+void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_addr) {
     BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
 }
 
-void CellEntity::begin_migrate(const GValue& new_addr) {
-    if (new_addr.as_string() == get_listen_addr()) {
+void CellEntity::begin_migrate(const GString& new_addr) {
+    if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
         WARN_LOG("ignore migrate to local game\n");
         return;
@@ -307,11 +307,11 @@ void CellEntity::begin_migrate(const GValue& new_addr) {
 
     is_migrating = true;
 
-    new_cell_addr = new_addr.as_string();
+    new_cell_addr = new_addr;
     base.call("migrate_req_from_cell"); 
 }
 
-void CellEntity::migrate_reqack_from_base(const GValue& is_ok) { 
+void CellEntity::migrate_reqack_from_base(bool is_ok) { 
     is_reqack_from_base = true; 
     real_begin_migrate(); 
 }
@@ -371,13 +371,13 @@ void CellEntityWithClient::ready() {
     client.call("ready");
 }
 
-void CellEntityWithClient::on_reconnect_fromclient(const GValue& client_addr, const GValue& gate_addr) {
+void CellEntityWithClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
     // recover client mailbox
-    client.set_entity_and_addr(uuid, client_addr.as_string());
-    client.set_gate_addr(gate_addr.as_string());
+    client.set_entity_and_addr(uuid, client_addr);
+    client.set_gate_addr(gate_addr);
 
     // create new client
-    auto gate = g_session_mgr.get_gate(gate_addr.as_string());
+    auto gate = g_session_mgr.get_gate(gate_addr);
     REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
         /*uuid*/ uuid,
         /*base addr*/ base.get_addr(),
@@ -401,8 +401,8 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
     }
 }
 
-void CellEntityWithClient::begin_migrate(const GValue& new_addr) {
-    if (new_addr.as_string() == get_listen_addr()) {
+void CellEntityWithClient::begin_migrate(const GString& new_addr) {
+    if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
         WARN_LOG("ignore migrate to local game\n");
         return;
@@ -418,17 +418,17 @@ void CellEntityWithClient::begin_migrate(const GValue& new_addr) {
 
     is_migrating = true;
 
-    new_cell_addr = new_addr.as_string();
+    new_cell_addr = new_addr;
     base.call("migrate_req_from_cell");
     client.call("migrate_req_from_cell");
 }
 
-void CellEntityWithClient::migrate_reqack_from_base(const GValue& is_ok) {
+void CellEntityWithClient::migrate_reqack_from_base(bool is_ok) {
     is_reqack_from_base = true;
     real_begin_migrate();
 }
 
-void CellEntityWithClient::migrate_reqack_from_client(const GValue& is_ok) { 
+void CellEntityWithClient::migrate_reqack_from_client(bool is_ok) { 
     is_reqack_from_client = true;
     real_begin_migrate();
 }
@@ -487,7 +487,7 @@ void CellEntityWithClient::on_new_cell_migrate_finish() {
     destroy_self();
 }
 
-void CellEntityWithClient::cell_real_time_to_save(const GValue& base_uuid, const GValue& base_bin) {
+void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin) {
     Encoder cell_db;
     serialize_db(cell_db);
     cell_db.write_end();
@@ -495,7 +495,7 @@ void CellEntityWithClient::cell_real_time_to_save(const GValue& base_uuid, const
     GBin cell_bin(cell_db.get_buf(), cell_db.get_offset());
 
     Encoder db;
-    db.write_bin(base_bin.as_bin());
+    db.write_bin(base_bin);
     db.write_bin(cell_bin);
     db.write_end();
 
@@ -526,15 +526,15 @@ void ClientEntity::on_reconnect_success(const GDict& create_data) {
     base.call("on_client_reconnect_success");
 }
 
-void ClientEntity::prop_sync_from_base(const GValue& v) {
-    Decoder decoder(v.as_bin().buf, v.as_bin().size);
+void ClientEntity::prop_sync_from_base(const GBin& v) {
+    Decoder decoder(v.buf, v.size);
     decoder.read_int16(); // skip pkg len offset
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
 }
 
-void ClientEntity::prop_sync_from_cell(const GValue& v) {
-    Decoder decoder(v.as_bin().buf, v.as_bin().size);
+void ClientEntity::prop_sync_from_cell(const GBin& v) {
+    Decoder decoder(v.buf, v.size);
     decoder.read_int16(); // skip pkg len offset
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
@@ -549,8 +549,8 @@ void ClientEntity::migrate_req_from_cell() {
     cell.start_cache_rpc();
 }
 
-void ClientEntity::new_cell_migrate_in(const GValue& new_cell_addr) {
-    cell.set_entity_and_addr(cell.get_entity_uuid(), new_cell_addr.as_string());
+void ClientEntity::new_cell_migrate_in(const GString& new_cell_addr) {
+    cell.set_entity_and_addr(cell.get_entity_uuid(), new_cell_addr);
     cell.stop_cache_rpc();
 }
 

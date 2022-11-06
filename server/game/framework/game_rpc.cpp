@@ -15,17 +15,17 @@ void connect_from_client() {
     INFO_LOG("on_connect_from_gate %s\n", session->get_remote_addr().c_str());
 }
 
-void disconnect_from_client(GValue session_addr) {
-    g_session_mgr.on_session_disconnected(session_addr.as_string());
-    INFO_LOG("on_disconnect_from_gate %s\n", session_addr.as_string().c_str());
+void disconnect_from_client(const GString& session_addr) {
+    g_session_mgr.on_session_disconnected(session_addr);
+    INFO_LOG("on_disconnect_from_gate %s\n", session_addr.c_str());
 }
 
-void regist_from_gate(const GValue& gate_listen_addr) {
+void regist_from_gate(const GString& gate_listen_addr) {
 
     auto session = g_cur_imp->get_session();
     session->set_verify(true);
 
-    g_session_mgr.add_gate(session->get_remote_addr(), gate_listen_addr.as_string());
+    g_session_mgr.add_gate(session->get_remote_addr(), gate_listen_addr);
 
     INFO_LOG("regist from gate@%s\n", session->get_remote_addr().c_str());
 
@@ -34,9 +34,9 @@ void regist_from_gate(const GValue& gate_listen_addr) {
     REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
 }
 
-void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
+void get_client_entity_rpc_names_ack(const GArray& client_rpc_names) {
 
-    if (client_rpc_names.as_array().empty()) {
+    if (client_rpc_names.empty()) {
         auto session = g_session_mgr.get_rand_session();
         REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
         return;
@@ -49,7 +49,7 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
         g_entity_rpc_name_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
     }
 
-    auto& client_rpc_name_array = client_rpc_names.as_array();
+    auto& client_rpc_name_array = client_rpc_names;
     for (size_t i = 0; i < client_rpc_name_array.size(); ++i) {
         g_entity_rpc_name_l2s.insert(make_pair(client_rpc_name_array[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
     }
@@ -59,8 +59,8 @@ void get_client_entity_rpc_names_ack(const GValue& client_rpc_names) {
     }
 }
 
-void create_base_entity_new(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr) {
-    Entity* entity = create_local_base_entity(entity_class_name.as_string(), gen_uuid());
+void create_base_entity_new(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr) {
+    Entity* entity = create_local_base_entity(entity_class_name, gen_uuid());
     GDict create_data;
     create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
     create_data.insert(make_pair("client_addr", client_addr));
@@ -68,10 +68,10 @@ void create_base_entity_new(const GValue& entity_class_name, const GValue& clien
     entity->on_create(create_data);;
 }
 
-void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
+void create_base_entity_fromdb(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
 
     // load from db - TODO: move to child thread
-    GString db_file_name = "./db/" + entity_uuid.as_string() + ".bin";
+    GString db_file_name = "./db/" + entity_uuid + ".bin";
     auto fp = fopen(db_file_name.c_str(), "rb");
     if (fp == nullptr) {
         ERROR_LOG("load - open db file %s error\n", db_file_name.c_str());
@@ -88,7 +88,7 @@ void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& cl
     Decoder base_db(base_bin.buf, base_bin.size);
     base_db.read_int16(); // skip pkg len offset
 
-    Entity* entity = create_local_base_entity(entity_class_name.as_string(), entity_uuid.as_string());
+    Entity* entity = create_local_base_entity(entity_class_name, entity_uuid);
     entity->propertys_unserialize(base_db);
 
     const GBin& cell_bin = db.read_bin(); // cell_bin
@@ -100,16 +100,16 @@ void create_base_entity_fromdb(const GValue& entity_class_name, const GValue& cl
     entity->on_create(create_data);
 }
 
-void entity_reconnect_fromclient(Entity* entity, const GValue& client_addr, const GValue& gate_addr) {
-    entity->on_reconnect_fromclient(client_addr.as_string(), gate_addr.as_string());
+void entity_reconnect_fromclient(Entity* entity, const GString& client_addr, const GString& gate_addr) {
+    entity->on_reconnect_fromclient(client_addr, gate_addr);
 }
 
-void create_base_entity(const GValue& entity_class_name, const GValue& client_addr, const GValue& gate_addr, const GValue& entity_uuid) {
-    if (entity_uuid.as_string().empty()) {
+void create_base_entity(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
+    if (entity_uuid.empty()) {
         create_base_entity_new(entity_class_name, client_addr, gate_addr);
     }
     else {
-        auto iter = g_base_entities.find(entity_uuid.as_string());
+        auto iter = g_base_entities.find(entity_uuid);
         if (iter == g_base_entities.end()) {
             create_base_entity_fromdb(entity_class_name, client_addr, gate_addr, entity_uuid);
         }
@@ -119,10 +119,10 @@ void create_base_entity(const GValue& entity_class_name, const GValue& client_ad
     }
 }
 
-void create_cell_entity(const GValue& entity_class_name, const GValue&  entity_uuid, const GValue&  base_addr, const GValue& gate_addr, const GValue& client_addr, const GValue& bin) {
-    Entity* entity = create_local_cell_entity(entity_class_name.as_string(), entity_uuid.as_string());
+void create_cell_entity(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& gate_addr, const GString& client_addr, const GBin& bin) {
+    Entity* entity = create_local_cell_entity(entity_class_name, entity_uuid);
 
-    const GBin& cell_bin = bin.as_bin();
+    const GBin& cell_bin = bin;
     if (cell_bin.size != 0) {
         Decoder cell_db(cell_bin.buf, cell_bin.size);
         cell_db.read_int16(); // skip pk len offset
@@ -136,36 +136,40 @@ void create_cell_entity(const GValue& entity_class_name, const GValue&  entity_u
     entity->on_create(create_data);
 }
 
-void call_base_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& inner_rpc) {
+void call_base_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
 
-    auto iter = g_base_entities.find(entity_uuid.as_string());
+    auto iter = g_base_entities.find(entity_uuid);
     if (iter == g_base_entities.end()) {
-        ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Decoder decoder(inner_rpc.as_bin().buf, inner_rpc.as_bin().size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
+    Entity* entity = iter->second;
 
-    DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
-    iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
+    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+    auto const pkg_len = decoder.read_uint16();
+    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+
+    DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
-void call_cell_entity(const GValue& from_client, const GValue& entity_uuid, const GValue& inner_rpc) {
+void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
 
-    auto iter = g_cell_entities.find(entity_uuid.as_string());
+    auto iter = g_cell_entities.find(entity_uuid);
     if (iter == g_cell_entities.end()) {
-        ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Decoder decoder(inner_rpc.as_bin().buf, inner_rpc.as_bin().size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
+    Entity* entity = iter->second;
 
-    DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
-    iter->second->rpc_call(from_client.as_bool(), rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
+    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+    auto const pkg_len = decoder.read_uint16();
+    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+
+    DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
 extern void migrate_rpc_handle_regist();
@@ -173,16 +177,16 @@ extern void migrate_rpc_handle_regist();
 void rpc_handle_regist() {
 
     RPC_REGISTER(connect_from_client);
-    RPC_REGISTER(disconnect_from_client, GString());
-    RPC_REGISTER(regist_from_gate, GString());
+    RPC_REGISTER(disconnect_from_client);
+    RPC_REGISTER(regist_from_gate);
 
-    RPC_REGISTER(get_client_entity_rpc_names_ack, GArray());
+    RPC_REGISTER(get_client_entity_rpc_names_ack);
 
-    RPC_REGISTER(create_base_entity, GString(), GString(), GString(), GString());
-    RPC_REGISTER(create_cell_entity, GString(), GString(), GString(), GString(), GString(), GBin());
+    RPC_REGISTER(create_base_entity);
+    RPC_REGISTER(create_cell_entity);
 
-    RPC_REGISTER(call_base_entity, bool(), GString(), GBin());
-    RPC_REGISTER(call_cell_entity, bool(), GString(), GBin());
+    RPC_REGISTER(call_base_entity);
+    RPC_REGISTER(call_cell_entity);
 
     migrate_rpc_handle_regist();
 }

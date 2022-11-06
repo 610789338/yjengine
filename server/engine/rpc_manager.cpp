@@ -5,6 +5,13 @@
 
 using namespace std;
 
+RpcImp::~RpcImp() {
+    if (m_rpc_method) {
+        delete m_rpc_method;
+        m_rpc_method = nullptr;
+    }
+}
+
 shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len) {
     Decoder decoder(buf, pkg_len);
     const GString& rpc_name = rpc_name_decode(decoder);
@@ -12,70 +19,15 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     auto iter = find_rpc_method(rpc_name);
     ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
 
-    // 根据模板把参数反序列化出来
-    vector<GValue> params;
-    rpc_params_decode(decoder, params, iter->m_params_t);
+    auto ret = make_shared<RpcImp>(rpc_name, iter->create_self());
+    ret->get_rpc_method()->decode(decoder);
 
     if (decoder.get_offset() < decoder.get_max_offset()) {
         auto remain_len = decoder.get_max_offset() - decoder.get_offset();
         WARN_LOG("rpc(%s) %d buf undecode\n", rpc_name.c_str(), remain_len);
     }
 
-    return make_shared<RpcImp>(rpc_name, params);
-}
-
-void RpcManagerBase::rpc_params_decode(Decoder& decoder, vector<GValue>& params, const vector<GString>& params_t) {
-    for (auto iter = params_t.begin(); iter != params_t.end(); ++iter) {
-        if (*iter == typeid(bool).name()) {
-            params.push_back(GValue(decoder.read_bool()));
-        }
-        else if (*iter == typeid(int8_t).name()) {
-            params.push_back(GValue(decoder.read_int8()));
-        }
-        else if (*iter == typeid(int16_t).name()) {
-            params.push_back(GValue(decoder.read_int16()));
-        }
-        else if (*iter == typeid(int32_t).name()) {
-            params.push_back(GValue(decoder.read_int32()));
-        }
-        else if (*iter == typeid(int64_t).name()) {
-            params.push_back(GValue(decoder.read_int64()));
-        }
-        else if (*iter == typeid(uint8_t).name()) {
-            params.push_back(GValue(decoder.read_uint8()));
-        }
-        else if (*iter == typeid(uint16_t).name()) {
-            params.push_back(GValue(decoder.read_uint16()));
-        }
-        else if (*iter == typeid(uint32_t).name()) {
-            params.push_back(GValue(decoder.read_uint32()));
-        }
-        else if (*iter == typeid(uint64_t).name()) {
-            params.push_back(GValue(decoder.read_uint64()));
-        }
-        else if (*iter == typeid(float).name()) {
-            params.push_back(GValue(decoder.read_float()));
-        }
-        else if (*iter == typeid(double).name()) {
-            params.push_back(GValue(decoder.read_double()));
-        }
-        else if (*iter == typeid(GString).name()) {
-            params.push_back(GValue(std::move(decoder.read_string())));
-        }
-        else if (*iter == typeid(GArray).name()) {
-            params.push_back(GValue(std::move(decoder.read_array())));
-        }
-        else if (*iter == typeid(GDict).name()) {
-            params.push_back(GValue(std::move(decoder.read_dict())));
-        }
-        else if (*iter == typeid(GBin).name()) {
-            params.push_back(GValue(std::move(decoder.read_bin())));
-        }
-
-        if (decoder.is_finish()) {
-            break;
-        }
-    }
+    return ret;
 }
 
 void RpcManagerBase::add_rpc_method(const GString& rpc_name, RpcMethodBase* method) {
@@ -186,8 +138,6 @@ bool RpcManager::imp_queue_empty() {
     return m_rpc_imp_queue.empty();
 }
 
-void args2array(vector<GValue>& rpc_params) {}
-
 shared_ptr<RpcImp> g_cur_imp = nullptr;
 void _rpc_imp_input_tick();
 void rpc_imp_input_tick() {
@@ -206,67 +156,13 @@ void rpc_imp_input_tick() {
 
 void _rpc_imp_input_tick() {
     auto imp = g_rpc_manager.imp_queue_pop();
-    if (nullptr == imp)
-        return;
+    if (nullptr == imp) return;
 
     g_cur_imp = imp;
 
-    auto const &params = imp->get_rpc_params();
-    switch (params.size())
-    {
-    case 0:
-        g_rpc_manager.rpc_call(imp->get_rpc_name());
-        break;
-    case 1:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0]);
-        break;
-    case 2:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1]);
-        break;
-    case 3:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2]);
-        break;
-    case 4:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3]);
-        break;
-    case 5:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4]);
-        break;
-    case 6:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5]);
-        break;
-    case 7:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6]);
-        break;
-    case 8:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7]);
-        break;
-    case 9:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8]);
-        break;
-    case 10:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
-        break;
-    case 11:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10]);
-        break;
-    case 12:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11]);
-        break;
-    case 13:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12]);
-        break;
-    case 14:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13]);
-        break;
-    case 15:
-        g_rpc_manager.rpc_call(imp->get_rpc_name(), params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9], params[10], params[11], params[12], params[13], params[14]);
-        break;
-    default:
-        break;
-    }
+    imp->get_rpc_method()->exec();
 
-    auto session = g_cur_imp->get_session();
+    auto session = imp->get_session();
     if (imp->get_rpc_name() != "connect_from_client" && session && !session->get_verify()) {
         ERROR_LOG("client(%s) not verify\n", session->get_remote_addr().c_str());
         session->close();

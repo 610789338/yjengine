@@ -16,24 +16,24 @@ void on_remote_connected() {
     REMOTE_RPC_CALL(remote, "regist_from_client", ini_get_string("Identity", "md5"), *get_local_entity_rpc_names());
 }
 
-void on_remote_disconnected(const GValue& remote_addr) {
-    g_remote_mgr.on_remote_disconnected(remote_addr.as_string());
-    INFO_LOG("on_gate_disconnected %s\n", remote_addr.as_string().c_str());
+void on_remote_disconnected(const GString& remote_addr) {
+    g_remote_mgr.on_remote_disconnected(remote_addr);
+    INFO_LOG("on_gate_disconnected %s\n", remote_addr.c_str());
 }
 
-void regist_ack_from_gate(const GValue& gate_addr, const GValue& result) {
-    if (result.as_bool()) {
-        INFO_LOG("regist ack from gate@%s\n", gate_addr.as_string().c_str());
+void regist_ack_from_gate(const GString& gate_addr, bool result) {
+    if (result) {
+        INFO_LOG("regist ack from gate@%s\n", gate_addr.c_str());
     }
 
-    auto remote = g_remote_mgr.get_remote(gate_addr.as_string());
+    auto remote = g_remote_mgr.get_remote(gate_addr);
     REMOTE_RPC_CALL(remote, "get_game_entity_rpc_names_from_client", remote->get_local_addr());
 }
 
-void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
+void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
 
     auto remote = g_remote_mgr.get_rand_remote();
-    if (game_entity_rpc_names.as_array().empty()) {
+    if (game_entity_rpc_names.empty()) {
         REMOTE_RPC_CALL(remote, "get_game_entity_rpc_names_from_client", remote->get_local_addr());
         return;
     }
@@ -41,7 +41,7 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
     g_entity_rpc_name_l2s.clear();
     g_entity_rpc_name_s2l.clear();
 
-    auto& game_entity_rpc_name_array = game_entity_rpc_names.as_array();
+    auto& game_entity_rpc_name_array = game_entity_rpc_names;
     for (size_t i = 0; i < game_entity_rpc_name_array.size(); ++i) {
         g_entity_rpc_name_l2s.insert(make_pair(game_entity_rpc_name_array[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
     }
@@ -67,8 +67,8 @@ void get_game_entity_rpc_names_ack(const GValue& game_entity_rpc_names) {
     }
 }
 
-void create_client_entity(const GValue& entity_class_name, const GValue& entity_uuid, const GValue& base_addr, const GValue& cell_addr) {
-    Entity* entity = create_local_client_entity(entity_class_name.as_string(), entity_uuid.as_string());
+void create_client_entity(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
+    Entity* entity = create_local_client_entity(entity_class_name, entity_uuid);
 
     GDict create_data;
     create_data.insert(make_pair("base_addr", base_addr));
@@ -76,8 +76,8 @@ void create_client_entity(const GValue& entity_class_name, const GValue& entity_
     entity->on_create(create_data);
 }
 
-void create_client_entity_onreconnect(const GValue& entity_class_name, const GValue& entity_uuid, const GValue& base_addr, const GValue& cell_addr) {
-    Entity* entity = create_local_client_entity(entity_class_name.as_string(), entity_uuid.as_string());
+void create_client_entity_onreconnect(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
+    Entity* entity = create_local_client_entity(entity_class_name, entity_uuid);
 
     GDict create_data;
     create_data.insert(make_pair("base_addr", base_addr));
@@ -85,31 +85,33 @@ void create_client_entity_onreconnect(const GValue& entity_class_name, const GVa
     entity->on_reconnect_success(create_data);
 }
 
-void call_client_entity(const GValue& entity_uuid, const GValue& inner_rpc) {
+void call_client_entity(const GString& entity_uuid, const GBin& inner_rpc) {
 
-    auto iter = g_client_entities.find(entity_uuid.as_string());
+    auto iter = g_client_entities.find(entity_uuid);
     if (iter == g_client_entities.end()) {
-        ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.as_string().c_str());
+        ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Decoder decoder(inner_rpc.as_bin().buf, inner_rpc.as_bin().size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = iter->second->rpc_mgr->rpc_decode(inner_rpc.as_bin().buf + decoder.get_offset(), pkg_len);
+    Entity* entity = iter->second;
 
-    //INFO_LOG("call_client_entity %s - %s\n", entity_uuid.as_string().c_str(), rpc_imp->get_rpc_name().c_str());
-    iter->second->rpc_call(false, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_params());
+    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+    auto const pkg_len = decoder.read_uint16();
+    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+
+    DEBUG_LOG("call_client_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+    entity->rpc_call(false, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
 
 void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
-    RPC_REGISTER(on_remote_disconnected, GString());
-    RPC_REGISTER(regist_ack_from_gate, GString(), bool());
-    RPC_REGISTER(create_client_entity, GString(), GString(), GString(), GString());
-    RPC_REGISTER(create_client_entity_onreconnect, GString(), GString(), GString(), GString());
+    RPC_REGISTER(on_remote_disconnected);
+    RPC_REGISTER(regist_ack_from_gate);
+    RPC_REGISTER(create_client_entity);
+    RPC_REGISTER(create_client_entity_onreconnect);
 
-    RPC_REGISTER(get_game_entity_rpc_names_ack, GArray());
+    RPC_REGISTER(get_game_entity_rpc_names_ack);
 
-    RPC_REGISTER(call_client_entity, GString(), GBin());
+    RPC_REGISTER(call_client_entity);
 }
