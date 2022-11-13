@@ -20,6 +20,8 @@ using namespace std;
     #define MAP unordered_map
 #endif
 
+#define RMCVR(T) typename std::remove_cv<typename std::remove_reference<T>::type>::type 
+
 class GValue;
 typedef string GString;
 typedef vector<GValue> GArray;

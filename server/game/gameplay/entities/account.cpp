@@ -30,9 +30,12 @@ void BaseAccount::on_ready() {
     cell.call("msg_from_base", "hello, i am base");
     client.call("msg_from_base", "hello, i am base");
 
-    //test_timer = REGIST_TIMER(5, 60, true, BaseAccount::account_timer_test, "1 minutes");
-    prop_timer = REGIST_TIMER(0, 1, true, BaseAccount::account_timer_prop_sync);
-    migrate_timer = REGIST_TIMER(0, 5, true, BaseAccount::account_migrate_timer);
+    //test_timer = REGIST_TIMER(5, 60, true, account_timer_test, "1 minutes");
+    prop_timer = REGIST_TIMER(0, 1, true, account_timer_prop_sync);
+    migrate_timer = REGIST_TIMER(0, 5, true, account_migrate_timer);
+
+    // notify component
+    get_component(CreateAvatarComponent::get_name())->on_ready();
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
@@ -47,8 +50,8 @@ void BaseAccount::msg_from_client(const GString& msg) {
     INFO_LOG("[base] msg.%s from client\n", msg.c_str()); 
 }
 
-void BaseAccount::account_timer_test(const GValue& arg1) {
-    INFO_LOG("[Base] this is timer test arg1.%s\n", arg1.as_string().c_str());
+void BaseAccount::account_timer_test(const GString& arg1) {
+    INFO_LOG("[Base] this is timer test arg1.%s\n", arg1.c_str());
 }
 
 void BaseAccount::account_migrate_timer() {
@@ -337,7 +340,7 @@ void CellAccount::property_define() {
 }
 
 void CellAccount::timer_cb_store() {
-    STORE_TIMER_CB_FOR_MIGRATE(CellAccount::account_timer_test, GString());
+    STORE_TIMER_CB_FOR_MIGRATE(account_timer_test);
 }
 
 void CellAccount::msg_from_base(const GString& msg) {
@@ -369,11 +372,11 @@ void CellAccount::on_ready() {
     base.call("msg_from_cell", "hello, i am cell");
     client.call("msg_from_cell", "hello, i am cell");
 
-    get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, CellAccount::account_timer_test, "arg1"));
+    get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, account_timer_test, "arg1"));
 }
 
-void CellAccount::account_timer_test(const GValue& arg1) {
-    INFO_LOG("[Cell] @@@@@@ this is timer test arg1.%s next_timer_id.%d\n", arg1.as_string().c_str(), get_prop("test_timer")->as_int32());
+void CellAccount::account_timer_test(const GString& arg1) {
+    INFO_LOG("[Cell] @@@@@@ this is timer test arg1.%s next_timer_id.%d\n", arg1.c_str(), get_prop("test_timer")->as_int32());
 
-    get_prop("test_timer")->update(REGIST_TIMER(3, 0, false, CellAccount::account_timer_test, "arg1"));
+    get_prop("test_timer")->update(REGIST_TIMER(3, 0, false, account_timer_test, "arg1"));
 }

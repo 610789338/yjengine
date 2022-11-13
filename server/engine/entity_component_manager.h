@@ -6,108 +6,6 @@
 
 struct EntityPropertyBase;
 
-template<class TEntityComp>
-struct EntityCompRpcMethod0 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)();
-    EntityCompRpcMethod0(CBType _cb) : cb(_cb) {}
-    CBType cb;
-
-    void decode(Decoder& decoder) {}
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod0(cb); }
-};
-
-template<class TEntityComp, class T1>
-struct EntityCompRpcMethod1 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)(T1);
-    EntityCompRpcMethod1(CBType _cb) : cb(_cb) {}
-    CBType cb;
-    RMCVR(T1) t1;
-
-    void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-    }
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(t1); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod1(cb); }
-};
-
-template<class TEntityComp, class T1, class T2>
-struct EntityCompRpcMethod2 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)(T1, T2);
-    EntityCompRpcMethod2(CBType _cb) : cb(_cb) {}
-    CBType cb;
-    RMCVR(T1) t1;
-    RMCVR(T2) t2;
-
-    void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-    }
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(t1, t2); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod2(cb); }
-};
-
-template<class TEntityComp, class T1, class T2, class T3>
-struct EntityCompRpcMethod3 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)(T1, T2, T3);
-    EntityCompRpcMethod3(CBType _cb) : cb(_cb) {}
-    CBType cb;
-    RMCVR(T1) t1;
-    RMCVR(T2) t2;
-    RMCVR(T3) t3;
-
-    void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-    }
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(t1, t2, t3); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod3(cb); }
-};
-
-template<class TEntityComp, class T1, class T2, class T3, class T4>
-struct EntityCompRpcMethod4 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)(T1, T2, T3, T4);
-    EntityCompRpcMethod4(CBType _cb) : cb(_cb) {}
-    CBType cb;
-    RMCVR(T1) t1;
-    RMCVR(T2) t2;
-    RMCVR(T3) t3;
-    RMCVR(T4) t4;
-
-    void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-    }
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(t1, t2, t3, t4); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod4(cb); }
-};
-
-template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
-struct EntityCompRpcMethod5 : public RpcMethodBase {
-    typedef void(TEntityComp::*CBType)(T1, T2, T3, T4, T5);
-    EntityCompRpcMethod5(CBType _cb) : cb(_cb) {}
-    CBType cb;
-    RMCVR(T1) t1;
-    RMCVR(T2) t2;
-    RMCVR(T3) t3;
-    RMCVR(T4) t4;
-    RMCVR(T5) t5;
-
-    void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-        t5 = decoder.read<RMCVR(T5)>();
-    }
-    void exec(void* _this) { (((TEntityComp*)_this)->*cb)(t1, t2, t3, t4, t5); }
-    RpcMethodBase* create_self() { return new EntityCompRpcMethod5(cb); }
-};
-
-
 class EntityComponentBase {
 public:
     EntityComponentBase() {}
@@ -123,6 +21,8 @@ public:
     virtual void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
     EntityPropertyBase* get_prop(const GString& prop_name) const;
 
+    virtual void on_ready() = 0;
+
 protected:
     GString name;
     Entity* owner;
@@ -131,7 +31,122 @@ protected:
 
 class ComponentManagerBase {
 public:
+    ComponentManagerBase() {}
+    virtual ~ComponentManagerBase() {}
+
+    template<class TEntityComp>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)()) {
+        RpcMethodBase* method = new EntityRpcMethod0<TEntityComp>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntityComp, class T1>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1)) {
+        RpcMethodBase* method = new EntityRpcMethod1<TEntityComp, T1>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntityComp, class T1, class T2>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2)) {
+        RpcMethodBase* method = new EntityRpcMethod2<TEntityComp, T1, T2>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3)) {
+        RpcMethodBase* method = new EntityRpcMethod3<TEntityComp, T1, T2, T3>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
+        RpcMethodBase* method = new EntityRpcMethod4<TEntityComp, T1, T2, T3, T4>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
+    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
+        RpcMethodBase* method = new EntityRpcMethod5<TEntityComp, T1, T2, T3, T4, T5>(cb);
+        method->component_name = TEntityComp::get_name();
+        method->type = entity_rpc_type;
+        get_rpc_mgr()->add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
     virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
+    virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
+
+#define GENERATE_COMP_TIMER_BODY \
+        int64_t start_time = nowms_timestamp() + int64_t(start * 1000); \
+        timer->m_id = entity_comp->get_owner()->next_timer_id++; \
+        timer->m_interval = (float)interval; \
+        timer->m_repeat = repeat; \
+        timer->m_start_time = start_time; \
+        timer->m_expiration = start_time; \
+        timer->m_cb_name = cb_name;
+
+    template<class TEntityComp>
+    Timer0<TEntityComp>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)()) {
+        auto timer = new Timer0<TEntityComp>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
+
+    template<class TEntityComp, class T1>
+    Timer1<TEntityComp, T1>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)(T1)) {
+        auto timer = new Timer1<TEntityComp, T1>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
+
+    template<class TEntityComp, class T1, class T2>
+    Timer2<TEntityComp, T1, T2>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)(T1, T2)) {
+        auto timer = new Timer2<TEntityComp, T1, T2>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3>
+    Timer3<TEntityComp, T1, T2, T3>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)(T1, T2, T3)) {
+        auto timer = new Timer3<TEntityComp, T1, T2, T3>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4>
+    Timer4<TEntityComp, T1, T2, T3, T4>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
+        auto timer = new Timer4<TEntityComp, T1, T2, T3, T4>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
+    Timer5<TEntityComp, T1, T2, T3, T4, T5>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
+        auto timer = new Timer5<TEntityComp, T1, T2, T3, T4, T5>(entity_comp, cb);
+        GENERATE_COMP_TIMER_BODY;
+        entity_comp->get_owner()->add_timer(timer);
+        return timer;
+    }
 };
 
 extern GArray* get_local_entity_rpc_names();
@@ -146,9 +161,9 @@ public:
         EntityClassType::regist_components();
     }
 
+    RpcManagerBase* get_rpc_mgr() { return rpc_mgr; }
     GString rpc_name_decode(Decoder& decoder) { return ""; }
     void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {}
-
 
     void component_regist(EntityComponentBase* component) {
 
@@ -167,63 +182,9 @@ public:
         }
     }
 
-    template<class TEntityComp>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)()) {
-        RpcMethodBase* method = new EntityCompRpcMethod0<TEntityComp>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
-    template<class TEntityComp, class T1>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1)) {
-        RpcMethodBase* method = new EntityCompRpcMethod1<TEntityComp, T1>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
-    template<class TEntityComp, class T1, class T2>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2)) {
-        RpcMethodBase* method = new EntityCompRpcMethod2<TEntityComp, T1, T2>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
-    template<class TEntityComp, class T1, class T2, class T3>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3)) {
-        RpcMethodBase* method = new EntityCompRpcMethod3<TEntityComp, T1, T2, T3>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
-    template<class TEntityComp, class T1, class T2, class T3, class T4>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
-        RpcMethodBase* method = new EntityCompRpcMethod4<TEntityComp, T1, T2, T3, T4>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
-    template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
-    void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
-        RpcMethodBase* method = new EntityCompRpcMethod5<TEntityComp, T1, T2, T3, T4, T5>(cb);
-        method->component_name = TEntityComp::get_name();
-        method->type = entity_rpc_type;
-        rpc_mgr->add_rpc_method(rpc_name, method);
-        get_local_entity_rpc_names()->push_back(rpc_name);
-    }
-
     void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) {
 
-        RpcMethodBase* method = rpc_mgr->find_rpc_method(rpc_name);
+        RpcMethodBase* method = get_rpc_mgr()->find_rpc_method(rpc_name);
         const auto& comp_name = method->get_comp_name();
 
         auto iter = entity->components.find(comp_name);
@@ -235,7 +196,9 @@ public:
     }
 
     unordered_map<GString, EntityComponentBase*> components;
-    RpcManagerBase* rpc_mgr;
+    RpcManagerBase* rpc_mgr = nullptr;
+
+    EntityClassType tclass;
 };
 
 #define COMP_RPC_CALL_DEFINE(TCLASS) \
@@ -256,6 +219,8 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 
 
 #define COMP_RPC_METHOD(rpc_type, rpc_name) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &TEntityComp::rpc_name)
+#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &cb)->set_args(##__VA_ARGS__)
+#define COMP_STORE_TIMER_CB_FOR_MIGRATE(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &cb)
 
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
@@ -263,7 +228,8 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     component->set_name(TEntityComp::get_name()); \
     component->set_owner(nullptr); \
     component_manager.component_regist(component); \
-    TEntityComp::rpc_method_define<TEntity, TEntityComp>();
+    TEntityComp::rpc_method_define<TEntity, TEntityComp>(); \
+    TEntityComp::timer_cb_store<TEntity>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \

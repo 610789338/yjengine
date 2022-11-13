@@ -20,7 +20,7 @@ public:
 
     void msg_from_cell(const GString& msg);
     void msg_from_client(const GString& msg);
-    void account_timer_test(const GValue& arg1);
+    void account_timer_test(const GString& arg1);
 
     // property
     void property_test();
@@ -68,7 +68,7 @@ public:
 
     void msg_from_base(const GString& msg);
     void msg_from_client(const GString& msg);
-    void account_timer_test(const GValue& arg1);
+    void account_timer_test(const GString& arg1);
 
     void add_migrate_int_from_base();
     void add_migrate_int_from_client();

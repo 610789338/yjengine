@@ -146,7 +146,7 @@ void Entity::timer_tick() {
         const auto& timer = *iter;
         if (timer->m_expiration <= now) {
             ++timer->m_fire_num;
-            get_timer_manager()->timer_callback(timer);
+            timer->callback();
             timer_fired.push_back(timer);
         }
         else {
@@ -418,6 +418,8 @@ void CellEntityWithClient::begin_migrate(const GString& new_addr) {
 
     is_migrating = true;
 
+    get_timer_manager()->regist_timer(this, 0, 5, true, "migrate_check_timer", &CellEntityWithClient::migrate_check_timer);
+
     new_cell_addr = new_addr;
     base.call("migrate_req_from_cell");
     client.call("migrate_req_from_cell");
@@ -485,6 +487,10 @@ void CellEntityWithClient::on_migrate_in(const GDict& create_data) {
 
 void CellEntityWithClient::on_new_cell_migrate_finish() {
     destroy_self();
+}
+
+void CellEntityWithClient::migrate_check_timer() {
+    INFO_LOG("CellEntityWithClient::migrate_check_timer\n");
 }
 
 void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin) {

@@ -17,7 +17,7 @@ class RpcManagerBase;
 class ComponentManagerBase;
 class EntityComponentBase;
 struct EntityPropertyBase;
-class TimerBase;
+struct TimerBase;
 class TimerManagerBase;
 
 enum EntityType {
@@ -239,6 +239,8 @@ public:
     virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
 
+    void migrate_check_timer();
+
     // db save
     void cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin);
 
@@ -302,7 +304,7 @@ public: \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
     GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
-    void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, TCLASS::time_to_save); } \
+    void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
     void time_to_save() { real_time_to_save(); }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
@@ -313,8 +315,8 @@ EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #T
     component_manager.generate_entity_components(entity); \
     entity->rpc_mgr = &TCLASS::rpc_manager; \
     return entity; }); \
-EntityComponentManager<TCLASS> TCLASS::component_manager; \
 TimerManager<TCLASS> TCLASS::timer_manager; \
+EntityComponentManager<TCLASS> TCLASS::component_manager; \
 PropertyTree TCLASS::property_tree(property_manager.propertys);
 
 

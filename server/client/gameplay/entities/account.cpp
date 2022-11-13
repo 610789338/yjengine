@@ -52,8 +52,8 @@ void ClientAccount::on_ready() {
 
     base.call("component_rpc_test", "hello, my cute component");
 
-    //migrate_timer = REGIST_TIMER(0, 0.1, true, ClientAccount::account_migrate_timer);
-    //migrate_print_timer = REGIST_TIMER(0, 1, true, ClientAccount::account_migrate_print_timer);
+    //migrate_timer = REGIST_TIMER(0, 0.1, true, account_migrate_timer);
+    //migrate_print_timer = REGIST_TIMER(0, 1, true, account_migrate_print_timer);
 }
 
 void ClientAccount::on_prop_sync_from_server() {

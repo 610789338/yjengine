@@ -15,8 +15,6 @@
 
 using namespace std;
 
-#define RMCVR(T) typename std::remove_cv<typename std::remove_reference<T>::type>::type 
-
 class Session;
 class Remote;
 struct RpcMethodBase;
