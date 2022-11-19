@@ -217,10 +217,10 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     rpc_method->exec((void*)this); \
 }
 
-
-#define COMP_RPC_METHOD(rpc_type, rpc_name) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &TEntityComp::rpc_name)
-#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &cb)->set_args(##__VA_ARGS__)
-#define COMP_STORE_TIMER_CB_FOR_MIGRATE(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &cb)
+#define RMP(T) std::remove_pointer<T>::type
+#define COMP_RPC_METHOD(rpc_type, rpc_name) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(jun))::rpc_name)
+#define COMP_STORE_TIMER_CB_FOR_MIGRATE(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(jun))::cb)
+#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(jun))::cb)->set_args(##__VA_ARGS__)
 
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
@@ -228,7 +228,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     component->set_name(TEntityComp::get_name()); \
     component->set_owner(nullptr); \
     component_manager.component_regist(component); \
-    TEntityComp::rpc_method_define<TEntity, TEntityComp>(); \
+    TEntityComp::rpc_method_define<TEntity>(); \
     TEntityComp::timer_cb_store<TEntity>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
@@ -240,4 +240,5 @@ public: \
         component->set_owner(owner); \
         return component; \
     } \
-    COMP_RPC_CALL_DEFINE(TEntityComp)
+    COMP_RPC_CALL_DEFINE(TEntityComp) \
+    TEntityComp* jun;
