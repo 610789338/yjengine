@@ -206,3 +206,20 @@ bool Decoder::is_finish() {
     
     return false;
 }
+template<> bool decoder_read<bool>(Decoder& decoder) { return decoder.read_bool(); }
+template<> int8_t decoder_read<int8_t>(Decoder& decoder) { return decoder.read_int8(); }
+template<> int16_t decoder_read<int16_t>(Decoder& decoder) { return decoder.read_int16(); }
+template<> int32_t decoder_read<int32_t>(Decoder& decoder) { return decoder.read_int32(); }
+template<> int64_t decoder_read<int64_t>(Decoder& decoder) { return decoder.read_int64(); }
+template<> uint8_t decoder_read<uint8_t>(Decoder& decoder) { return decoder.read_uint8(); }
+template<> uint16_t decoder_read<uint16_t>(Decoder& decoder) { return decoder.read_uint16(); }
+template<> uint32_t decoder_read<uint32_t>(Decoder& decoder) { return decoder.read_uint32(); }
+template<> uint64_t decoder_read<uint64_t>(Decoder& decoder) { return decoder.read_uint64(); }
+
+template<> float decoder_read<float>(Decoder& decoder) { return decoder.read_float(); }
+template<> double decoder_read<double>(Decoder& decoder) { return decoder.read_double(); }
+
+template<> GString decoder_read<GString>(Decoder& decoder) { return decoder.read_string(); }
+template<> GArray decoder_read<GArray>(Decoder& decoder) { return decoder.read_array(); }
+template<> GDict decoder_read<GDict>(Decoder& decoder) { return decoder.read_dict(); }
+template<> GBin decoder_read<GBin>(Decoder& decoder) { return decoder.read_bin(); }

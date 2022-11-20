@@ -27,7 +27,7 @@ struct EntityRpcMethod1 : public RpcMethodBase {
     RMCVR(T1) t1;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
     }
     void exec(void* _this) { (((TEntity*)_this)->*cb)(t1); }
     RpcMethodBase* create_self() { return new EntityRpcMethod1(cb); }
@@ -42,8 +42,8 @@ struct EntityRpcMethod2 : public RpcMethodBase {
     RMCVR(T2) t2;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
     }
     void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2); }
     RpcMethodBase* create_self() { return new EntityRpcMethod2(cb); }
@@ -59,9 +59,9 @@ struct EntityRpcMethod3 : public RpcMethodBase {
     RMCVR(T3) t3;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
     }
     void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3); }
     RpcMethodBase* create_self() { return new EntityRpcMethod3(cb); }
@@ -78,10 +78,10 @@ struct EntityRpcMethod4 : public RpcMethodBase {
     RMCVR(T4) t4;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
     }
     void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4); }
     RpcMethodBase* create_self() { return new EntityRpcMethod4(cb); }
@@ -99,11 +99,11 @@ struct EntityRpcMethod5 : public RpcMethodBase {
     RMCVR(T5) t5;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-        t5 = decoder.read<RMCVR(T5)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
     }
     void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4, t5); }
     RpcMethodBase* create_self() { return new EntityRpcMethod5(cb); }

@@ -84,7 +84,7 @@ struct RpcMethod1 : public RpcMethodBase {
     RMCVR(T1) t1;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
     }
     void exec() { cb(t1); }
     RpcMethodBase* create_self() { return new RpcMethod1(cb); }
@@ -99,8 +99,8 @@ struct RpcMethod2 : public RpcMethodBase {
     RMCVR(T2) t2;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
     }
     void exec() { cb(t1, t2); }
     RpcMethodBase* create_self() { return new RpcMethod2(cb); }
@@ -116,9 +116,9 @@ struct RpcMethod3 : public RpcMethodBase {
     RMCVR(T3) t3;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
     }
     void exec() { cb(t1, t2, t3); }
     RpcMethodBase* create_self() { return new RpcMethod3(cb); }
@@ -135,10 +135,10 @@ struct RpcMethod4 : public RpcMethodBase {
     RMCVR(T4) t4;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
     }
     void exec() { cb(t1, t2, t3, t4); }
     RpcMethodBase* create_self() { return new RpcMethod4(cb); }
@@ -156,11 +156,11 @@ struct RpcMethod5 : public RpcMethodBase {
     RMCVR(T5) t5;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-        t5 = decoder.read<RMCVR(T5)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
     }
     void exec() { cb(t1, t2, t3, t4, t5); }
     RpcMethodBase* create_self() { return new RpcMethod5(cb); }
@@ -179,12 +179,12 @@ struct RpcMethod6 : public RpcMethodBase {
     RMCVR(T6) t6;
 
     void decode(Decoder& decoder) {
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-        t5 = decoder.read<RMCVR(T5)>();
-        t6 = decoder.read<RMCVR(T6)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
     }
     void exec() { cb(t1, t2, t3, t4, t5, t6); }
     RpcMethodBase* create_self() { return new RpcMethod6(cb); }

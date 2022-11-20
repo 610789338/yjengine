@@ -9,6 +9,7 @@
 #include "gvalue.h"
 #include "log.h"
 #include "decode.h"
+#include "encode.h"
 
 using namespace std;
 
@@ -90,7 +91,7 @@ struct Timer1 : public TimerBase {
 
     void unserialize(Decoder& decoder) {
         TimerBase::unserialize(decoder);
-        t1 = decoder.read<RMCVR(T1)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
     }
 
     TimerBase* create_self() { 
@@ -129,8 +130,8 @@ struct Timer2 : public TimerBase {
 
     void unserialize(Decoder& decoder) {
         TimerBase::unserialize(decoder);
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
     }
 
     TimerBase* create_self() { 
@@ -172,9 +173,9 @@ struct Timer3 : public TimerBase {
 
     void unserialize(Decoder& decoder) {
         TimerBase::unserialize(decoder);
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
     }
 
     TimerBase* create_self() {
@@ -219,10 +220,10 @@ struct Timer4 : public TimerBase {
 
     void unserialize(Decoder& decoder) {
         TimerBase::unserialize(decoder);
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
     }
 
     TimerBase* create_self() {
@@ -270,11 +271,11 @@ struct Timer5 : public TimerBase {
 
     void unserialize(Decoder& decoder) {
         TimerBase::unserialize(decoder);
-        t1 = decoder.read<RMCVR(T1)>();
-        t2 = decoder.read<RMCVR(T2)>();
-        t3 = decoder.read<RMCVR(T3)>();
-        t4 = decoder.read<RMCVR(T4)>();
-        t5 = decoder.read<RMCVR(T5)>();
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
     }
 
     TimerBase* create_self() {
@@ -437,7 +438,7 @@ public:
     EntityClassType tclass;
 };
 
-#define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &decltype(timer_manager.tclass)::cb)->set_args(##__VA_ARGS__)
+#define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &decltype(timer_manager.tclass)::cb)->set_args(__VA_ARGS__)
 #define CANCELL_TIMER(timer_id) cancel_timer(timer_id)
 #define STORE_TIMER_CB_FOR_MIGRATE(cb) timer_manager.store_timer_cb_for_migrate(#cb, &decltype(timer_manager.tclass)::cb)
 #define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)
