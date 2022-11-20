@@ -44,3 +44,21 @@ private:
 };
 
 template<class T> T decoder_read(Decoder& decoder) { return T(); }
+
+template<> bool decoder_read<bool>(Decoder& decoder);
+template<> int8_t decoder_read<int8_t>(Decoder& decoder);
+template<> int16_t decoder_read<int16_t>(Decoder& decoder);
+template<> int32_t decoder_read<int32_t>(Decoder& decoder);
+template<> int64_t decoder_read<int64_t>(Decoder& decoder);
+template<> uint8_t decoder_read<uint8_t>(Decoder& decoder);
+template<> uint16_t decoder_read<uint16_t>(Decoder& decoder);
+template<> uint32_t decoder_read<uint32_t>(Decoder& decoder);
+template<> uint64_t decoder_read<uint64_t>(Decoder& decoder);
+
+template<> float decoder_read<float>(Decoder& decoder);
+template<> double decoder_read<double>(Decoder& decoder);
+
+template<> GString decoder_read<GString>(Decoder& decoder);
+template<> GArray decoder_read<GArray>(Decoder& decoder);
+template<> GDict decoder_read<GDict>(Decoder& decoder);
+template<> GBin decoder_read<GBin>(Decoder& decoder);
