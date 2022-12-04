@@ -6,26 +6,30 @@ struct AvatarData;
 
 class CreateAvatarComponent : public EntityComponentBase {
 
-    GENERATE_COMPONENT_INNER(CreateAvatarComponent)
+    GENERATE_COMPONENT_INNER(CreateAvatarComponent);
+
+    COMP_RPC_DEFINE() {
+        COMP_RPC_METHOD(RpcType::EXPOSED, component_rpc_test);
+    }
+
+    COMP_MIGRATE_TIMER_DEFINE() {
+        COMP_STORE_TIMER_CB_FOR_MIGRATE(component_timer_test);
+    }
 
 public:
     CreateAvatarComponent() {}
     ~CreateAvatarComponent() {}
 
-    template<class TEntity>
-    static void rpc_method_define() {
-        COMP_RPC_METHOD(RpcType::EXPOSED, component_rpc_test);
-    }
-
-    template<class TEntity>
-    static void timer_cb_store() {
-        COMP_STORE_TIMER_CB_FOR_MIGRATE(component_timer_test);
-    }
-
-    void on_ready() {
+    virtual void init() {
         COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
+        REGIST_EVENT("event_test", component_event_test);
+    }
+
+    virtual void on_ready() {
+        SEND_EVENT("event_test", "lalalala");
     }
 
     void component_rpc_test(const GString& msg);
     void component_timer_test(const GString& msg);
+    void component_event_test(const GString& msg);
 };

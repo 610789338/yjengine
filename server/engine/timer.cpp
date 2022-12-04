@@ -37,7 +37,7 @@ void TimerManagerBase::restore_timer(void* entity, const GString& cb_name, const
     timer->set_this(entity);
 
     Decoder decoder(timer_bin.buf, timer_bin.size);
-    decoder.read_int16(); // skip pkg len offset
+    decoder.skip_head_len();
     timer->unserialize(decoder);
 
     ((Entity*)entity)->add_timer(timer);

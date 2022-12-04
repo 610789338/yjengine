@@ -236,7 +236,7 @@ public:
         encoder.write_uint16(iter->second);
     }
 
-    EntityClassType tclass;
+    EntityClassType* tclass;
 };
 
 #define RPC_CALL_DEFINE(TCLASS) \
@@ -256,4 +256,4 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     rpc_method->exec((void*)this); \
 }
 
-#define RPC_METHOD(rpc_type, rpc_name) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &decltype(rpc_manager.tclass)::rpc_name)
+#define RPC_METHOD(rpc_type, rpc_name) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(rpc_manager.tclass))::rpc_name)

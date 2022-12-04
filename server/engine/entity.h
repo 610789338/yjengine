@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "gvalue.h"
 #include "boost_asio.h"
@@ -19,6 +20,7 @@ class EntityComponentBase;
 struct EntityPropertyBase;
 struct TimerBase;
 class TimerManagerBase;
+class EventManagerBase;
 
 enum EntityType {
     EntityType_Base,  // stub
@@ -93,6 +95,32 @@ public:
     virtual void on_migrate_in(const GDict& create_data) { ASSERT(false); }
     virtual void on_migrate_out(GDict& create_data) { ASSERT(false); }
 
+    // event
+    virtual EventManagerBase* get_event_manager() { return nullptr; }
+    Entity* get_owner() { return nullptr; }
+    void comp_regist_event(const GString& event_name, void* component) {
+        auto iter = event_components.find(event_name);
+        if (iter == event_components.end()) {
+            event_components[event_name] = unordered_set<EntityComponentBase*>();
+            iter = event_components.find(event_name);
+        }
+
+        if (iter->second.find((EntityComponentBase*)component) == iter->second.end()) {
+            iter->second.insert((EntityComponentBase*)component);
+        }
+    }
+
+    template<class... Args>
+    void send_event(const GString& event_name, Args... args) {
+        get_event_manager()->send_event(this, event_name, args...);
+        auto iter = event_components.find(event_name);
+        if (iter != event_components.end()) {
+            for (auto iter_inner = iter->second.begin(); iter_inner != iter->second.end(); ++iter_inner) {
+                (*iter_inner)->get_event_manager()->send_event(*iter_inner, event_name, args...);
+            }
+        }
+    }
+
     GString uuid = "";
     GString class_name = "";
 
@@ -100,6 +128,7 @@ public:
     unordered_map<EntityPropertyBase*, GString> propertys_turn;
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
+    unordered_map<GString, unordered_set<EntityComponentBase*>> event_components;
 
     multiset<TimerBase*, TimerCompare> timers;  // 不能用set，否则过期时间一样会被认为是重复key
     TimerID next_timer_id = 1;
@@ -305,7 +334,9 @@ public: \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
     GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
     void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
-    void time_to_save() { real_time_to_save(); }
+    void time_to_save() { real_time_to_save(); } \
+    EventManager<TCLASS> event_manager; \
+    EventManagerBase* get_event_manager() { return &event_manager; }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \

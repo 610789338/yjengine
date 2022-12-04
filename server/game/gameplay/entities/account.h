@@ -2,19 +2,27 @@
 
 #include "engine/engine.h"
 
+#include "../components/create_avatar_component.h"
+
 
 class BaseAccount : public BaseEntityWithCellAndClient {
 
-    GENERATE_ENTITY_INNER(BaseAccount)
+    GENERATE_ENTITY_INNER(BaseAccount);
+
+    static void regist_components() {
+        REGIST_COMPONENT(BaseAccount, CreateAvatarComponent);
+    }
+    static void rpc_method_define() {
+        RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
+        RPC_METHOD(RpcType::EXPOSED, msg_from_client);
+        RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
+    }
+    static void property_define();
+    static void timer_cb_store() {}
 
 public:
     BaseAccount() {}
     ~BaseAccount() {}
-
-    static void regist_components();
-    static void rpc_method_define();
-    static void property_define();
-    static void timer_cb_store() {}
 
     void on_ready(); // call by engine
 
@@ -41,6 +49,10 @@ public:
     void account_migrate_timer();
     void add_migrate_int_from_client();
 
+    // event 
+    void entity_event_test(const GString& msg);
+    void account_event_timer();
+
 private:
     int32_t sync_count = 0;
     int32_t incr = 0;
@@ -53,7 +65,7 @@ private:
 
 class CellAccount : public CellEntityWithClient {
 
-    GENERATE_ENTITY_INNER(CellAccount)
+    GENERATE_ENTITY_INNER(CellAccount);
 
 public:
     CellAccount() {}

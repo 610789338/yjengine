@@ -9,7 +9,7 @@ void entity_property_migrate_from_oldcell(GString old_cell_addr, GString entity_
 
     Entity* entity = create_local_cell_entity(entity_class_name, entity_uuid);
     Decoder decoder(v.buf, v.size);
-    decoder.read_int16(); // skip pkg len offset
+    decoder.skip_head_len();
     entity->propertys_unserialize(decoder);
     entity->on_migrate_in(create_data);
 

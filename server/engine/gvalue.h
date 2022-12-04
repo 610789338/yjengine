@@ -21,6 +21,7 @@ using namespace std;
 #endif
 
 #define RMCVR(T) typename std::remove_cv<typename std::remove_reference<T>::type>::type 
+#define RMP(T) std::remove_pointer<T>::type
 
 class GValue;
 typedef string GString;

@@ -62,6 +62,9 @@
     <ClInclude Include="entity_property_tree.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="entity_event_manager.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp">
@@ -110,5 +113,6 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="entity_property_tree.cpp" />
+    <ClCompile Include="entity_event_manager.cpp" />
   </ItemGroup>
 </Project>

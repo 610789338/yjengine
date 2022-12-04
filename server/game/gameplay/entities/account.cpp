@@ -3,21 +3,9 @@
 #include "account.h"
 #include "common/prop_def/account_prop_def.h"
 
-#include "../components/create_avatar_component.h"
-
 
 GENERATE_ENTITY_OUT(BaseAccount)
 
-void BaseAccount::regist_components() {
-    REGIST_COMPONENT(BaseAccount, CreateAvatarComponent);
-}
-
-void BaseAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client);
-
-    RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
-}
 
 void BaseAccount::property_define() {
     account_property_define<BaseAccount>();
@@ -34,12 +22,20 @@ void BaseAccount::on_ready() {
     prop_timer = REGIST_TIMER(0, 1, true, account_timer_prop_sync);
     migrate_timer = REGIST_TIMER(0, 5, true, account_migrate_timer);
 
-    // notify component
-    get_component(CreateAvatarComponent::get_name())->on_ready();
+    REGIST_EVENT("event_test", entity_event_test);
+    REGIST_TIMER(5, 0, false, account_event_timer);
 
 #ifndef __PROP_SYNC_TEST__
     property_test();
 #endif
+}
+
+void BaseAccount::entity_event_test(const GString& msg) {
+    INFO_LOG("[base] entity_event_test.%s \n", msg.c_str());
+}
+
+void BaseAccount::account_event_timer() {
+    SEND_EVENT("event_test", "hahahaha");
 }
 
 void BaseAccount::msg_from_cell(const GString& msg) {

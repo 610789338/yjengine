@@ -119,7 +119,12 @@ void Entity::ready() {
     if (need_create_save_timer()) {
         create_dbsave_timer();
     }
+
     on_ready();
+
+    for (auto iter = components.begin(); iter != components.end(); ++iter) {
+        iter->second->on_ready();
+    }
 }
 
 void Entity::propertys_unserialize(Decoder& decoder) {
@@ -534,14 +539,14 @@ void ClientEntity::on_reconnect_success(const GDict& create_data) {
 
 void ClientEntity::prop_sync_from_base(const GBin& v) {
     Decoder decoder(v.buf, v.size);
-    decoder.read_int16(); // skip pkg len offset
+    decoder.skip_head_len();
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
 }
 
 void ClientEntity::prop_sync_from_cell(const GBin& v) {
     Decoder decoder(v.buf, v.size);
-    decoder.read_int16(); // skip pkg len offset
+    decoder.skip_head_len();
     propertys_unserialize(decoder);
     on_prop_sync_from_server();
 }

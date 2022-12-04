@@ -35,12 +35,12 @@ public:
     uint16_t get_offset() { return m_offset; }
     const char* get_buf() const { return m_buf; }
     bool is_finish();
+    void skip_head_len() { read_int16(); }
 
 private:
     const char* m_buf;
     uint16_t m_max_offset;
     uint16_t m_offset;
-    bool m_need_release_buf;
 };
 
 template<class T> T decoder_read(Decoder& decoder) { return T(); }
