@@ -1,20 +1,28 @@
 #pragma once
 
 #include "engine/engine.h"
+#include "common/prop_def/account_prop_def.h"
+#include "common/utils/utils.h"
 
 
 class ClientAccount : public ClientEntity {
 
-    GENERATE_ENTITY_INNER(ClientAccount)
+    GENERATE_ENTITY_INNER(ClientAccount);
+
+    static void regist_components() {}
+    static void rpc_method_define() {
+        RPC_METHOD(RpcType::CLIENT, msg_from_base);
+        RPC_METHOD(RpcType::CLIENT, msg_from_cell);
+        RPC_METHOD(RpcType::CLIENT, prop_sync_compare);
+    }
+    static void property_define() {
+        account_property_define<ClientAccount>();
+    }
+    static void migrate_timer_define() {}
 
 public:
     ClientAccount() {}
     ~ClientAccount() {}
-
-    static void regist_components();
-    static void rpc_method_define();
-    static void property_define();
-    static void timer_cb_store() {}
 
     void on_ready(); // call by engine
 

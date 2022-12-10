@@ -1,15 +1,10 @@
 #include "engine/utils.h"
 
 #include "account.h"
-#include "common/prop_def/account_prop_def.h"
 
 
 GENERATE_ENTITY_OUT(BaseAccount)
 
-
-void BaseAccount::property_define() {
-    account_property_define<BaseAccount>();
-}
 
 void BaseAccount::on_ready() {
 
@@ -319,25 +314,6 @@ void BaseAccount::property_sync_test_update() {
 }
 
 GENERATE_ENTITY_OUT(CellAccount)
-
-void CellAccount::regist_components() {
-}
-
-void CellAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base);
-    RPC_METHOD(RpcType::EXPOSED, msg_from_client);
-
-    RPC_METHOD(RpcType::SERVER_ONLY, add_migrate_int_from_base);
-    RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
-}
-
-void CellAccount::property_define() {
-    account_property_define<CellAccount>();
-}
-
-void CellAccount::timer_cb_store() {
-    STORE_TIMER_CB_FOR_MIGRATE(account_timer_test);
-}
 
 void CellAccount::msg_from_base(const GString& msg) {
     INFO_LOG("[cell] msg.%s from base\n", msg.c_str());

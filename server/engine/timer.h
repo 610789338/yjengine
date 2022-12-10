@@ -433,12 +433,12 @@ public:
 template<class EntityClassType>
 class TimerManager : public TimerManagerBase {
 public:
-    TimerManager() { EntityClassType::timer_cb_store(); }
+    TimerManager() { EntityClassType::migrate_timer_define(); }
 
     EntityClassType* tclass;
 };
 
 #define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(timer_manager.tclass))::cb)->set_args(__VA_ARGS__)
 #define CANCELL_TIMER(timer_id) cancel_timer(timer_id)
-#define STORE_TIMER_CB_FOR_MIGRATE(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
+#define MIGRATE_TIMER_DEFINE(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
 #define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)

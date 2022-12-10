@@ -3,6 +3,8 @@
 #include "engine/engine.h"
 
 #include "../components/create_avatar_component.h"
+#include "common/prop_def/account_prop_def.h"
+#include "common/utils/utils.h"
 
 
 class BaseAccount : public BaseEntityWithCellAndClient {
@@ -17,8 +19,10 @@ class BaseAccount : public BaseEntityWithCellAndClient {
         RPC_METHOD(RpcType::EXPOSED, msg_from_client);
         RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
     }
-    static void property_define();
-    static void timer_cb_store() {}
+    static void property_define() {
+        account_property_define<BaseAccount>();
+    }
+    static void migrate_timer_define() {}
 
 public:
     BaseAccount() {}
@@ -67,14 +71,24 @@ class CellAccount : public CellEntityWithClient {
 
     GENERATE_ENTITY_INNER(CellAccount);
 
+    static void regist_components() {}
+    static void rpc_method_define() {
+        RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base);
+        RPC_METHOD(RpcType::EXPOSED, msg_from_client);
+
+        RPC_METHOD(RpcType::SERVER_ONLY, add_migrate_int_from_base);
+        RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
+    }
+    static void property_define() {
+        account_property_define<CellAccount>();
+    }
+    static void migrate_timer_define() {
+        MIGRATE_TIMER_DEFINE(account_timer_test);
+    }
+
 public:
     CellAccount() {}
     ~CellAccount() {}
-
-    static void regist_components();
-    static void rpc_method_define();
-    static void property_define();
-    static void timer_cb_store();
 
     void on_ready(); // call by engine
 

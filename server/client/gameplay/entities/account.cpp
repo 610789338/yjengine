@@ -1,21 +1,7 @@
 #include "account.h"
-#include "common/prop_def/account_prop_def.h"
 
 
 GENERATE_ENTITY_OUT(ClientAccount)
-
-void ClientAccount::regist_components() {
-}
-
-void ClientAccount::rpc_method_define() {
-    RPC_METHOD(RpcType::CLIENT, msg_from_base);
-    RPC_METHOD(RpcType::CLIENT, msg_from_cell);
-    RPC_METHOD(RpcType::CLIENT, prop_sync_compare);
-}
-
-void ClientAccount::property_define() {
-    account_property_define<ClientAccount>();
-}
 
 void ClientAccount::msg_from_base(const GString& msg) {
     INFO_LOG("[client] msg.%s from base\n", msg.c_str()); 
