@@ -33,6 +33,12 @@ enum EntityType {
     EntityType_None
 };
 
+enum MigrateState {
+    Migrate_None,
+    Migrate_Prepare,
+    Migrate_RealMigrate,
+};
+
 class Entity {
 public:
     enum {
@@ -235,9 +241,10 @@ public:
 
     BaseMailBox base;
 
-    bool is_migrating = false;
+    MigrateState migrate_state = Migrate_None;
     GString new_cell_addr = "";
     bool is_reqack_from_base = false;
+    GDict migrate_timers;
 };
 
 class CellEntityWithClient : public CellEntity {

@@ -33,6 +33,9 @@ void Entity::release_property() {
 void Entity::release_timer() {
     vector<TimerID> _timer_ids;
     for (auto iter = timer_ids.begin(); iter != timer_ids.end(); ++iter) {
+        if (iter->second->m_cb_name == "migrate_check_timer") {
+            continue;
+        }
         _timer_ids.push_back(iter->first);
     }
 
@@ -302,15 +305,15 @@ void CellEntity::begin_migrate(const GString& new_addr) {
         return;
     }
 
-    if (is_migrating) {
-        return;
-    }
-
     if (!is_ready) {
         return;
     }
 
-    is_migrating = true;
+    if (migrate_state > MigrateState::Migrate_None) {
+        return;
+    }
+
+    migrate_state = MigrateState::Migrate_Prepare;
 
     new_cell_addr = new_addr;
     base.call("migrate_req_from_cell"); 
@@ -322,9 +325,11 @@ void CellEntity::migrate_reqack_from_base(bool is_ok) {
 }
 
 void CellEntity::real_begin_migrate() { 
-    if (!is_reqack_from_base) {
+    if (!is_reqack_from_base || migrate_state != MigrateState::Migrate_Prepare) {
         return;
     }
+
+    migrate_state = MigrateState::Migrate_RealMigrate;
 
     migrate_entity();
     is_reqack_from_base = false;
@@ -413,17 +418,17 @@ void CellEntityWithClient::begin_migrate(const GString& new_addr) {
         return;
     }
 
-    if (is_migrating) {
-        return;
-    }
-
     if (!is_ready) {
         return;
     }
 
-    is_migrating = true;
+    if (migrate_state > MigrateState::Migrate_None) {
+        return;
+    }
 
-    get_timer_manager()->regist_timer(this, 0, 5, true, "migrate_check_timer", &CellEntityWithClient::migrate_check_timer);
+    migrate_state = MigrateState::Migrate_Prepare;
+
+    REGIST_TIMER_INNER(10, 0, false, "migrate_check_timer", &CellEntityWithClient::migrate_check_timer);
 
     new_cell_addr = new_addr;
     base.call("migrate_req_from_cell");
@@ -441,9 +446,11 @@ void CellEntityWithClient::migrate_reqack_from_client(bool is_ok) {
 }
 
 void CellEntityWithClient::real_begin_migrate() {
-    if (!is_reqack_from_base || !is_reqack_from_client) {
+    if (!is_reqack_from_base || !is_reqack_from_client || migrate_state != MigrateState::Migrate_Prepare) {
         return;
     }
+
+    migrate_state = MigrateState::Migrate_RealMigrate;
 
     migrate_entity();
     is_reqack_from_base = false;
@@ -458,15 +465,15 @@ void CellEntityWithClient::on_migrate_out(GDict& create_data) {
 
     //INFO_LOG("entity.%s on_migrate_out\n", uuid.c_str());s
 
-    GDict _timers;
+    migrate_timers.clear();
     for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
         TimerBase* timer = *iter;
         Encoder encoder;
         timer->serialize(encoder);
         encoder.write_end();
-        _timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset()) ));
+        migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset()) ));
     }
-    create_data.insert(make_pair("timers", _timers));
+    create_data.insert(make_pair("timers", migrate_timers));
     create_data.insert(make_pair("next_timer_id", next_timer_id));
     release_timer();
 }
@@ -495,7 +502,28 @@ void CellEntityWithClient::on_new_cell_migrate_finish() {
 }
 
 void CellEntityWithClient::migrate_check_timer() {
-    INFO_LOG("CellEntityWithClient::migrate_check_timer\n");
+    WARN_LOG("CellEntityWithClient::migrate failed state.%d\n", migrate_state);
+
+    if (migrate_state == MigrateState::Migrate_Prepare) {
+        migrate_state = MigrateState::Migrate_None;
+    }
+    else if (migrate_state == MigrateState::Migrate_RealMigrate) {
+        migrate_state = MigrateState::Migrate_None;
+
+        for (auto iter = migrate_timers.begin(); iter != migrate_timers.end(); ++iter) {
+            RESTORE_TIMER(iter->first, iter->second.as_bin());
+        }
+
+        base.call("new_cell_migrate_in", get_listen_addr());
+        client.call("new_cell_migrate_in", get_listen_addr());
+
+        // notify new cell destroy
+        CellMailBox new_cell;
+        new_cell.set_side("server");
+        new_cell.set_entity_and_addr(uuid, new_cell_addr);
+        new_cell.set_owner(this);
+        new_cell.call("on_new_cell_migrate_finish");
+    }
 }
 
 void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin) {
