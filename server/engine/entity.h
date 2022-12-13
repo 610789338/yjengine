@@ -56,11 +56,13 @@ public:
     void tick();
 
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
-    virtual void on_create(const GDict& create_data) = 0;
-    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) { ASSERT(false); }
-    virtual void on_reconnect_success(const GDict& create_data) { ASSERT(false); }
+    virtual void on_create(const GDict& create_data);
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) { ASSERT(false); } // for base and cell
+    virtual void on_reconnect_success(const GDict& create_data) { ASSERT(false); } // for client
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
+    virtual void create_check_timer();
+    virtual void destroy_self();
 
     virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
@@ -139,9 +141,11 @@ public:
     multiset<TimerBase*, TimerCompare> timers;  // 不能用set，否则过期时间一样会被认为是重复key
     TimerID next_timer_id = 1;
     unordered_map<TimerID, TimerBase*> timer_ids;
+    TimerID create_check_timerid = 0;
 
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
+    bool need_destroy = false;
 };
 
 // ------------------------------- base ------------------------------- //
@@ -237,7 +241,6 @@ public:
     virtual void on_migrate_out(GDict& create_data);
     virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
-    void destroy_self();
 
     BaseMailBox base;
 
@@ -306,6 +309,7 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void on_reconnect_success(const GDict& create_data);
     virtual void ready() { Entity::ready(); } // must exist
+    virtual void destroy_by_create_check_timer() {}
     virtual void on_destroy() {}
     void prop_sync_from_base(const GBin& bin);
     void prop_sync_from_cell(const GBin& bin);

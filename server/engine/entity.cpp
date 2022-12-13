@@ -8,12 +8,34 @@
 
 
 void Entity::tick() {
-    if (!is_ready) {
-        return;
+
+    if (is_ready) {
+        propertys_sync2client();
     }
 
-    propertys_sync2client();
     timer_tick();  // 处理当前帧创建的立即触发的timer
+}
+
+void Entity::on_create(const GDict& create_data) {
+    create_check_timerid = REGIST_TIMER_INNER(10, 0, false, "create_check_timer", &Entity::create_check_timer);
+}
+
+void Entity::create_check_timer() {
+    // 10s内没有ready就会触发自毁流程
+    // 没ready分两种情况：
+    // 1.cell/client创建失败
+    //    这种情况下，已经创建了的entity会走到这个自毁流程中
+    // 2.base/cell/client创建成功了，但是ready notify丢失
+    //    这种情况下部分entity ready了，部分没有
+    //    没有ready的entity会走到这个自毁流程中，已经ready的交给心跳机制处理(TODO)
+
+    if (!is_ready) {
+        destroy_self();
+    }
+}
+
+void Entity::destroy_self() {
+    need_destroy = true;
 }
 
 void Entity::release_component() {
@@ -40,7 +62,7 @@ void Entity::release_timer() {
     }
 
     for (auto iter = _timer_ids.begin(); iter != _timer_ids.end(); ++iter) {
-        CANCELL_TIMER(*iter);
+        CANCEL_TIMER(*iter);
     }
 }
 
@@ -123,6 +145,11 @@ void Entity::ready() {
         create_dbsave_timer();
     }
 
+    if (create_check_timerid != 0) {
+        CANCEL_TIMER(create_check_timerid);
+        create_check_timerid = 0;
+    }
+
     on_ready();
 
     for (auto iter = components.begin(); iter != components.end(); ++iter) {
@@ -195,10 +222,14 @@ void Entity::remove_timer(TimerBase* timer) {
 }
 
 void BaseEntity::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
     ready();
 }
 
 void BaseEntityWithCell::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
     create_cell(create_data);
 }
 
@@ -230,6 +261,8 @@ void BaseEntityWithCell::new_cell_migrate_in(const GString& new_cell_addr) {
 }
 
 void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
     client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
     create_cell(create_data);
@@ -251,11 +284,18 @@ void BaseEntityWithCellAndClient::create_client() {
 }
 
 void BaseEntityWithCellAndClient::ready() {
+    // ready通知意味base/cell/client entity都创建好了
+    if (is_ready) {
+        return;
+    }
+
     Entity::ready();
     cell.call("ready");
 }
 
 void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
+    INFO_LOG("[base] entity.%s reconnect from client\n", client.get_entity_uuid().c_str());
+
     // kick old client
     kick_client();
 
@@ -266,8 +306,16 @@ void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_
 }
 
 void BaseEntityWithCellAndClient::on_client_reconnect_success() {
-    propertys_sync2client(true);
-    cell.call("on_client_reconnect_success");
+    // 对于服务端，登陆会收到ready通知，断线重连会收到on_client_reconnect_success通知
+    // 对于客户端，无论是登陆还是断线重连，只有ready通知，也就是说客户端对断线重连是无感的
+    if (!is_ready) {
+        // 如果是登陆流程中途客户端断线，重连上来后重新走ready通知
+        ready();
+    }
+    else {
+        propertys_sync2client(true);
+        cell.call("on_client_reconnect_success");
+    }
 }
 
 void BaseEntityWithCellAndClient::propertys_sync2client(bool force_all) {
@@ -364,11 +412,9 @@ void CellEntity::on_new_cell_migrate_finish() {
     destroy_self();
 }
 
-void CellEntity::destroy_self() {
-    destroy_local_cell_entity(uuid);
-}
-
 void CellEntityWithClient::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
     base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
     client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
     client.set_gate_addr(create_data.at("gate_addr").as_string());
@@ -552,6 +598,8 @@ void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, cons
 
 
 void ClientEntity::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
     base.set_entity_and_addr(uuid, create_data.at("base_addr").as_string());
     cell.set_entity_and_addr(uuid, create_data.at("cell_addr").as_string());
 
@@ -707,15 +755,39 @@ RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
 }
 
 void entity_tick() {
+    GArray base_entitys_to_destroy;
+    GArray cell_entitys_to_destroy;
+    GArray client_entitys_to_destroy;
     for (auto iter = g_base_entities.begin(); iter != g_base_entities.end(); ++iter) {
         iter->second->tick();
+        if (iter->second->need_destroy) {
+            base_entitys_to_destroy.push_back(iter->second->uuid);
+        }
     }
 
     for (auto iter = g_cell_entities.begin(); iter != g_cell_entities.end(); ++iter) {
         iter->second->tick();
+        if (iter->second->need_destroy) {
+            cell_entitys_to_destroy.push_back(iter->second->uuid);
+        }
     }
 
     for (auto iter = g_client_entities.begin(); iter != g_client_entities.end(); ++iter) {
         iter->second->tick();
+        if (iter->second->need_destroy) {
+            client_entitys_to_destroy.push_back(iter->second->uuid);
+        }
+    }
+
+    for (auto iter = base_entitys_to_destroy.begin(); iter != base_entitys_to_destroy.end(); ++iter) {
+        destroy_local_base_entity(iter->as_string());
+    }
+
+    for (auto iter = cell_entitys_to_destroy.begin(); iter != cell_entitys_to_destroy.end(); ++iter) {
+        destroy_local_cell_entity(iter->as_string());
+    }
+
+    for (auto iter = client_entitys_to_destroy.begin(); iter != client_entitys_to_destroy.end(); ++iter) {
+        destroy_local_client_entity(iter->as_string());
     }
 }
