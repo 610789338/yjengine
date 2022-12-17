@@ -114,7 +114,9 @@ void create_base_entity(const GString& entity_class_name, const GString& client_
             create_base_entity_fromdb(entity_class_name, client_addr, gate_addr, entity_uuid);
         }
         else {
-            entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+            if (iter->second->is_ready) {
+                entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+            }
         }
     }
 }

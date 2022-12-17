@@ -17,18 +17,12 @@ void Entity::tick() {
 }
 
 void Entity::on_create(const GDict& create_data) {
-    create_check_timerid = REGIST_TIMER_INNER(10, 0, false, "create_check_timer", &Entity::create_check_timer);
+    ready_check_timerid = REGIST_TIMER_INNER(10, 0, false, "ready_check_timer", &Entity::ready_check_timer);
 }
 
-void Entity::create_check_timer() {
+void Entity::ready_check_timer() {
     // 10s内没有ready就会触发自毁流程
-    // 没ready分两种情况：
-    // 1.cell/client创建失败
-    //    这种情况下，已经创建了的entity会走到这个自毁流程中
-    // 2.base/cell/client创建成功了，但是ready notify丢失
-    //    这种情况下部分entity ready了，部分没有
-    //    没有ready的entity会走到这个自毁流程中，已经ready的交给心跳机制处理(TODO)
-
+    // base/cell自毁时会通知对方一起自毁
     if (!is_ready) {
         destroy_self();
     }
@@ -145,9 +139,9 @@ void Entity::ready() {
         create_dbsave_timer();
     }
 
-    if (create_check_timerid != 0) {
-        CANCEL_TIMER(create_check_timerid);
-        create_check_timerid = 0;
+    if (ready_check_timerid != 0) {
+        CANCEL_TIMER(ready_check_timerid);
+        ready_check_timerid = 0;
     }
 
     on_ready();
@@ -268,6 +262,14 @@ void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
     create_cell(create_data);
 }
 
+void BaseEntityWithCellAndClient::ready_check_timer() {
+    if (!is_ready) {
+        destroy_self();
+        cell.call("destroy_self");
+        client.call("destroy_self");
+    }
+}
+
 void BaseEntityWithCellAndClient::on_cell_create(const GString& cell_addr) {
     cell.set_entity_and_addr(uuid, cell_addr);
     create_client();
@@ -291,6 +293,10 @@ void BaseEntityWithCellAndClient::ready() {
 
     Entity::ready();
     cell.call("ready");
+}
+
+void BaseEntityWithCellAndClient::destroy_self() {
+    Entity::destroy_self();
 }
 
 void BaseEntityWithCellAndClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
@@ -422,6 +428,14 @@ void CellEntityWithClient::on_create(const GDict& create_data) {
     base.call("on_cell_create", server->get_listen_addr());
 }
 
+void CellEntityWithClient::ready_check_timer() {
+    if (!is_ready) {
+        destroy_self();
+        base.call("destroy_self");
+        client.call("destroy_self");
+    }
+}
+
 void CellEntityWithClient::ready() {
     Entity::ready();
     client.call("ready");
@@ -444,6 +458,10 @@ void CellEntityWithClient::on_reconnect_fromclient(const GString& client_addr, c
 void CellEntityWithClient::on_client_reconnect_success() {
     propertys_sync2client(true);
     client.call("ready");
+}
+
+void CellEntityWithClient::destroy_self() {
+    Entity::destroy_self();
 }
 
 void CellEntityWithClient::propertys_sync2client(bool force_all) {
@@ -552,6 +570,9 @@ void CellEntityWithClient::migrate_check_timer() {
 
     if (migrate_state == MigrateState::Migrate_Prepare) {
         migrate_state = MigrateState::Migrate_None;
+
+        base.call("new_cell_migrate_in", get_listen_addr());
+        client.call("new_cell_migrate_in", get_listen_addr());
     }
     else if (migrate_state == MigrateState::Migrate_RealMigrate) {
         migrate_state = MigrateState::Migrate_None;
@@ -611,6 +632,14 @@ void ClientEntity::on_reconnect_success(const GDict& create_data) {
     cell.set_entity_and_addr(uuid, create_data.at("cell_addr").as_string());
 
     base.call("on_client_reconnect_success");
+}
+
+void ClientEntity::ready() { 
+    Entity::ready();
+}
+
+void ClientEntity::destroy_self() {
+    Entity::destroy_self();
 }
 
 void ClientEntity::prop_sync_from_base(const GBin& v) {

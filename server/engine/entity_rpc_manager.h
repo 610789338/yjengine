@@ -129,18 +129,21 @@ public:
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCellAndClient::on_cell_create);
             entity_rpc_regist(RpcType::EXPOSED, "on_client_reconnect_success", &BaseEntityWithCellAndClient::on_client_reconnect_success);
             entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithCellAndClient::ready);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCellAndClient::destroy_self);
         }
         else if (entity_type == EntityType::EntityType_CellWithClient) {
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient", &CellEntityWithClient::on_reconnect_fromclient);
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_client_reconnect_success", &CellEntityWithClient::on_client_reconnect_success);
             entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save", &CellEntityWithClient::cell_real_time_to_save);
             entity_rpc_regist(RpcType::SERVER_ONLY, "ready", &CellEntityWithClient::ready);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &CellEntityWithClient::destroy_self);
         }
         else if (entity_type == EntityType::EntityType_Client) {
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base", &ClientEntity::prop_sync_from_base);
             entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell", &ClientEntity::prop_sync_from_cell);
             entity_rpc_regist(RpcType::CLIENT, "ready", &ClientEntity::ready);
             entity_rpc_regist(RpcType::CLIENT, "on_kick", &ClientEntity::on_kick);
+            entity_rpc_regist(RpcType::CLIENT, "destroy_self", &ClientEntity::destroy_self);
         }
 
         regist_migrate_rpc(entity_type);
