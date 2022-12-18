@@ -131,6 +131,7 @@
     <None Include="game.ini" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="framework\game_instance.cpp" />
     <ClCompile Include="framework\game_rpc.cpp" />
     <ClCompile Include="framework\migrate_rpc.cpp" />
     <ClCompile Include="gameplay\components\create_avatar_component.cpp" />
@@ -138,6 +139,7 @@
     <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="framework\game_instance.h" />
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\game_utils.h" />

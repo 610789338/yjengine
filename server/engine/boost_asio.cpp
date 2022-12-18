@@ -50,6 +50,8 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
         return;
     }
 
+    m_last_active_time = nowms_timestamp(true);
+
     //auto _id = boost::this_thread::get_id();
     //GString thread_id = boost::lexical_cast<GString>(_id);
     //INFO_LOG("thread.%s on_read: length.%d from %s\n", thread_id.c_str(), int(length), get_remote_addr().c_str());
@@ -107,14 +109,17 @@ void SessionManager::on_session_disconnected(const GString& session_addr) {
 }
 
 void SessionManager::add_session(const shared_ptr<Session>& session) {
-    //unique_lock<boost::shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     m_sessions.insert(make_pair(session->get_remote_addr(), session));
     m_sessions_turn.insert(make_pair(session, session->get_remote_addr()));
 }
 
 void SessionManager::remove_session(const GString& session_addr) {
-    //unique_lock<boost::shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     auto iter = m_sessions.find(session_addr);
+    if (iter == m_sessions.end()) {
+        return;
+    }
     m_sessions_turn.erase(iter->second);
     m_sessions.erase(iter);
 
@@ -173,6 +178,13 @@ shared_ptr<Session> SessionManager::get_fixed_session(const GString& input) {
     return nullptr;
 }
 
+void SessionManager::foreach_session(ForEachFunc func) {
+    shared_lock<boost::shared_mutex> lock(m_mutex);
+    for (auto iter = m_sessions.begin(); iter != m_sessions.end(); ++iter) {
+        func(iter->first, iter->second);
+    }
+}
+
 void SessionManager::add_gate(const GString& session_addr, const GString& gate_addr) {
     m_gates.insert(make_pair(gate_addr, session_addr));
     m_gates_turn.insert(make_pair(session_addr, gate_addr));
@@ -202,7 +214,8 @@ void Server::do_accept() {
             // Session的接口都是线程安全的，主线程可以直接使用
             auto session = make_shared<Session>(std::move(socket));
             session->start();
-            
+
+            // TODO - Server跑多线程的，LOCAL_RPC_CALL有多线程冲突风险的
             LOCAL_RPC_CALL(session, "connect_from_client");
         }
         else {

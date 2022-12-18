@@ -26,10 +26,16 @@ extern void byte_print(const char* buf, uint16_t length);
 extern string gen_uuid();
 
 
-extern void update_time_now_cache();
 extern string now_format(bool use_cache = false);
 extern int64_t now_timestamp(bool use_cache = false);
 extern int64_t nowms_timestamp(bool use_cache = false);
 extern int64_t nowmicro_timestamp(bool use_cache = false);
 extern uint32_t bkdr_hash(const char* str);
 extern string get_listen_addr();
+
+template<class ...Args>
+char* str_format(const char* format, Args... args) {
+    static char sfmt[1024] = {0};
+    snprintf(sfmt, 1024, format, args...);
+    return sfmt;
+}

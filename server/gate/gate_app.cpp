@@ -5,6 +5,7 @@
 using namespace std;
 
 GString ini_file("gate.ini");
+extern void create_gate_instance();
 
 void init(int argc, char* args[]) {
 
@@ -23,22 +24,17 @@ void init(int argc, char* args[]) {
     set_engine_listen_ipport(ip, port);
     
     engine_init();
+    create_gate_instance();
 }
 
 void connect_game() {
 
-    {
-        auto ip = ini_get_string("Game0", "ip");
-        auto port = ini_get_string("Game0", "port");
-        if (!ip.empty() && !port.empty()) {
-            INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
-            g_remote_mgr.connect_remote(ip, port);
-        }
-    }
+    auto cluster_game_nums = ini_get_int("Common", "cluster_game_nums");
 
-    {
-        auto ip = ini_get_string("Game1", "ip");
-        auto port = ini_get_string("Game1", "port");
+    for (auto i = 0; i < cluster_game_nums; ++i) {
+        const char* game_no = str_format("Game%d", i);
+        auto ip = ini_get_string(game_no, "ip");
+        auto port = ini_get_string(game_no, "port");
         if (!ip.empty() && !port.empty()) {
             INFO_LOG("connect game %s:%s\n", ip.c_str(), port.c_str());
             g_remote_mgr.connect_remote(ip, port);

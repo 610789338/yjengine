@@ -44,8 +44,10 @@ public:
         g_rpc_manager.imp_queue_push(imp);
     }
 
-    bool get_verify() { return is_verify; }
-    void set_verify(bool success) { is_verify = success; }
+    bool get_verify() { return m_is_verify; }
+    void set_verify(bool success) { m_is_verify = success; }
+
+    int64_t get_last_active_time() { return m_last_active_time; }
 
 private:
     void on_write(boost::system::error_code ec, std::size_t length);
@@ -67,10 +69,12 @@ private:
     GString m_remote_addr;
     GString m_local_addr;
 
-    bool is_verify = false;
+    bool m_is_verify = false;
+    int64_t m_last_active_time = 0;
 };
 
 class SessionManager {
+    typedef std::function<void(const GString&, shared_ptr<Session>)> ForEachFunc;
 public:
     SessionManager() {}
     ~SessionManager() {}
@@ -85,6 +89,7 @@ public:
     shared_ptr<Session> get_session(const GString& session_addr);
     shared_ptr<Session> get_rand_session();
     shared_ptr<Session> get_fixed_session(const GString& input);
+    void foreach_session(ForEachFunc func);
 
     // partial for gate
     void add_gate(const GString& session_addr, const GString& gate_addr);

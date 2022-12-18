@@ -31,6 +31,9 @@
     <ClCompile Include="framework\migrate_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="framework\game_instance.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -41,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="gameplay\components\create_avatar_component.h">
       <Filter>gameplay\components</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\game_instance.h">
+      <Filter>framework</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -77,6 +77,8 @@ void Remote::on_read(boost::system::error_code ec, std::size_t length) {
     //GString thread_id = boost::lexical_cast<GString>(_id);
     //INFO_LOG("thread.%s on_read: length.%d from %s\n", thread_id.c_str(), int(length), get_remote_addr().c_str());
 
+    m_last_active_time = nowms_timestamp(true);
+
     // Õ³°ü
     memmove(m_buffer_cache + m_cache_idx, m_buffer, length);
     m_cache_idx += uint16_t(length);
@@ -142,6 +144,9 @@ void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
 void RemoteManager::remove_remote(const GString& remote_addr) {
     //unique_lock<boost::shared_mutex> lock(m_mutex);
     auto iter = m_remotes.find(remote_addr);
+    if (iter == m_remotes.end()) {
+        return;
+    }
     m_remotes_turn.erase(iter->second);
     m_remotes.erase(iter);
 }
@@ -196,4 +201,11 @@ shared_ptr<Remote> RemoteManager::get_fixed_remote(const GString& input) {
     }
 
     return nullptr;
+}
+
+void RemoteManager::foreach_remote(ForEachFunc func) {
+    shared_lock<boost::shared_mutex> lock(m_mutex);
+    for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
+        func(iter->first, iter->second);
+    }
 }

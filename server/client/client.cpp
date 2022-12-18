@@ -29,18 +29,12 @@ void init(int argc, char* args[]) {
 
 void connect_gate() {
 
-    {
-        auto ip = ini_get_string("Gate0", "ip");
-        auto port = ini_get_string("Gate0", "port");
-        if (!ip.empty() && !port.empty()) {
-            INFO_LOG("connect gate %s:%s\n", ip.c_str(), port.c_str());
-            g_remote_mgr.connect_remote(ip, port);
-        }
-    }
+    auto cluster_gate_nums = ini_get_int("Common", "cluster_gate_nums");
 
-    {
-        auto ip = ini_get_string("Gate1", "ip");
-        auto port = ini_get_string("Gate1", "port");
+    for (auto i = 0; i < cluster_gate_nums; ++i) {
+        const char* gate_no = str_format("Gate%d", i);
+        auto ip = ini_get_string(gate_no, "ip");
+        auto port = ini_get_string(gate_no, "port");
         if (!ip.empty() && !port.empty()) {
             INFO_LOG("connect gate %s:%s\n", ip.c_str(), port.c_str());
             g_remote_mgr.connect_remote(ip, port);

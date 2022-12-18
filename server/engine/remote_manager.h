@@ -49,6 +49,8 @@ public:
         g_rpc_manager.imp_queue_push(imp);
     }
 
+    int64_t get_last_active_time() { return m_last_active_time; }
+
 private:
     void on_resolve(boost::system::error_code ec, tcp::resolver::results_type endpoints);
     void on_connect(boost::system::error_code ec, tcp::endpoint endpoint);
@@ -72,9 +74,12 @@ private:
 
     GString m_remote_addr;
     GString m_local_addr;
+
+    int64_t m_last_active_time = 0;
 };
 
 class RemoteManager {
+    typedef std::function<void(const GString&, shared_ptr<Remote>)> ForEachFunc;
 public:
     RemoteManager() {}
     ~RemoteManager() {}
@@ -90,6 +95,7 @@ public:
     shared_ptr<Remote> get_remote(const GString& remote_addr);
     shared_ptr<Remote> get_rand_remote();
     shared_ptr<Remote> get_fixed_remote(const GString& input);
+    void foreach_remote(ForEachFunc func);
 
 private:
     boost::shared_mutex m_mutex;

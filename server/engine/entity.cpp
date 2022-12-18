@@ -692,7 +692,7 @@ function<Entity*()> get_entity_creator(const GString& entity_class_name) {
     return iter->second;
 }
 
-Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid) {\
+Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid) {
     function<Entity*()> creator = get_entity_creator("Base" + entity_class_name);
     if (!creator) {
         ERROR_LOG("base entity type(%s) error\n", entity_class_name.c_str());
@@ -702,6 +702,14 @@ Entity* create_local_base_entity(const GString& entity_class_name, const GString
     Entity* entity = creator();
     entity->uuid = entity_uuid;
     entity->class_name = entity_class_name;
+
+    auto iter = g_base_entities.find(entity->uuid);
+    if (iter != g_base_entities.end()) {
+        WARN_LOG("lose base entity.%s unexcept\n", entity->uuid.c_str());
+        delete iter->second;
+        g_base_entities.erase(iter);
+    }
+
     g_base_entities.insert(make_pair(entity->uuid, entity));
 
     DEBUG_LOG("create_local_base_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
@@ -719,6 +727,14 @@ Entity* create_local_cell_entity(const GString& entity_class_name, const GString
     Entity* entity = creator();
     entity->uuid = entity_uuid;
     entity->class_name = entity_class_name;
+
+    auto iter = g_cell_entities.find(entity->uuid);
+    if (iter != g_cell_entities.end()) {
+        WARN_LOG("lose cell entity.%s unexcept\n", entity->uuid.c_str());
+        delete iter->second;
+        g_cell_entities.erase(iter);
+    }
+
     g_cell_entities.insert(make_pair(entity->uuid, entity));
 
     DEBUG_LOG("create_local_cell_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
@@ -736,6 +752,14 @@ Entity* create_local_client_entity(const GString& entity_class_name, const GStri
     Entity* entity = creator();
     entity->uuid = entity_uuid;
     entity->class_name = entity_class_name;
+
+    auto iter = g_client_entities.find(entity->uuid);
+    if (iter != g_client_entities.end()) {
+        WARN_LOG("lose client entity.%s unexcept\n", entity->uuid.c_str());
+        delete iter->second;
+        g_client_entities.erase(iter);
+    }
+
     g_client_entities.insert(make_pair(entity->uuid, entity));
 
     DEBUG_LOG("create_local_client_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());

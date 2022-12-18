@@ -167,6 +167,7 @@ void call_client_entity(GString client_addr, GString entity_uuid, GBin inner_rpc
 }
 
 extern void migrate_rpc_handle_regist();
+extern void heartbeat_req_from_game();
 
 void rpc_handle_regist() {
     RPC_REGISTER(on_remote_connected);
@@ -189,6 +190,8 @@ void rpc_handle_regist() {
     RPC_REGISTER(call_base_entity);
     RPC_REGISTER(call_cell_entity);
     RPC_REGISTER(call_client_entity);
+
+    RPC_REGISTER(heartbeat_req_from_game);
 
     migrate_rpc_handle_regist();
 }

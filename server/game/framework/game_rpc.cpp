@@ -175,6 +175,7 @@ void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& 
 }
 
 extern void migrate_rpc_handle_regist();
+extern void heartbeat_ack_from_gate();
 
 void rpc_handle_regist() {
 
@@ -189,6 +190,8 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(call_base_entity);
     RPC_REGISTER(call_cell_entity);
+
+    RPC_REGISTER(heartbeat_ack_from_gate);
 
     migrate_rpc_handle_regist();
 }

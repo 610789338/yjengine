@@ -5,6 +5,7 @@
 using namespace std;
 
 GString ini_file("game.ini");
+extern void create_game_instance();
 
 void init(int argc, char* args[]) {
 
@@ -23,6 +24,7 @@ void init(int argc, char* args[]) {
     set_engine_listen_ipport(ip, port);
 
     engine_init();
+    create_game_instance();
 }
 
 extern void main_tick(const int64_t ms_pertick);
