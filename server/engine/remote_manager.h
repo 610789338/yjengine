@@ -49,7 +49,19 @@ public:
         g_rpc_manager.imp_queue_push(imp);
     }
 
+    void send_buff_thread_safe(const Encoder& encoder) {
+        auto self(shared_from_this());
+        boost::asio::async_write(
+            m_socket,
+            boost::asio::buffer(encoder.get_buf(), encoder.get_offset()),
+            [this, self](boost::system::error_code ec, std::size_t length) {
+                on_write(ec, length);
+            });
+    }
+
     int64_t get_last_active_time() { return m_last_active_time; }
+    int64_t get_next_heartbeat_time() { return m_next_heartbeat_time; }
+    void set_next_heartbeat_time(int64_t next_heartbeat_time) { m_next_heartbeat_time = next_heartbeat_time; }
 
 private:
     void on_resolve(boost::system::error_code ec, tcp::resolver::results_type endpoints);
@@ -76,6 +88,7 @@ private:
     GString m_local_addr;
 
     int64_t m_last_active_time = 0;
+    int64_t m_next_heartbeat_time = 0;
 };
 
 class RemoteManager {

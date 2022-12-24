@@ -64,6 +64,7 @@ struct RpcMethodBase {
     virtual void exec() {}
     virtual void exec(void* _this) {}
     virtual RpcMethodBase* create_self() { return nullptr; }
+    virtual RpcMethodBase* copy_self() { return nullptr; }
 };
 
 struct RpcMethod0 : public RpcMethodBase {
@@ -74,12 +75,14 @@ struct RpcMethod0 : public RpcMethodBase {
     void decode(Decoder& decoder) {}
     void exec() { cb(); }
     RpcMethodBase* create_self() { return new RpcMethod0(cb); }
+    RpcMethodBase* copy_self() { return new RpcMethod0(cb); }
 };
 
 template<class T1>
 struct RpcMethod1 : public RpcMethodBase {
     typedef void(*CBType)(T1);
     RpcMethod1(CBType _cb) : cb(_cb) {}
+    RpcMethod1(CBType _cb, T1 _t1) : cb(_cb), t1(_t1) {}
     CBType cb;
     RMCVR(T1) t1;
 
@@ -88,6 +91,7 @@ struct RpcMethod1 : public RpcMethodBase {
     }
     void exec() { cb(t1); }
     RpcMethodBase* create_self() { return new RpcMethod1(cb); }
+    RpcMethodBase* copy_self() { return new RpcMethod1(cb, t1); }
 };
 
 template<class T1, class T2>

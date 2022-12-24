@@ -57,7 +57,7 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("call_base_entity", idx++));
     m_l2s.insert(make_pair("call_cell_entity", idx++));
     m_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
-    m_l2s.insert(make_pair("heartbeat_req_from_game", idx++));
+    m_l2s.insert(make_pair("heartbeat_from_game", idx++));
 
     // gate
     m_l2s.insert(make_pair("on_remote_connected", idx++));
@@ -69,7 +69,7 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("create_client_entity", idx++));
     m_l2s.insert(make_pair("create_client_entity_onreconnect", idx++));
     m_l2s.insert(make_pair("call_client_entity", idx++));
-    m_l2s.insert(make_pair("heartbeat_ack_from_gate", idx++));
+    m_l2s.insert(make_pair("heartbeat_from_gate", idx++));
 
     // client
     m_l2s.insert(make_pair("regist_ack_from_gate", idx++));
@@ -109,6 +109,7 @@ uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_p
         READ_PRE_CHECK(ret + 2 + pkg_len, length);
         ret += 2;  // pkg head len
         auto imp = rpc_decode(buf + ret, pkg_len);
+        //DEBUG_LOG("receive rpc.%s\n", imp->get_rpc_name().c_str());
         ret += pkg_len;  // pkg len
 
         imp->set_session(session);
@@ -165,7 +166,10 @@ void _rpc_imp_input_tick() {
     imp->get_rpc_method()->exec();
 
     auto session = imp->get_session();
-    if (imp->get_rpc_name() != "connect_from_client" && session && !session->get_verify()) {
+    if (imp->get_rpc_name() != "connect_from_client" && 
+        imp->get_rpc_name() != "heartbeat_from_gate" && 
+        imp->get_rpc_name() != "heartbeat_from_client" && 
+        session && !session->get_verify()) {
         ERROR_LOG("client(%s) not verify\n", session->get_remote_addr().c_str());
         session->close();
     }
