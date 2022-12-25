@@ -16,7 +16,7 @@ void on_remote_connected() {
     auto remote = g_cur_imp->get_remote();
     g_remote_mgr.on_remote_connected(remote);
     INFO_LOG("on game connected %s\n", remote->get_remote_addr().c_str());
-    
+
     REMOTE_RPC_CALL(remote, "regist_from_gate", get_listen_addr());
 }
 
@@ -42,12 +42,12 @@ void regist_ack_from_game(GString game_addr, bool result, GArray game_entity_rpc
 void connect_from_client() {
     auto session = g_cur_imp->get_session();
     g_session_mgr.on_session_connected(session);
-    INFO_LOG("on_connect_from_client %s\n", session->get_remote_addr().c_str());
+    INFO_LOG("connect from client %s\n", session->get_remote_addr().c_str());
 }
 
 void disconnect_from_client(GString session_addr) {
     g_session_mgr.on_session_disconnected(session_addr);
-    INFO_LOG("on_disconnect_from_client %s\n", session_addr.c_str());
+    INFO_LOG("disconnect from client %s\n", session_addr.c_str());
 }
 
 void regist_from_client(GString identity, GArray client_entity_rpc_names) {

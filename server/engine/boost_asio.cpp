@@ -13,14 +13,6 @@ using boost::asio::ip::tcp;
 
 boost::asio::io_context io_context;
 
-static shared_ptr<RpcImp> connect_from_client_imp = nullptr;
-static shared_ptr<RpcImp> disconnect_from_client_imp = nullptr;
-
-shared_ptr<RpcImp> gen_thread_safe_imp(const GString& rpc_name) {
-    const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name);
-    return g_rpc_manager.rpc_decode(encoder.get_buf() + 2, encoder.get_offset() - 2);
-}
-
 SessionManager g_session_mgr;
 
 void Session::start() {
@@ -52,17 +44,9 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
             ERROR_LOG("socket read error: %s\n", ec.message().c_str());
         }
 
-        {
-            //LOCAL_RPC_CALL is thread unsafe
-            //LOCAL_RPC_CALL(shared_from_this(), "disconnect_from_client", get_remote_addr());
-            auto rpc_imp = make_shared<RpcImp>(
-                disconnect_from_client_imp->get_rpc_name(), 
-                disconnect_from_client_imp->get_rpc_method()->copy_self());
-            rpc_imp->set_session(shared_from_this());
-            g_rpc_manager.imp_queue_push(rpc_imp);
-        }
-
+        LOCAL_RPC_CALL(shared_from_this(), "disconnect_from_client", get_remote_addr());
         close();
+
         return;
     }
 
@@ -89,6 +73,15 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
 void Session::on_write(boost::system::error_code ec, std::size_t length) {
     if (ec) {
         ERROR_LOG("write error : %s\n", ec.message().c_str());
+        LOCAL_RPC_CALL(shared_from_this(), "disconnect_from_client", get_remote_addr());
+        close();
+    }
+}
+
+void Session::set_next_heartbeat_time(int64_t next_heartbeat_time) {
+    unique_lock<boost::shared_mutex> lock(m_mutex);
+    if (m_next_heartbeat_time < next_heartbeat_time) {
+        m_next_heartbeat_time = next_heartbeat_time;
     }
 }
 
@@ -230,16 +223,7 @@ void Server::do_accept() {
             // Session的接口都是线程安全的，主线程可以直接使用
             auto session = make_shared<Session>(std::move(socket));
             session->start();
-
-            {
-                //LOCAL_RPC_CALL is thread unsafe
-                //LOCAL_RPC_CALL(session, "connect_from_client");
-                auto rpc_imp = make_shared<RpcImp>(
-                    connect_from_client_imp->get_rpc_name(), 
-                    connect_from_client_imp->get_rpc_method()->copy_self());
-                rpc_imp->set_session(session->shared_from_this());
-                g_rpc_manager.imp_queue_push(rpc_imp);
-            }
+            LOCAL_RPC_CALL(session->shared_from_this(), "connect_from_client");
         }
         else {
             ERROR_LOG("accept %s", ec.message().c_str());
@@ -277,9 +261,6 @@ void boost_asio_init() {
         server->do_accept();
 
         INFO_LOG("boost asio listen@%s\n", IPPORT_STRING(listen_ip, listen_port).c_str());
-
-        connect_from_client_imp = gen_thread_safe_imp("connect_from_client");
-        disconnect_from_client_imp = gen_thread_safe_imp("disconnect_from_client");
     }
 }
 

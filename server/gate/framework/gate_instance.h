@@ -26,12 +26,9 @@
 
 class HeatbeatThreadObj {
 public:
-    HeatbeatThreadObj();
+    HeatbeatThreadObj() {}
     ~HeatbeatThreadObj() {}
 
     void operator()();
     void heart_beat_check();
-
-private:
-    Encoder headbeat_buff;
 };

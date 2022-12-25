@@ -11,14 +11,14 @@ extern shared_ptr<RpcImp> g_cur_imp;
 void on_remote_connected() {
     auto remote = g_cur_imp->get_remote();
     g_remote_mgr.on_remote_connected(remote);
-    INFO_LOG("on_gate_connected %s\n", remote->get_remote_addr().c_str());
+    INFO_LOG("on gate connected %s\n", remote->get_remote_addr().c_str());
 
     REMOTE_RPC_CALL(remote, "regist_from_client", ini_get_string("Identity", "md5"), *get_local_entity_rpc_names());
 }
 
 void on_remote_disconnected(const GString& remote_addr) {
     g_remote_mgr.on_remote_disconnected(remote_addr);
-    INFO_LOG("on_gate_disconnected %s\n", remote_addr.c_str());
+    INFO_LOG("on gate disconnected %s\n", remote_addr.c_str());
 }
 
 void regist_ack_from_gate(const GString& gate_addr, bool result) {

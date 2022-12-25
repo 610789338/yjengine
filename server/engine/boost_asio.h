@@ -5,6 +5,7 @@
 
 #include "gvalue.h"
 #include "rpc_manager.h"
+#include "utils.h"
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -32,8 +33,10 @@ public:
             m_socket,
             boost::asio::buffer(encoder.get_buf(), encoder.get_offset()),
             [this, self](boost::system::error_code ec, std::size_t length) {
-            on_write(ec, length);
-        });
+                on_write(ec, length);
+            });
+
+        set_next_heartbeat_time(nowms_timestamp(true) + 1000);
     }
 
     template<class... T>
@@ -59,7 +62,7 @@ public:
 
     int64_t get_last_active_time() { return m_last_active_time; }
     int64_t get_next_heartbeat_time() { return m_next_heartbeat_time; }
-    void set_next_heartbeat_time(int64_t next_heartbeat_time) { m_next_heartbeat_time = next_heartbeat_time; }
+    void set_next_heartbeat_time(int64_t next_heartbeat_time);
 
 private:
     void on_write(boost::system::error_code ec, std::size_t length);
@@ -84,6 +87,7 @@ private:
     bool m_is_verify = false;
     int64_t m_last_active_time = 0;
     int64_t m_next_heartbeat_time = 0;
+    boost::shared_mutex m_mutex;
 };
 
 class SessionManager {

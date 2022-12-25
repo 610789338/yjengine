@@ -12,12 +12,12 @@ extern shared_ptr<RpcImp> g_cur_imp;
 void connect_from_client() {
     auto session = g_cur_imp->get_session();
     g_session_mgr.on_session_connected(session);
-    INFO_LOG("on_connect_from_gate %s\n", session->get_remote_addr().c_str());
+    INFO_LOG("connect from gate %s\n", session->get_remote_addr().c_str());
 }
 
 void disconnect_from_client(const GString& session_addr) {
     g_session_mgr.on_session_disconnected(session_addr);
-    INFO_LOG("on_disconnect_from_gate %s\n", session_addr.c_str());
+    INFO_LOG("disconnect from gate %s\n", session_addr.c_str());
 }
 
 void regist_from_gate(const GString& gate_listen_addr) {

@@ -37,10 +37,6 @@ void heartbeat_from_game() {
     // here do nothing
 }
 
-HeatbeatThreadObj::HeatbeatThreadObj() {
-    headbeat_buff = g_rpc_manager.rpc_encode("heartbeat_from_gate");
-}
-
 void HeatbeatThreadObj::operator()() {
     while (true) {
         heart_beat_check();
@@ -50,29 +46,24 @@ void HeatbeatThreadObj::operator()() {
 
 void HeatbeatThreadObj::heart_beat_check() {
     auto nowms = nowms_timestamp(true);
-    vector<GString> remote_tobe_remove;
+    vector<shared_ptr<Remote>> remote_tobe_remove;
     g_remote_mgr.foreach_remote([this, nowms, &remote_tobe_remove](const GString& remote_name, shared_ptr<Remote> remote) {
         if (remote->get_last_active_time() != 0 && remote->get_last_active_time() + 3000 < nowms) {
             // 3s³¬Ê±
             remote->close();
-            remote_tobe_remove.push_back(remote_name);
+            remote_tobe_remove.push_back(remote);
         }
 
         auto next_heartbeat_time = remote->get_next_heartbeat_time();
         if (next_heartbeat_time < nowms) {
-            remote->send_buff_thread_safe(headbeat_buff);
-            if (next_heartbeat_time == 0) {
-                // É¢ÁÐ
-                remote->set_next_heartbeat_time(nowms + rand() % 1000);
-            }
-            else {
-                remote->set_next_heartbeat_time(nowms + 1000);
-            }
+            REMOTE_RPC_CALL(remote, "heartbeat_from_gate");
+            remote->set_next_heartbeat_time(nowms + 1000);
         }
     });
 
     for (auto iter = remote_tobe_remove.begin(); iter != remote_tobe_remove.end(); ++iter) {
-        g_remote_mgr.on_remote_disconnected(*iter);
+        //g_remote_mgr.on_remote_disconnected(*iter);
+        LOCAL_RPC_CALL((*iter)->shared_from_this(), "on_remote_disconnected", (*iter)->get_remote_addr());
     }
 }
 

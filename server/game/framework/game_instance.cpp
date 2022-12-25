@@ -40,10 +40,6 @@ void heartbeat_from_gate() {
     // here do nothing
 }
 
-HeatbeatThreadObj::HeatbeatThreadObj() {
-    headbeat_buff = g_rpc_manager.rpc_encode("heartbeat_from_game");
-}
-
 void HeatbeatThreadObj::operator()() {
     while (true) {
         heart_beat_check();
@@ -53,29 +49,25 @@ void HeatbeatThreadObj::operator()() {
 
 void HeatbeatThreadObj::heart_beat_check() {
     auto nowms = nowms_timestamp();
-    vector<GString> session_tobe_remove;
+    vector<shared_ptr<Session>> session_tobe_remove;
     g_session_mgr.foreach_session([this, nowms, &session_tobe_remove](const GString& session_name, shared_ptr<Session> session) {
         if (session->get_last_active_time() != 0 && session->get_last_active_time() + 3000 < nowms) {
-            // 3s超时
+            // 3s超时，断开连接
             session->close();
-            session_tobe_remove.push_back(session_name);
+            session_tobe_remove.push_back(session);
         }
 
         auto next_heartbeat_time = session->get_next_heartbeat_time();
         if (next_heartbeat_time < nowms) {
-            session->send_buff_thread_safe(headbeat_buff);
-            if (next_heartbeat_time == 0) {
-                // 散列
-                session->set_next_heartbeat_time(nowms + rand() % 1000);
-            }
-            else {
-                session->set_next_heartbeat_time(nowms + 1000);
-            }
+            // REMOTE/LOCAL RPC CALL应该是线程安全的，因为m_s2l/m_l2s没有写操作
+            REMOTE_RPC_CALL(session, "heartbeat_from_game");
+            session->set_next_heartbeat_time(nowms + 1000);
         }
     });
 
     for (auto iter = session_tobe_remove.begin(); iter != session_tobe_remove.end(); ++iter) {
-        g_session_mgr.on_session_disconnected(*iter);
+        // LOCAL_RPC_CALL是异步本地调用，所以要shared_from_this
+        LOCAL_RPC_CALL((*iter)->shared_from_this(), "disconnect_from_client", (*iter)->get_remote_addr());
     }
 }
 

@@ -118,6 +118,15 @@ GString& Remote::get_remote_addr() {
 void Remote::on_write(boost::system::error_code ec, std::size_t length) {
     if (ec) {
         ERROR_LOG("write error : %s\n", ec.message().c_str());
+
+        LOCAL_RPC_CALL(shared_from_this(), "on_remote_disconnected", get_remote_addr());
+    }
+}
+
+void Remote::set_next_heartbeat_time(int64_t next_heartbeat_time) {
+    unique_lock<boost::shared_mutex> lock(m_mutex);
+    if (m_next_heartbeat_time < next_heartbeat_time) {
+        m_next_heartbeat_time = next_heartbeat_time;
     }
 }
 
