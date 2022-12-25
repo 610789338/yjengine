@@ -8,7 +8,11 @@
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
+#include "entity_rpc_manager.h"
 #include "entity_property_tree.h"
+#include "entity_property_manager.h"
+#include "time.h"
+#include "entity_component_manager.h"
 
 using namespace std;
 

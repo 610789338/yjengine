@@ -1,6 +1,9 @@
 #include <iostream>
 
-#include "engine/engine.h"
+#include "engine/gvalue.h"
+#include "engine/ini.h"
+
+#include "client_instance.h"
 
 using namespace std;
 
@@ -18,6 +21,7 @@ void on_remote_connected() {
 
 void on_remote_disconnected(const GString& remote_addr) {
     g_remote_mgr.on_remote_disconnected(remote_addr);
+    g_client_instance->on_gate_disappear(remote_addr);
     INFO_LOG("on gate disconnected %s\n", remote_addr.c_str());
 }
 
@@ -54,8 +58,7 @@ void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
         g_entity_rpc_name_s2l.insert(make_pair(iter->second, iter->first));
     }
 
-    static bool is_call_create = false;
-    if (!is_call_create) {
+    if (g_client_instance->get_should_call_create()) {
         const GString& base_uuid = ini_get_string("Entity", "uuid", "empty");
         if (base_uuid == "empty") {
             REMOTE_RPC_CALL(remote, "create_base_entity", "Account", "");
@@ -63,7 +66,7 @@ void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
         else {
             REMOTE_RPC_CALL(remote, "create_base_entity", "Account", base_uuid);
         }
-        is_call_create = true;
+        g_client_instance->set_should_call_create(false);
     }
 }
 
@@ -74,6 +77,10 @@ void create_client_entity(const GString& entity_class_name, const GString& entit
     create_data.insert(make_pair("base_addr", base_addr));
     create_data.insert(make_pair("cell_addr", cell_addr));
     entity->on_create(create_data);
+
+    if (entity_class_name == "ClientAccount" || entity_class_name == "ClientPlayer") {
+        g_client_instance->set_controller(entity);
+    }
 }
 
 void create_client_entity_onreconnect(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
@@ -83,6 +90,10 @@ void create_client_entity_onreconnect(const GString& entity_class_name, const GS
     create_data.insert(make_pair("base_addr", base_addr));
     create_data.insert(make_pair("cell_addr", cell_addr));
     entity->on_reconnect_success(create_data);
+
+    if (entity_class_name == "ClientAccount" || entity_class_name == "ClientPlayer") {
+        g_client_instance->set_controller(entity);
+    }
 }
 
 void call_client_entity(const GString& entity_uuid, const GBin& inner_rpc) {

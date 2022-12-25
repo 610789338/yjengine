@@ -3,10 +3,11 @@
 #include "gvalue.h"
 #include "log.h"
 #include "rpc_manager.h"
-#include "entity.h"
 
 
 class Entity;
+
+extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
 
 template<class TEntity>
 struct EntityRpcMethod0 : public RpcMethodBase {

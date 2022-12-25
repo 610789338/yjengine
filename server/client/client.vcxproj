@@ -127,7 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="client.cpp" />
+    <ClCompile Include="client_app.cpp" />
     <ClCompile Include="framework\client_instance.cpp" />
     <ClCompile Include="framework\client_rpc.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />

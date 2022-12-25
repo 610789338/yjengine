@@ -1,6 +1,9 @@
 #include <iostream>
 
-#include "engine/engine.h"
+#include "engine/gvalue.h"
+#include "engine/ini.h"
+
+#include "game_instance.h"
 
 
 using namespace std;
@@ -17,6 +20,7 @@ void connect_from_client() {
 
 void disconnect_from_client(const GString& session_addr) {
     g_session_mgr.on_session_disconnected(session_addr);
+    g_game_instance->on_gate_disappear(session_addr);
     INFO_LOG("disconnect from gate %s\n", session_addr.c_str());
 }
 

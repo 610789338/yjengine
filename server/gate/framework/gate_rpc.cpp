@@ -6,6 +6,8 @@
 #include "engine/ini.h"
 #include "engine/remote_manager.h"
 
+#include "gate_instance.h"
+
 using namespace std;
 
 extern shared_ptr<RpcImp> g_cur_imp;
@@ -22,6 +24,7 @@ void on_remote_connected() {
 
 void on_remote_disconnected(GString remote_addr) {
     g_remote_mgr.on_remote_disconnected(remote_addr);
+    g_gate_instance->on_game_disappear(remote_addr);
     INFO_LOG("on game disconnected %s\n", remote_addr.c_str());
 }
 

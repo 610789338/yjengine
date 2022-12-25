@@ -11,6 +11,7 @@ using namespace std;
 extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();
+extern void create_client_instance();
 
 GString ini_file("client.ini");
 
@@ -25,6 +26,8 @@ void init(int argc, char* args[]) {
 
         ++idx;
     }
+
+    create_client_instance();
 }
 
 void connect_gate() {

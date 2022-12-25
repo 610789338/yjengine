@@ -13,7 +13,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="client.cpp" />
     <ClCompile Include="framework\client_rpc.cpp">
       <Filter>framework</Filter>
     </ClCompile>
@@ -23,6 +22,7 @@
     <ClCompile Include="framework\client_instance.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="client_app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
