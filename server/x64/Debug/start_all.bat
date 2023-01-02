@@ -6,7 +6,7 @@ start game.exe -c game1.ini
 start gate.exe -c gate0.ini
 start gate.exe -c gate1.ini
 
-start client.exe -c client.ini
+rem start client.exe -c client.ini
 
 
 

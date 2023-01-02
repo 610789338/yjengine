@@ -1,4 +1,5 @@
 #include <string>
+#include <unordered_set>
 
 #include "boost/thread.hpp"
 
@@ -30,8 +31,9 @@ void init(int argc, char* args[]) {
     create_client_instance();
 }
 
-void connect_gate() {
+unordered_set<GString> g_gate_list;
 
+void get_gate_list() {
     auto cluster_gate_nums = ini_get_int("Common", "cluster_gate_nums");
 
     for (auto i = 0; i < cluster_gate_nums; ++i) {
@@ -39,9 +41,18 @@ void connect_gate() {
         auto ip = ini_get_string(gate_no, "ip");
         auto port = ini_get_string(gate_no, "port");
         if (!ip.empty() && !port.empty()) {
-            INFO_LOG("connect gate %s:%s\n", ip.c_str(), port.c_str());
-            g_remote_mgr.connect_remote(ip, port);
+            g_gate_list.insert(str_format("%s:%s", ip.c_str(), port.c_str()));
         }
+    }
+}
+
+void connect_gate() {
+    if (!g_gate_list.empty()) {
+        auto gate_addr = *(g_gate_list.begin());
+        INFO_LOG("connect gate %s\n", gate_addr.c_str());
+        auto split_pos = gate_addr.find(":");
+        g_remote_mgr.connect_remote(gate_addr.substr(0, split_pos), gate_addr.substr(split_pos + 1, gate_addr.size()));
+        g_gate_list.erase(gate_addr);
     }
 }
 
@@ -51,6 +62,7 @@ int main(int argc, char* args[]) {
 
     init(argc, args);
 
+    get_gate_list();
     connect_gate();
     //connect_gate();
     //connect_gate();

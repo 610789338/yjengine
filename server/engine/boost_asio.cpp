@@ -210,8 +210,12 @@ void SessionManager::remove_gate(const GString& session_addr) {
 }
 
 shared_ptr<Session> SessionManager::get_gate(const GString& gate_addr) {
-    auto session_addr = m_gates.at(gate_addr);
-    return m_sessions.at(session_addr);
+    auto iter = m_gates.find(gate_addr);
+    if (iter == m_gates.end()) {
+        return nullptr;
+    }
+
+    return m_sessions.at(iter->second);
 }
 
 

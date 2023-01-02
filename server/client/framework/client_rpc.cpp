@@ -84,7 +84,15 @@ void create_client_entity(const GString& entity_class_name, const GString& entit
 }
 
 void create_client_entity_onreconnect(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
-    Entity* entity = create_local_client_entity(entity_class_name, entity_uuid);
+    Entity* entity = nullptr;
+
+    auto iter = g_client_entities.find(entity_uuid);
+    if (iter == g_client_entities.end()) {
+        entity = create_local_client_entity(entity_class_name, entity_uuid);
+    }
+    else {
+        entity = iter->second;
+    }
 
     GDict create_data;
     create_data.insert(make_pair("base_addr", base_addr));

@@ -132,6 +132,10 @@ void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_p
 }
 
 void Entity::ready() {
+    if (is_ready) {
+        return;
+    }
+
     is_ready = true;
     propertys_sync2client(true);
 

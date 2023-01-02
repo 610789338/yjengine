@@ -2,11 +2,13 @@
 
 #include "client_instance.h"
 
+extern void connect_gate();
 
 GENERATE_ENTITY_OUT(ClientGameInstance);
 
 void ClientGameInstance::on_gate_disappear(const GString& gate_addr) {
     //m_controller->on_gate_disappear(gate_addr);
+    connect_gate();
 }
 
 void ClientGameInstance::set_controller(Entity* entity) {
