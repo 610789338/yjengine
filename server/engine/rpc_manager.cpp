@@ -58,6 +58,9 @@ RpcManager::RpcManager() {
     m_l2s.insert(make_pair("call_cell_entity", idx++));
     m_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
     m_l2s.insert(make_pair("heartbeat_from_game", idx++));
+    m_l2s.insert(make_pair("on_game_disappear", idx++));
+    m_l2s.insert(make_pair("base_recover_by_disaster_backup", idx++));
+    m_l2s.insert(make_pair("cell_recover_by_disaster_backup", idx++));
 
     // gate
     m_l2s.insert(make_pair("on_remote_connected", idx++));

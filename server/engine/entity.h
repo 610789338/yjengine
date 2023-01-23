@@ -104,8 +104,10 @@ public:
     void remove_timer(TimerBase* timer);
 
     // migrate
-    virtual void on_migrate_in(const GDict& create_data) { ASSERT(false); }
-    virtual void on_migrate_out(GDict& create_data) { ASSERT(false); }
+    virtual void on_migrate_out(GDict& migrate_data) { ASSERT(false); }
+    virtual void on_migrate_in(const GDict& migrate_data) { ASSERT(false); }
+    virtual void packet_migrate_data(const GDict& migrate_data) { ASSERT(false); }
+    virtual void unpacket_migrate_data(const GDict& migrate_data) { ASSERT(false); }
 
     // event
     virtual EventManagerBase* get_event_manager() { return nullptr; }
@@ -132,6 +134,10 @@ public:
             }
         }
     }
+
+    // disaster backup
+    virtual void on_game_disappear(const GString& game_addr) {}
+    virtual void recover_by_disaster_backup(const GString& addr, const GString& client_addr, const GString& client_gate_addr) { ASSERT(false); }
 
     GString uuid = "";
     GString class_name = "";
@@ -189,6 +195,9 @@ public:
     virtual void new_cell_migrate_in(const GString& new_cell_addr);
 
     CellMailBox cell;
+    GBin disaster_backup_of_self;
+    GBin disaster_backup_of_cell;
+    GDict disaster_backup_of_cell_migrate_data;
 };
 
 class BaseEntityWithCellAndClient : public BaseEntityWithCell {
@@ -220,6 +229,12 @@ public:
     // migrate
     void migrate_req_from_cell() { BaseEntityWithCell::migrate_req_from_cell(); }
 
+    // disaster backup
+    virtual void base_disaster_backup(const GBin& cell_all_db, const GDict& migrate_data);
+    virtual void on_game_disappear(const GString& game_addr);
+    virtual void recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr);
+    virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
+
     ClientMailBox client;
 };
 
@@ -244,8 +259,6 @@ public:
     virtual void migrate_reqack_from_base(bool is_ok);
     virtual void real_begin_migrate();
     virtual void migrate_entity();
-    virtual void on_migrate_out(GDict& create_data);
-    virtual void on_migrate_in(const GDict& create_data);
     virtual void on_new_cell_migrate_finish();
 
     BaseMailBox base;
@@ -254,6 +267,10 @@ public:
     GString new_cell_addr = "";
     bool is_reqack_from_base = false;
     GDict migrate_timers;
+
+    GBin  disaster_backup_of_base;
+    GBin  disaster_backup_of_self;
+    GDict disaster_backup_of_self_migrate_data;
 };
 
 class CellEntityWithClient : public CellEntity {
@@ -282,14 +299,22 @@ public:
     virtual void migrate_reqack_from_base(bool is_ok);
     virtual void migrate_reqack_from_client(bool is_ok);
     virtual void real_begin_migrate();
-    virtual void on_migrate_out(GDict& create_data);
-    virtual void on_migrate_in(const GDict& create_data);
+    virtual void on_migrate_out(GDict& migrate_data);
+    virtual void packet_migrate_data(GDict& migrate_data);
+    virtual void on_migrate_in(const GDict& migrate_data);
+    virtual void unpacket_migrate_data(const GDict& migrate_data);
     virtual void on_new_cell_migrate_finish();
 
     void migrate_check_timer();
 
     // db save
     void cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin);
+
+    // disaster backup
+    virtual void cell_disaster_backup(const GBin& base_all_db);
+    virtual void on_game_disappear(const GString& game_addr);
+    virtual void recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr);
+    virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
 
     ClientMailBox client;
     bool is_reqack_from_client = false;
@@ -324,6 +349,9 @@ public:
     void prop_sync_from_cell(const GBin& bin);
     virtual void on_prop_sync_from_server() {}
     virtual void on_kick();
+
+    virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
+    virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
 
     // migrate
     void migrate_req_from_cell();

@@ -4,7 +4,11 @@
 
 GENERATE_ENTITY_OUT(BaseGateInstance);
 
+
 void BaseGateInstance::on_game_disappear(const GString& game_addr) {
+    g_remote_mgr.foreach_remote([this, &game_addr](const GString& remote_name, shared_ptr<Remote> remote) {
+        REMOTE_RPC_CALL(remote, "on_game_disappear", game_addr);
+    });
 }
 
 BaseGateInstance* g_gate_instance = nullptr;

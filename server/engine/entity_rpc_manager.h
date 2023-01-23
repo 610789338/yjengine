@@ -131,11 +131,15 @@ public:
             entity_rpc_regist(RpcType::EXPOSED, "on_client_reconnect_success", &BaseEntityWithCellAndClient::on_client_reconnect_success);
             entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithCellAndClient::ready);
             entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCellAndClient::destroy_self);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "base_disaster_backup", &BaseEntityWithCellAndClient::base_disaster_backup);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_recover_by_disaster_backup_success", &BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success);
         }
         else if (entity_type == EntityType::EntityType_CellWithClient) {
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient", &CellEntityWithClient::on_reconnect_fromclient);
             entity_rpc_regist(RpcType::SERVER_ONLY, "on_client_reconnect_success", &CellEntityWithClient::on_client_reconnect_success);
             entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save", &CellEntityWithClient::cell_real_time_to_save);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_disaster_backup", &CellEntityWithClient::cell_disaster_backup);
+            entity_rpc_regist(RpcType::SERVER_ONLY, "base_recover_by_disaster_backup_success", &CellEntityWithClient::base_recover_by_disaster_backup_success);
             entity_rpc_regist(RpcType::SERVER_ONLY, "ready", &CellEntityWithClient::ready);
             entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &CellEntityWithClient::destroy_self);
         }
@@ -145,6 +149,8 @@ public:
             entity_rpc_regist(RpcType::CLIENT, "ready", &ClientEntity::ready);
             entity_rpc_regist(RpcType::CLIENT, "on_kick", &ClientEntity::on_kick);
             entity_rpc_regist(RpcType::CLIENT, "destroy_self", &ClientEntity::destroy_self);
+            entity_rpc_regist(RpcType::CLIENT, "base_recover_by_disaster_backup_success", &ClientEntity::base_recover_by_disaster_backup_success);
+            entity_rpc_regist(RpcType::CLIENT, "cell_recover_by_disaster_backup_success", &ClientEntity::cell_recover_by_disaster_backup_success);
         }
 
         regist_migrate_rpc(entity_type);

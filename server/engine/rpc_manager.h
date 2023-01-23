@@ -194,6 +194,32 @@ struct RpcMethod6 : public RpcMethodBase {
     RpcMethodBase* create_self() { return new RpcMethod6(cb); }
 };
 
+template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+struct RpcMethod7 : public RpcMethodBase {
+    typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7);
+    RpcMethod7(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
+        t7 = decoder_read<RMCVR(T7)>(decoder);
+    }
+    void exec() { cb(t1, t2, t3, t4, t5, t6, t7); }
+    RpcMethodBase* create_self() { return new RpcMethod7(cb); }
+};
+
 class RpcManagerBase {
     friend void entity_rpc_mgr_init();
 public:
@@ -280,6 +306,12 @@ public:
     template<class T1, class T2, class T3, class T4, class T5, class T6>
     void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4, T5, T6)) {
         RpcMethodBase* method = new RpcMethod6<T1, T2, T3, T4, T5, T6>(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+    void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4, T5, T6, T7)) {
+        RpcMethodBase* method = new RpcMethod7<T1, T2, T3, T4, T5, T6, T7>(cb);
         add_rpc_method(rpc_name, method);
     }
 

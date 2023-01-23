@@ -178,6 +178,45 @@ void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& 
     entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
+void on_game_disappear(const GString& game_addr) {
+
+    static std::unordered_map<GString, int64_t> next_disaster_times;
+
+    auto now = nowms_timestamp(true);
+    auto iter = next_disaster_times.find(game_addr);
+    if (iter != next_disaster_times.end() && now < iter->second) {
+        // ±ÜÃâÖØ¸´´¦Àí
+        return;
+    }
+
+    next_disaster_times.insert(make_pair(game_addr, now + 20 * 1000));
+
+    for (auto iter = g_base_entities.begin(); iter != g_base_entities.end(); ++iter) {
+        iter->second->on_game_disappear(game_addr);
+    }
+
+    for (auto iter = g_cell_entities.begin(); iter != g_cell_entities.end(); ++iter) {
+        iter->second->on_game_disappear(game_addr);
+    }
+}
+
+void base_recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& entity_class_name, const GString& entity_uuid, const GBin& disaster_backup_of_base) {
+    Entity* entity = create_local_base_entity(entity_class_name, entity_uuid);
+    Decoder decoder(disaster_backup_of_base.buf, disaster_backup_of_base.size);
+    decoder.skip_head_len();
+    entity->propertys_unserialize(decoder);
+    entity->recover_by_disaster_backup(cell_addr, client_addr, "TODO");
+}
+
+void cell_recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_class_name, const GString& entity_uuid, const GBin& disaster_backup_of_cell, const GDict& disaster_backup_of_cell_migrate_data) {
+    Entity* entity = create_local_cell_entity(entity_class_name, entity_uuid);
+    Decoder decoder(disaster_backup_of_cell.buf, disaster_backup_of_cell.size);
+    decoder.skip_head_len();
+    entity->propertys_unserialize(decoder);
+    entity->unpacket_migrate_data(disaster_backup_of_cell_migrate_data);
+    entity->recover_by_disaster_backup(base_addr, client_addr, client_gate_addr);
+}
+
 extern void migrate_rpc_handle_regist();
 extern void heartbeat_from_gate();
 
@@ -196,6 +235,10 @@ void rpc_handle_regist() {
     RPC_REGISTER(call_cell_entity);
 
     RPC_REGISTER(heartbeat_from_gate);
+    RPC_REGISTER(on_game_disappear);
+
+    RPC_REGISTER(base_recover_by_disaster_backup);
+    RPC_REGISTER(cell_recover_by_disaster_backup);
 
     migrate_rpc_handle_regist();
 }

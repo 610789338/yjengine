@@ -145,13 +145,13 @@ void RemoteManager::on_remote_disconnected(const GString& remote_addr) {
 }
 
 void RemoteManager::add_remote(const shared_ptr<Remote>& remote) {
-    //unique_lock<boost::shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     m_remotes.insert(make_pair(remote->get_remote_addr(), remote));
     m_remotes_turn.insert(make_pair(remote, remote->get_remote_addr()));
 }
 
 void RemoteManager::remove_remote(const GString& remote_addr) {
-    //unique_lock<boost::shared_mutex> lock(m_mutex);
+    unique_lock<boost::shared_mutex> lock(m_mutex);
     auto iter = m_remotes.find(remote_addr);
     if (iter == m_remotes.end()) {
         return;
