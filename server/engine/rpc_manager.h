@@ -242,12 +242,12 @@ public:
 
     template<class T, class ...T2>
     void rpc_params_encode(Encoder& encoder, const T& arg, const T2&... args) {
-        encoder.write<T>(arg);
+        encoder.write<const T&>(arg);
         rpc_params_encode(encoder, args...);
     }
     template<class T>
     void rpc_params_encode(Encoder& encoder, const T& arg) {
-        encoder.write<T>(arg);
+        encoder.write<const T&>(arg);
     }
     void rpc_params_encode(Encoder& encoder) {
     }

@@ -13,19 +13,17 @@ class CreateAvatarComponent : public EntityComponentBase {
     }
 
     COMP_MIGRATE_TIMER_DEFINE() {
-        COMP_STORE_TIMER_CB_FOR_MIGRATE(component_timer_test);
+        COMP_MIGRATE_TIMER_DEF(component_timer_test);
     }
 
 public:
     CreateAvatarComponent() {}
     ~CreateAvatarComponent() {}
 
-    virtual void init() {
+    virtual void on_ready() {
         COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
         REGIST_EVENT("event_test", component_event_test);
-    }
 
-    virtual void on_ready() {
         SEND_EVENT("event_test", "lalalala");
     }
 

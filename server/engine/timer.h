@@ -441,5 +441,5 @@ public:
 #define REGIST_TIMER_INNER(start, interval, repeat, cb_name, cb, ...) get_timer_manager()->regist_timer(this, start, interval, repeat, cb_name, cb)->set_args(__VA_ARGS__)
 #define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(timer_manager.tclass))::cb)->set_args(__VA_ARGS__)
 #define CANCEL_TIMER(timer_id) cancel_timer(timer_id)
-#define MIGRATE_TIMER_DEFINE(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
+#define MIGRATE_TIMER_DEF(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
 #define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)

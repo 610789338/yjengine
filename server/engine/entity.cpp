@@ -354,20 +354,48 @@ void BaseEntityWithCellAndClient::real_time_to_save() {
     Encoder base_all_db;
     serialize_all(base_all_db);
     base_all_db.write_end();
-    cell.call("cell_disaster_backup", GBin(base_all_db.get_buf(), base_all_db.get_offset()));
+
+    GDict base_migrate_data;
+    packet_migrate_data(base_migrate_data);
+    cell.call("cell_disaster_backup", GBin(base_all_db.get_buf(), base_all_db.get_offset()), base_migrate_data);
 }
 
 void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_addr) {
     BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
 }
 
-void BaseEntityWithCellAndClient::base_disaster_backup(const GBin& cell_all_db, const GDict& migrate_data) {
+void BaseEntityWithCellAndClient::packet_migrate_data(GDict& migrate_data) {
+    migrate_data.clear();
+
+    migrate_timers.clear();
+    for (auto iter = timers.begin(); iter != timers.end(); ++iter) {
+        TimerBase* timer = *iter;
+        Encoder encoder;
+        timer->serialize(encoder);
+        encoder.write_end();
+        migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
+    }
+    migrate_data.insert(make_pair("timers", migrate_timers));
+    migrate_data.insert(make_pair("next_timer_id", next_timer_id));
+}
+
+void BaseEntityWithCellAndClient::unpacket_migrate_data(const GDict& migrate_data) {
+    auto _timers = migrate_data.at("timers").as_dict();
+    for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
+        RESTORE_TIMER(iter->first, iter->second.as_bin());
+    }
+    next_timer_id = migrate_data.at("next_timer_id").as_int32();
+}
+
+void BaseEntityWithCellAndClient::base_disaster_backup(const GBin& cell_all_db, const GDict& cell_migrate_data) {
     Encoder self_all_db;
     serialize_all(self_all_db);
     self_all_db.write_end();
     disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
+    packet_migrate_data(disaster_backup_of_self_migrate_data);
+
     disaster_backup_of_cell = std::move(cell_all_db);
-    disaster_backup_of_cell_migrate_data = migrate_data;
+    disaster_backup_of_cell_migrate_data = cell_migrate_data;
 }
 
 void BaseEntityWithCellAndClient::on_game_disappear(const GString& game_addr) {
@@ -671,13 +699,14 @@ void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, cons
     return;
 }
 
-void CellEntityWithClient::cell_disaster_backup(const GBin& base_all_db) {
+void CellEntityWithClient::cell_disaster_backup(const GBin& base_all_db, const GDict& base_migrate_data) {
+    disaster_backup_of_base = std::move(base_all_db);
+    disaster_backup_of_base_migrate_data = base_migrate_data;
+
     Encoder self_all_db;
     serialize_all(self_all_db);
     self_all_db.write_end();
-    disaster_backup_of_base = std::move(base_all_db);
     disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
-
     packet_migrate_data(disaster_backup_of_self_migrate_data);
 
     base.call("base_disaster_backup", GBin(self_all_db.get_buf(), self_all_db.get_offset()), disaster_backup_of_self_migrate_data);
@@ -693,9 +722,12 @@ void CellEntityWithClient::on_game_disappear(const GString& game_addr) {
     REMOTE_RPC_CALL(session, "base_recover_by_disaster_backup",
         /*base addr*/get_listen_addr(),
         /*client addr*/client.get_addr(),
+        /*client gate addr*/client.get_gate_addr(),
         /*entity class name*/class_name,
         /*uuid*/uuid,
-        /*disaster backup of cell*/disaster_backup_of_base);
+        /*disaster backup of base*/disaster_backup_of_base,
+        /*disaster backup of base migrate data*/disaster_backup_of_base_migrate_data
+        );
 }
 
 void CellEntityWithClient::recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr) {

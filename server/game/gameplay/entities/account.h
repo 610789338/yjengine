@@ -22,7 +22,9 @@ class BaseAccount : public BaseEntityWithCellAndClient {
     static void property_define() {
         account_property_define<BaseAccount>();
     }
-    static void migrate_timer_define() {}
+    static void migrate_timer_define() {
+        MIGRATE_TIMER_DEF(account_migrate_timer);
+    }
 
 public:
     BaseAccount() {}
@@ -83,7 +85,7 @@ class CellAccount : public CellEntityWithClient {
         account_property_define<CellAccount>();
     }
     static void migrate_timer_define() {
-        MIGRATE_TIMER_DEFINE(account_timer_test);
+        MIGRATE_TIMER_DEF(account_timer_test);
     }
 
 public:

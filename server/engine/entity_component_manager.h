@@ -13,7 +13,6 @@ public:
     EntityComponentBase() {}
     virtual ~EntityComponentBase();
     virtual EntityComponentBase* create_self(Entity* owner) = 0;
-    virtual void init() {}
     virtual void on_ready() {}
 
     void set_name(GString _name) { name = _name; }
@@ -190,7 +189,6 @@ public:
         owner->components.clear();
         for (auto iter = components.begin(); iter != components.end(); ++iter) {
             owner->components[iter->first] = iter->second->create_self(owner);
-            owner->components[iter->first]->init();
         }
     }
 
@@ -230,7 +228,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 }
 
 #define COMP_RPC_METHOD(rpc_type, rpc_name) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(youjun))::rpc_name)
-#define COMP_STORE_TIMER_CB_FOR_MIGRATE(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb)
+#define COMP_MIGRATE_TIMER_DEF(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb)
 #define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
 
 
