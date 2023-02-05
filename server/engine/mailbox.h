@@ -146,6 +146,15 @@ public:
         is_rpc_cache = false;
     }
 
+    void clear_cache_rpc() {
+        while (!m_inner_rpc_cache.empty()) {
+            auto inner_rpc = m_inner_rpc_cache.front();
+            delete inner_rpc;
+            m_inner_rpc_cache.pop();
+        }
+        is_rpc_cache = false;
+    }
+
 private:
     shared_ptr<Session> m_session_cache = nullptr;
     shared_ptr<Remote> m_remote_cache = nullptr;

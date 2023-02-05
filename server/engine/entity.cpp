@@ -428,17 +428,25 @@ void BaseEntityWithCellAndClient::recover_by_disaster_backup(const GString& cell
     cell.call("base_recover_by_disaster_backup_success", get_listen_addr());
     client.call("base_recover_by_disaster_backup_success", get_listen_addr());
 
+    is_ready = true;
     propertys_sync2client(true);
+
+    if (need_create_save_timer()) {
+        create_dbsave_timer();
+    }
 }
 
 void BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success(const GString& cell_addr) {
     cell.set_entity_and_addr(uuid, cell_addr);
+    cell.clear_cache_rpc();
 
     // sync recover self
     Decoder decoder(disaster_backup_of_self.buf, disaster_backup_of_self.size);
     decoder.skip_head_len();
     propertys_unserialize(decoder);
     propertys_sync2client(true);
+
+    time_to_disaster_backup();
 }
 
 void CellEntity::begin_migrate(const GString& new_addr) {
@@ -765,6 +773,7 @@ void CellEntityWithClient::recover_by_disaster_backup(const GString& base_addr, 
     base.call("cell_recover_by_disaster_backup_success", get_listen_addr());
     client.call("cell_recover_by_disaster_backup_success", get_listen_addr());
 
+    is_ready = true;
     propertys_sync2client(true);
 }
 
@@ -826,6 +835,7 @@ void ClientEntity::base_recover_by_disaster_backup_success(const GString& base_a
 
 void ClientEntity::cell_recover_by_disaster_backup_success(const GString& cell_addr) {
     cell.set_entity_and_addr(uuid, cell_addr);
+    cell.clear_cache_rpc();
 }
 
 void ClientEntity::migrate_req_from_cell() {
