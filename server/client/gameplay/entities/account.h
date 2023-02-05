@@ -36,6 +36,8 @@ public:
     void account_migrate_timer();
     void account_migrate_print_timer();
 
+    void client_rpc_timer();
+
 private:
     TimerID migrate_timer;
     TimerID migrate_print_timer;

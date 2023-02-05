@@ -90,6 +90,7 @@ public:
     virtual void create_dbsave_timer() { ASSERT(false); }
     double get_db_save_interval();
     virtual void real_time_to_save() { ASSERT(false); }
+    virtual void time_to_disaster_backup() {}
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
     void ready();
@@ -223,6 +224,7 @@ public:
     virtual void kick_client();
 
     virtual void real_time_to_save();
+    virtual void time_to_disaster_backup();
 
     void new_cell_migrate_in(const GString& new_cell_addr);
 
@@ -270,6 +272,7 @@ public:
     BaseMailBox base;
 
     MigrateState migrate_state = Migrate_None;
+    TimerID migrate_check_timer_id = 0;
     GString new_cell_addr = "";
     bool is_reqack_from_base = false;
 
@@ -312,6 +315,7 @@ public:
     virtual void on_new_cell_migrate_finish();
 
     void migrate_check_timer();
+    void migrate_failed_rollback(const GString& reason);
 
     // db save
     void cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin);
@@ -387,7 +391,7 @@ public: \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
     GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
-    void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
+    void create_dbsave_timer() { time_to_disaster_backup(); REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
     void time_to_save() { real_time_to_save(); } \
     EventManager<TCLASS> event_manager; \
     EventManagerBase* get_event_manager() { return &event_manager; }

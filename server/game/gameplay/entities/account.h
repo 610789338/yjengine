@@ -24,6 +24,7 @@ class BaseAccount : public BaseEntityWithCellAndClient {
     }
     static void migrate_timer_define() {
         MIGRATE_TIMER_DEF(account_migrate_timer);
+        MIGRATE_TIMER_DEF(base_rpc_timer);
     }
 
 public:
@@ -59,6 +60,8 @@ public:
     void entity_event_test(const GString& msg);
     void account_event_timer();
 
+    void base_rpc_timer();
+
 private:
     int32_t sync_count = 0;
     int32_t incr = 0;
@@ -86,6 +89,7 @@ class CellAccount : public CellEntityWithClient {
     }
     static void migrate_timer_define() {
         MIGRATE_TIMER_DEF(account_timer_test);
+        MIGRATE_TIMER_DEF(cell_rpc_timer);
     }
 
 public:
@@ -100,4 +104,6 @@ public:
 
     void add_migrate_int_from_base();
     void add_migrate_int_from_client();
+
+    void cell_rpc_timer();
 };

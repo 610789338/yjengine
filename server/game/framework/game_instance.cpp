@@ -47,7 +47,7 @@ void HeatbeatThreadObj::heart_beat_check() {
 
     for (auto iter = session_tobe_remove.begin(); iter != session_tobe_remove.end(); ++iter) {
         // LOCAL_RPC_CALL是异步本地调用，所以要shared_from_this
-        INFO_LOG("heatbeat check gate(%s) disappear!!!\n", (*iter)->get_remote_addr().c_str());
+        //INFO_LOG("heatbeat check gate(%s) disappear!!!\n", (*iter)->get_remote_addr().c_str());
         LOCAL_RPC_CALL((*iter)->shared_from_this(), "disconnect_from_client", (*iter)->get_remote_addr());
     }
 }

@@ -351,6 +351,15 @@ void BaseEntityWithCellAndClient::real_time_to_save() {
     base_db.write_end();
     cell.call("cell_real_time_to_save", uuid, GBin(base_db.get_buf(), base_db.get_offset()));
 
+    time_to_disaster_backup();
+}
+
+void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_addr) {
+    BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
+}
+
+void BaseEntityWithCellAndClient::time_to_disaster_backup() {
+
     Encoder base_all_db;
     serialize_all(base_all_db);
     base_all_db.write_end();
@@ -358,10 +367,6 @@ void BaseEntityWithCellAndClient::real_time_to_save() {
     GDict base_migrate_data;
     packet_migrate_data(base_migrate_data);
     cell.call("cell_disaster_backup", GBin(base_all_db.get_buf(), base_all_db.get_offset()), base_migrate_data);
-}
-
-void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_addr) {
-    BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
 }
 
 void BaseEntityWithCellAndClient::packet_migrate_data(GDict& migrate_data) {
@@ -437,24 +442,30 @@ void BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success(const 
 }
 
 void CellEntity::begin_migrate(const GString& new_addr) {
-    if (new_addr == get_listen_addr()) {
-        // new cell addr == old cell addr
-        WARN_LOG("ignore migrate to local game\n");
-        return;
-    }
+    //if (new_addr == get_listen_addr()) {
+    //    // new cell addr == old cell addr
+    //    WARN_LOG("ignore migrate to local addr\n");
+    //    return;
+    //}
 
-    if (!is_ready) {
-        return;
-    }
+    //if (new_addr == base.get_addr()) {
+    //    // new cell addr == base addr
+    //    WARN_LOG("ignore migrate to base addr\n");
+    //    return;
+    //}
 
-    if (migrate_state > MigrateState::Migrate_None) {
-        return;
-    }
+    //if (!is_ready) {
+    //    return;
+    //}
 
-    migrate_state = MigrateState::Migrate_Prepare;
+    //if (migrate_state > MigrateState::Migrate_None) {
+    //    return;
+    //}
 
-    new_cell_addr = new_addr;
-    base.call("migrate_req_from_cell"); 
+    //migrate_state = MigrateState::Migrate_Prepare;
+
+    //new_cell_addr = new_addr;
+    //base.call("migrate_req_from_cell"); 
 }
 
 void CellEntity::migrate_reqack_from_base(bool is_ok) { 
@@ -554,7 +565,13 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
 void CellEntityWithClient::begin_migrate(const GString& new_addr) {
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
-        WARN_LOG("ignore migrate to local game\n");
+        WARN_LOG("ignore migrate to local addr\n");
+        return;
+    }
+
+    if (new_addr == base.get_addr()) {
+        // new cell addr == base addr
+        WARN_LOG("ignore migrate to base addr\n");
         return;
     }
 
@@ -568,7 +585,7 @@ void CellEntityWithClient::begin_migrate(const GString& new_addr) {
 
     migrate_state = MigrateState::Migrate_Prepare;
 
-    REGIST_TIMER_INNER(10, 0, false, "migrate_check_timer", &CellEntityWithClient::migrate_check_timer);
+    migrate_check_timer_id = REGIST_TIMER_INNER(10, 0, false, "migrate_check_timer", &CellEntityWithClient::migrate_check_timer);
 
     new_cell_addr = new_addr;
     base.call("migrate_req_from_cell");
@@ -648,7 +665,11 @@ void CellEntityWithClient::on_new_cell_migrate_finish() {
 }
 
 void CellEntityWithClient::migrate_check_timer() {
-    WARN_LOG("CellEntityWithClient::migrate failed state.%d\n", migrate_state);
+    migrate_failed_rollback("timeout");
+}
+
+void CellEntityWithClient::migrate_failed_rollback(const GString& reason) {
+    WARN_LOG("CellEntityWithClient::migrate failed state.%d reason.%s\n", migrate_state, reason.c_str());
 
     if (migrate_state == MigrateState::Migrate_Prepare) {
         migrate_state = MigrateState::Migrate_None;
@@ -715,6 +736,12 @@ void CellEntityWithClient::cell_disaster_backup(const GBin& base_all_db, const G
 void CellEntityWithClient::on_game_disappear(const GString& game_addr) {
     if (base.get_addr() != game_addr) {
         return;
+    }
+
+    if (migrate_check_timer_id != 0) {
+        CANCEL_TIMER(migrate_check_timer_id);
+        ready_check_timerid = 0;
+        migrate_failed_rollback("on_game_disappear");
     }
 
     // base recover by disaster backup

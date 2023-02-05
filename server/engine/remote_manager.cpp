@@ -181,8 +181,9 @@ shared_ptr<Remote> RemoteManager::get_rand_remote() {
         return nullptr;
     }
 
+    auto iter = m_remotes.begin();
     auto idx = rand() % m_remotes.size();
-    for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
+    for (; iter != m_remotes.end(); ++iter) {
         if (idx == 0) {
             return iter->second;
         }
@@ -190,7 +191,42 @@ shared_ptr<Remote> RemoteManager::get_rand_remote() {
         --idx;
     }
 
-    return nullptr;
+    return iter->second;
+}
+
+shared_ptr<Remote> RemoteManager::get_rand_remote_exclude(const GString& exclude_addr) {
+    shared_lock<boost::shared_mutex> lock(m_mutex);
+
+    if (m_remotes.empty()) {
+        return nullptr;
+    }
+
+    if (m_remotes.size() == 1) {
+        auto iter = m_remotes.begin();
+        return iter->second;
+    }
+
+    unordered_map<GString, shared_ptr<Remote>> remotes_excluded;
+    for (auto iter = m_remotes.begin(); iter != m_remotes.end(); ++iter) {
+        if (iter->second->get_remote_addr() == exclude_addr) {
+            continue;
+        }
+
+        remotes_excluded.insert(make_pair(iter->first, iter->second));
+    }
+
+    auto iter = remotes_excluded.begin();
+    auto idx = rand() % remotes_excluded.size();
+    for (; iter != remotes_excluded.end(); ++iter) {
+
+        if (idx == 0) {
+            return iter->second;
+        }
+
+        --idx;
+    }
+
+    return iter->second;
 }
 
 shared_ptr<Remote> RemoteManager::get_fixed_remote(const GString& input) {

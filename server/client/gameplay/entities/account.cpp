@@ -3,6 +3,17 @@
 
 GENERATE_ENTITY_OUT(ClientAccount)
 
+void ClientAccount::on_ready() {
+    INFO_LOG("ClientAccount on_ready\n");
+
+    base.call("component_rpc_test", "hello, my cute component");
+
+    //migrate_timer = REGIST_TIMER(0, 0.1, true, account_migrate_timer);
+    //migrate_print_timer = REGIST_TIMER(0, 1, true, account_migrate_print_timer);
+
+    REGIST_TIMER(0, 5, true, client_rpc_timer);
+}
+
 void ClientAccount::msg_from_base(const GString& msg) {
     INFO_LOG("[client] msg.%s from base\n", msg.c_str()); 
 }
@@ -30,18 +41,6 @@ void ClientAccount::prop_sync_compare(const GBin& v) {
     INFO_LOG("prop syc compare %d.%d\n", server_len, client_len);
 }
 
-void ClientAccount::on_ready() {
-    INFO_LOG("ClientAccount on_ready\n");
-
-    base.call("msg_from_client", "hello, i am client");
-    cell.call("msg_from_client", "hello, i am client");
-
-    base.call("component_rpc_test", "hello, my cute component");
-
-    //migrate_timer = REGIST_TIMER(0, 0.1, true, account_migrate_timer);
-    //migrate_print_timer = REGIST_TIMER(0, 1, true, account_migrate_print_timer);
-}
-
 void ClientAccount::on_prop_sync_from_server() {
     avatar_datas_print(get_prop("avatar_datas"));
 }
@@ -59,4 +58,9 @@ void ClientAccount::account_migrate_timer() {
 
 void ClientAccount::account_migrate_print_timer() {
     INFO_LOG("account_migrate_print_timer %d\n", get_prop("migrate_int")->as_int32());
+}
+
+void ClientAccount::client_rpc_timer() {
+    base.call("msg_from_client", "hello, i am client");
+    cell.call("msg_from_client", "hello, i am client");
 }

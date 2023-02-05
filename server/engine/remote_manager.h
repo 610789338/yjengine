@@ -111,6 +111,7 @@ public:
 
     shared_ptr<Remote> get_remote(const GString& remote_addr);
     shared_ptr<Remote> get_rand_remote();
+    shared_ptr<Remote> get_rand_remote_exclude(const GString& exclude_addr);
     shared_ptr<Remote> get_fixed_remote(const GString& input);
     void foreach_remote(ForEachFunc func);
 

@@ -34,6 +34,9 @@
     <ClCompile Include="framework\game_instance.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\account_prop_test.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
