@@ -78,9 +78,10 @@ public:
     virtual GString prop_int2str(int16_t idx) { return ""; }
     bool need_create_save_timer();
     virtual void create_dbsave_timer() { ASSERT(false); }
+    virtual void create_disater_backup_timer() { ASSERT(false); }
     double get_db_save_interval();
     virtual void real_time_to_save() { ASSERT(false); }
-    virtual void time_to_disaster_backup() {}
+    virtual void real_time_to_disaster_backup() { ASSERT(false); }
 
     void give_propertys(unordered_map<GString, EntityPropertyBase*>& propertys);
     void ready();
@@ -214,7 +215,7 @@ public:
     virtual void kick_client();
 
     virtual void real_time_to_save();
-    virtual void time_to_disaster_backup();
+    virtual void real_time_to_disaster_backup();
 
     void new_cell_migrate_in(const GString& new_cell_addr);
 

@@ -141,6 +141,7 @@ void Entity::ready() {
 
     if (need_create_save_timer()) {
         create_dbsave_timer();
+        create_disater_backup_timer();
     }
 
     if (ready_check_timerid != 0) {
@@ -350,15 +351,13 @@ void BaseEntityWithCellAndClient::real_time_to_save() {
     serialize_db(base_db);
     base_db.write_end();
     cell.call("cell_real_time_to_save", uuid, GBin(base_db.get_buf(), base_db.get_offset()));
-
-    time_to_disaster_backup();
 }
 
 void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_addr) {
     BaseEntityWithCell::new_cell_migrate_in(new_cell_addr);
 }
 
-void BaseEntityWithCellAndClient::time_to_disaster_backup() {
+void BaseEntityWithCellAndClient::real_time_to_disaster_backup() {
 
     Encoder base_all_db;
     serialize_all(base_all_db);
@@ -433,6 +432,7 @@ void BaseEntityWithCellAndClient::recover_by_disaster_backup(const GString& cell
 
     if (need_create_save_timer()) {
         create_dbsave_timer();
+        create_disater_backup_timer();
     }
 }
 
@@ -446,7 +446,7 @@ void BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success(const 
     propertys_unserialize(decoder);
     propertys_sync2client(true);
 
-    time_to_disaster_backup();
+    real_time_to_disaster_backup();
 }
 
 void CellEntity::begin_migrate(const GString& new_addr) {

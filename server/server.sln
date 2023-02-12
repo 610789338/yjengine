@@ -7,6 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client\client.vcxproj", "{9B4C93F9-C44C-4C86-84B0-65274FDCB9B7}"
 	ProjectSection(ProjectDependencies) = postProject
+		{655CFF19-C867-4C08-9BC8-B28DEC55A867} = {655CFF19-C867-4C08-9BC8-B28DEC55A867}
 		{E880729B-7C7B-46EB-8C53-A3AC60CD5550} = {E880729B-7C7B-46EB-8C53-A3AC60CD5550}
 	EndProjectSection
 EndProject
@@ -17,6 +18,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gate", "gate\gate.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game\game.vcxproj", "{8CFE7634-19B9-4FD3-A20B-0C95F5AA62C0}"
 	ProjectSection(ProjectDependencies) = postProject
+		{655CFF19-C867-4C08-9BC8-B28DEC55A867} = {655CFF19-C867-4C08-9BC8-B28DEC55A867}
 		{E880729B-7C7B-46EB-8C53-A3AC60CD5550} = {E880729B-7C7B-46EB-8C53-A3AC60CD5550}
 	EndProjectSection
 EndProject

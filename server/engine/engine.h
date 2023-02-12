@@ -32,8 +32,13 @@ public: \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
     GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
-    void create_dbsave_timer() { time_to_disaster_backup(); REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
+    void create_dbsave_timer() { REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
     void time_to_save() { real_time_to_save(); } \
+    void create_disater_backup_timer() { \
+        REGIST_TIMER(1,                      get_db_save_interval(), false, time_to_disaster_backup); \
+        REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true,  time_to_disaster_backup); \
+    } \
+    void time_to_disaster_backup() { real_time_to_disaster_backup(); } \
     EventManager<TCLASS> event_manager; \
     EventManagerBase* get_event_manager() { return &event_manager; }
 
