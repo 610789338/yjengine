@@ -1,8 +1,8 @@
 #pragma once
 
 #include "gvalue.h"
+#include "timer.h"
 #include "entity_rpc_manager.h"
-#include "entity.h"
 #include "entity_event_manager.h"
 
 struct EntityPropertyBase;
@@ -28,10 +28,6 @@ public:
     virtual EventManagerBase* get_event_manager() { return nullptr; }
     bool is_comp() { return true; }
     void comp_regist_event(const GString& event_name, EntityComponentBase* component) {}
-    template<class... Args>
-    void send_event(const GString& event_name, Args... args) { 
-        get_owner()->send_event(event_name, args...);
-    }
 
 protected:
     GString name;
@@ -98,7 +94,9 @@ public:
         get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
-    virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
+    virtual void component_regist(EntityComponentBase* component);
+    virtual void generate_entity_components(Entity* owner);
+    virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method);
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
 
 #define GENERATE_COMP_TIMER_BODY \
@@ -157,6 +155,8 @@ public:
         entity_comp->get_owner()->add_timer(timer);
         return timer;
     }
+
+    unordered_map<GString, EntityComponentBase*> components;
 };
 
 extern GArray* get_local_entity_rpc_names();
@@ -175,37 +175,6 @@ public:
     GString rpc_name_decode(Decoder& decoder) { return ""; }
     void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {}
 
-    void component_regist(EntityComponentBase* component) {
-
-        if (components.find(component->get_name()) != components.end()) {
-            WARN_LOG("component.%s exist\n", component->get_name().c_str());
-            return;
-        }
-
-        components[component->get_name()] = component;
-    }
-
-    void generate_entity_components(Entity* owner) {
-        owner->components.clear();
-        for (auto iter = components.begin(); iter != components.end(); ++iter) {
-            owner->components[iter->first] = iter->second->create_self(owner);
-        }
-    }
-
-    void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) {
-
-        RpcMethodBase* method = get_rpc_mgr()->find_rpc_method(rpc_name);
-        const auto& comp_name = method->get_comp_name();
-
-        auto iter = entity->components.find(comp_name);
-        if (iter == entity->components.end()) {
-            return;
-        }
-
-        iter->second->rpc_call(from_client, rpc_name, rpc_method);
-    }
-
-    unordered_map<GString, EntityComponentBase*> components;
     RpcManagerBase* rpc_mgr = nullptr;
 
     EntityClassType* tclass;

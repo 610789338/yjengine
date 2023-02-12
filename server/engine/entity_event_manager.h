@@ -114,7 +114,7 @@ public:
     template<class T1>
     void send_event(void* _this, const GString& event_name, const T1& t1) {
         Encoder encoder;
-        encoder.write<T1>(t1);
+        encoder.write(t1);
         encoder.write_end();
 
         auto cb_set = get_event_cb_set(event_name);
@@ -128,8 +128,8 @@ public:
     template<class T1, class T2>
     void send_event(void* _this, const GString& event_name, const T1& t1, const T2& t2) {
         Encoder encoder;
-        encoder.write<T1>(t1);
-        encoder.write<T2>(t2);
+        encoder.write(t1);
+        encoder.write(t2);
         encoder.write_end();
 
         auto cb_set = get_event_cb_set(event_name);
@@ -143,9 +143,9 @@ public:
     template<class T1, class T2, class T3>
     void send_event(void* _this, const GString& event_name, const T1& t1, const T2& t2, const T3& t3) {
         Encoder encoder;
-        encoder.write<T1>(t1);
-        encoder.write<T2>(t2);
-        encoder.write<T3>(t3);
+        encoder.write(t1);
+        encoder.write(t2);
+        encoder.write(t3);
         encoder.write_end();
 
         auto cb_set = get_event_cb_set(event_name);
@@ -185,4 +185,6 @@ if (get_owner()) { \
     get_owner()->comp_regist_event(event_name, this); \
 }
 
+
 #define SEND_EVENT(event_name, ...) send_event(event_name, ##__VA_ARGS__)
+#define COMP_SEND_EVENT(event_name, ...) get_owner()->send_event(event_name, ##__VA_ARGS__)

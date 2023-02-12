@@ -11,22 +11,12 @@
 #include "entity_rpc_manager.h"
 #include "entity_property_tree.h"
 #include "entity_property_manager.h"
-#include "time.h"
 #include "entity_component_manager.h"
+#include "entity_event_manager.h"
 
 using namespace std;
 
-class Entity;
-struct RpcMethodBase;
-class RpcManagerBase;
-class ComponentManagerBase;
-class EntityComponentBase;
-struct EntityPropertyBase;
-struct TimerBase;
-class TimerManagerBase;
-class EventManagerBase;
-
-enum EntityType {
+enum EntityType : int8_t {
     EntityType_Base,  // stub
     EntityType_BaseWithCell,  // monster
     EntityType_BaseWithCellAndClient,  // player
@@ -370,43 +360,6 @@ public:
     BaseMailBox base;
     CellMailBox cell;
 };
-
-
-// ------------------------------- definition ------------------------------- //
-
-
-#define GENERATE_ENTITY_INNER(TCLASS) \
-public: \
-    EntityType get_entity_type() { return (EntityType)TCLASS::ENTITY_TYPE; } \
-    static EntityPropertyManager<TCLASS> property_manager; \
-    static EntityRpcManager<TCLASS> rpc_manager; \
-    RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
-    RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
-    RPC_CALL_DEFINE(TCLASS) \
-    static EntityComponentManager<TCLASS> component_manager; \
-    ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
-    static TimerManager<TCLASS> timer_manager; \
-    TimerManagerBase* get_timer_manager() { return &timer_manager; } \
-    static PropertyTree property_tree; \
-    static void generate_property_tree(); \
-    int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \
-    GString prop_int2str(int16_t idx) { return property_manager.i2s_map.at(idx); } \
-    void create_dbsave_timer() { time_to_disaster_backup(); REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true, time_to_save); } \
-    void time_to_save() { real_time_to_save(); } \
-    EventManager<TCLASS> event_manager; \
-    EventManagerBase* get_event_manager() { return &event_manager; }
-
-#define GENERATE_ENTITY_OUT(TCLASS) \
-EntityPropertyManager<TCLASS> TCLASS::property_manager; \
-EntityRpcManager<TCLASS> TCLASS::rpc_manager((EntityType)TCLASS::ENTITY_TYPE, #TCLASS, []()->TCLASS* { \
-    auto entity = new TCLASS(); \
-    entity->give_propertys(property_manager.propertys); \
-    component_manager.generate_entity_components(entity); \
-    entity->rpc_mgr = &TCLASS::rpc_manager; \
-    return entity; }); \
-TimerManager<TCLASS> TCLASS::timer_manager; \
-EntityComponentManager<TCLASS> TCLASS::component_manager; \
-PropertyTree TCLASS::property_tree(property_manager.propertys);
 
 
 extern unordered_map<GString, Entity*> g_base_entities;

@@ -10,7 +10,6 @@
 
 #include "utils.h"
 #include "ini.h"
-#include "entity_property_manager.h"
 #include "boost_asio.h"
 
 using namespace std;

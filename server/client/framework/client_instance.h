@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/entity.h"
+#include "engine/engine.h"
 
 #include "common/utils/utils.h"
 

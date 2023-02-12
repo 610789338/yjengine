@@ -120,69 +120,10 @@ class EntityRpcManager : public RpcManagerBase {
 
 public:
     EntityRpcManager() = delete;
-    EntityRpcManager(enum EntityType entity_type, const GString& entity_class_name, const function<Entity*()>& creator) {
-
-        // entity base rpc
-        if (entity_type == EntityType::EntityType_BaseWithCell) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCell::on_cell_create);
-        }
-        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCellAndClient::on_cell_create);
-            entity_rpc_regist(RpcType::EXPOSED, "on_client_reconnect_success", &BaseEntityWithCellAndClient::on_client_reconnect_success);
-            entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithCellAndClient::ready);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCellAndClient::destroy_self);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "base_disaster_backup", &BaseEntityWithCellAndClient::base_disaster_backup);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_recover_by_disaster_backup_success", &BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success);
-        }
-        else if (entity_type == EntityType::EntityType_CellWithClient) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient", &CellEntityWithClient::on_reconnect_fromclient);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "on_client_reconnect_success", &CellEntityWithClient::on_client_reconnect_success);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save", &CellEntityWithClient::cell_real_time_to_save);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "cell_disaster_backup", &CellEntityWithClient::cell_disaster_backup);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "base_recover_by_disaster_backup_success", &CellEntityWithClient::base_recover_by_disaster_backup_success);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "ready", &CellEntityWithClient::ready);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &CellEntityWithClient::destroy_self);
-        }
-        else if (entity_type == EntityType::EntityType_Client) {
-            entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base", &ClientEntity::prop_sync_from_base);
-            entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell", &ClientEntity::prop_sync_from_cell);
-            entity_rpc_regist(RpcType::CLIENT, "ready", &ClientEntity::ready);
-            entity_rpc_regist(RpcType::CLIENT, "on_kick", &ClientEntity::on_kick);
-            entity_rpc_regist(RpcType::CLIENT, "destroy_self", &ClientEntity::destroy_self);
-            entity_rpc_regist(RpcType::CLIENT, "base_recover_by_disaster_backup_success", &ClientEntity::base_recover_by_disaster_backup_success);
-            entity_rpc_regist(RpcType::CLIENT, "cell_recover_by_disaster_backup_success", &ClientEntity::cell_recover_by_disaster_backup_success);
-        }
-
-        regist_migrate_rpc(entity_type);
+    EntityRpcManager(const GString& entity_class_name, const function<Entity*()>& creator) {
         regist_entity_creator(entity_class_name, creator);
-
+        EntityClassType::rpc_method_define_base();
         EntityClassType::rpc_method_define();
-    }
-
-    void regist_migrate_rpc(enum EntityType entity_type) {
-        if (entity_type == EntityType::EntityType_BaseWithCell) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCell::migrate_req_from_cell);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCell::new_cell_migrate_in);
-        }
-        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCellAndClient::migrate_req_from_cell);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCellAndClient::new_cell_migrate_in);
-        }
-        else if (entity_type == EntityType::EntityType_Cell) {
-            entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntity::begin_migrate);
-            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntity::migrate_reqack_from_base);
-            entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntity::on_new_cell_migrate_finish);
-        }
-        else if (entity_type == EntityType::EntityType_CellWithClient) {
-            entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntityWithClient::begin_migrate);
-            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntityWithClient::migrate_reqack_from_base);
-            entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_client", &CellEntityWithClient::migrate_reqack_from_client);
-            entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntityWithClient::on_new_cell_migrate_finish);
-        }
-        else if (entity_type == EntityType::EntityType_Client) {
-            entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &ClientEntity::migrate_req_from_cell);
-            entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &ClientEntity::new_cell_migrate_in);
-        }
     }
 
     template<class TEntity>
@@ -265,5 +206,63 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 \
     rpc_method->exec((void*)this); \
 }
+
+#define RPC_METHOD_DEFINE_BASE(TCLASS) \
+    static void rpc_method_define_base() { \
+        EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
+        if (entity_type == EntityType::EntityType_BaseWithCell) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCell::on_cell_create); \
+        } \
+        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCellAndClient::on_cell_create); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "on_client_reconnect_success", &BaseEntityWithCellAndClient::on_client_reconnect_success); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithCellAndClient::ready); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCellAndClient::destroy_self); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "base_disaster_backup", &BaseEntityWithCellAndClient::base_disaster_backup); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "cell_recover_by_disaster_backup_success", &BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success); \
+        } \
+        else if (entity_type == EntityType::EntityType_CellWithClient) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient", &CellEntityWithClient::on_reconnect_fromclient); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_client_reconnect_success", &CellEntityWithClient::on_client_reconnect_success); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "cell_real_time_to_save", &CellEntityWithClient::cell_real_time_to_save); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "cell_disaster_backup", &CellEntityWithClient::cell_disaster_backup); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "base_recover_by_disaster_backup_success", &CellEntityWithClient::base_recover_by_disaster_backup_success); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "ready", &CellEntityWithClient::ready); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &CellEntityWithClient::destroy_self); \
+        } \
+        else if (entity_type == EntityType::EntityType_Client) { \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base", &ClientEntity::prop_sync_from_base); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_cell", &ClientEntity::prop_sync_from_cell); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "ready", &ClientEntity::ready); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "on_kick", &ClientEntity::on_kick); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "destroy_self", &ClientEntity::destroy_self); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "base_recover_by_disaster_backup_success", &ClientEntity::base_recover_by_disaster_backup_success); \
+            rpc_manager.entity_rpc_regist(RpcType::CLIENT, "cell_recover_by_disaster_backup_success", &ClientEntity::cell_recover_by_disaster_backup_success); \
+        } \
+    \
+        if (entity_type == EntityType::EntityType_BaseWithCell) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCell::migrate_req_from_cell); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCell::new_cell_migrate_in); \
+        } \
+        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &BaseEntityWithCellAndClient::migrate_req_from_cell); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &BaseEntityWithCellAndClient::new_cell_migrate_in); \
+        } \
+        else if (entity_type == EntityType::EntityType_Cell) { \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntity::begin_migrate); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntity::migrate_reqack_from_base); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntity::on_new_cell_migrate_finish); \
+        } \
+        else if (entity_type == EntityType::EntityType_CellWithClient) { \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "begin_migrate", &CellEntityWithClient::begin_migrate); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_base", &CellEntityWithClient::migrate_reqack_from_base); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "migrate_reqack_from_client", &CellEntityWithClient::migrate_reqack_from_client); \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "on_new_cell_migrate_finish", &CellEntityWithClient::on_new_cell_migrate_finish); \
+        } \
+        else if (entity_type == EntityType::EntityType_Client) { \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "migrate_req_from_cell", &ClientEntity::migrate_req_from_cell); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "new_cell_migrate_in", &ClientEntity::new_cell_migrate_in); \
+        } \
+    }
 
 #define RPC_METHOD(rpc_type, rpc_name) rpc_manager.entity_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(rpc_manager.tclass))::rpc_name)

@@ -7,6 +7,9 @@ EXE_DIR = linux/bin
 ENGINE_DIR = engine
 ENGINE_OUT_DIR = linux/engine
 
+COMMON_DIR = common
+COMMON_OUT_DIR = linux/engine
+
 BOOST_INCLUDE = /home/youjun/boost_1_78_0
 BOOST_LIB = /home/youjun/boost_1_78_0/stage/lib
 STD_LIB = -lpthread -lboost_thread
@@ -76,12 +79,27 @@ engine: boost_asio.o decode.o encode.o engine.o entity.o entity_component_manage
 clean_engine:
 	rm $(ENGINE_OUT_DIR)/*
 
+
+# common
+tmp_utils.o: $(COMMON_DIR)/utils/utils.cpp
+	g++ -fPIC -g -c $(COMMON_DIR)/utils/utils.cpp -o $(COMMON_OUT_DIR)/tmp_utils.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
+common: tmp_utils.o
+	ar crv $(LIB_DIR)/libcommon.a $(COMMON_OUT_DIR)/*.o
+
+clean_common:
+	rm $(COMMON_OUT_DIR)/*
+
+
 # game
 game_rpc.o: $(GAME_DIR)/framework/game_rpc.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/framework/game_rpc.cpp -o $(GAME_OUT_DIR)/game_rpc.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
 migrate_rpc_game.o: $(GAME_DIR)/framework/migrate_rpc.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/framework/migrate_rpc.cpp -o $(GAME_OUT_DIR)/migrate_rpc_game.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
+game_instance.o: $(GAME_DIR)/framework/game_instance.cpp
+	g++ -fPIC -g -c $(GAME_DIR)/framework/game_instance.cpp -o $(GAME_OUT_DIR)/game_instance.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
 create_avatar_component.o: $(GAME_DIR)/gameplay/components/create_avatar_component.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/gameplay/components/create_avatar_component.cpp -o $(GAME_OUT_DIR)/create_avatar_component.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
@@ -92,8 +110,8 @@ account.o: $(GAME_DIR)/gameplay/entities/account.cpp
 game_app.o: $(GAME_DIR)/game_app.cpp
 	g++ -fPIC -g -c $(GAME_DIR)/game_app.cpp -o $(GAME_OUT_DIR)/game_app.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-game: game_rpc.o migrate_rpc_game.o create_avatar_component.o account.o game_app.o
-	g++ -fPIC -g $(GAME_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/game
+game: game_rpc.o migrate_rpc_game.o game_instance.o create_avatar_component.o account.o game_app.o
+	g++ -fPIC -g $(GAME_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine -lcommon $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/game
 
 clean_game:
 	rm $(GAME_OUT_DIR)/*
@@ -105,10 +123,13 @@ gate_rpc.o: $(GATE_DIR)/framework/gate_rpc.cpp
 migrate_rpc_gate.o: $(GATE_DIR)/framework/migrate_rpc.cpp
 	g++ -fPIC -g -c $(GATE_DIR)/framework/migrate_rpc.cpp -o $(GATE_OUT_DIR)/migrate_rpc_gate.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
+gate_instance.o: $(GATE_DIR)/framework/gate_instance.cpp
+	g++ -fPIC -g -c $(GATE_DIR)/framework/gate_instance.cpp -o $(GATE_OUT_DIR)/gate_instance.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
 gate_app.o: $(GATE_DIR)/gate_app.cpp
 	g++ -fPIC -g -c $(GATE_DIR)/gate_app.cpp -o $(GATE_OUT_DIR)/gate_app.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-gate: gate_rpc.o migrate_rpc_gate.o gate_app.o
+gate: gate_rpc.o migrate_rpc_gate.o gate_instance.o gate_app.o
 	g++ -fPIC -g $(GATE_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/gate
 
 clean_gate:
@@ -118,28 +139,34 @@ clean_gate:
 client_rpc.o: $(CLIENT_DIR)/framework/client_rpc.cpp
 	g++ -fPIC -g -c $(CLIENT_DIR)/framework/client_rpc.cpp -o $(CLIENT_OUT_DIR)/client_rpc.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
+client_instance.o: $(CLIENT_DIR)/framework/client_instance.cpp
+	g++ -fPIC -g -c $(CLIENT_DIR)/framework/client_instance.cpp -o $(CLIENT_OUT_DIR)/client_instance.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+
 client_account.o: $(CLIENT_DIR)/gameplay/entities/account.cpp
 	g++ -fPIC -g -c $(CLIENT_DIR)/gameplay/entities/account.cpp -o $(CLIENT_OUT_DIR)/client_account.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-client.o: $(CLIENT_DIR)/client.cpp
-	g++ -fPIC -g -c $(CLIENT_DIR)/client.cpp -o $(CLIENT_OUT_DIR)/client.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
+client_app.o: $(CLIENT_DIR)/client_app.cpp
+	g++ -fPIC -g -c $(CLIENT_DIR)/client_app.cpp -o $(CLIENT_OUT_DIR)/client_app.o -I $(BOOST_INCLUDE) -I ./ -std=$(CPP_STD)
 
-client: client_rpc.o create_avatar_component.o client_account.o client.o
-	g++ -fPIC -g $(CLIENT_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/client
+client: client_rpc.o client_instance.o create_avatar_component.o client_account.o client_app.o
+	g++ -fPIC -g $(CLIENT_OUT_DIR)/*.o -L $(BOOST_LIB) -L $(LIB_DIR) -lengine -lcommon $(STD_LIB) -std=$(CPP_STD) -o $(EXE_DIR)/client
 
 clean_client:
 	rm $(CLIENT_OUT_DIR)/*
 
 
-all: engine game gate client
+all: engine common game gate client
 	rm $(ENGINE_OUT_DIR)/* -rf
+	rm $(COMMON_OUT_DIR)/* -rf
 	rm $(GAME_OUT_DIR)/* -rf
 	rm $(GATE_OUT_DIR)/* -rf
 	rm $(CLIENT_OUT_DIR)/* -rf
 
 clean:
 	rm $(ENGINE_OUT_DIR)/* -rf
+	rm $(COMMON_OUT_DIR)/* -rf
 	rm $(GAME_OUT_DIR)/* -rf
 	rm $(GATE_OUT_DIR)/* -rf
 	rm $(CLIENT_OUT_DIR)/* -rf
 	rm $(LIB_DIR)/* -rf
+
