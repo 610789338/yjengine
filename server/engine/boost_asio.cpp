@@ -50,7 +50,7 @@ void Session::on_read(boost::system::error_code ec, size_t length) {
         return;
     }
 
-    m_last_active_time = nowms_timestamp(true);
+    m_last_active_time = nowms_timestamp();
 
     //auto _id = boost::this_thread::get_id();
     //GString thread_id = boost::lexical_cast<GString>(_id);

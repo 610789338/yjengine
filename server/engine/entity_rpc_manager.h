@@ -212,6 +212,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
         EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
         if (entity_type == EntityType::EntityType_BaseWithCell) { \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCell::on_cell_create); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "respect_from_cell", &BaseEntityWithCell::respect_from_cell); \
         } \
         else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCellAndClient::on_cell_create); \
@@ -220,6 +221,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCellAndClient::destroy_self); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "base_disaster_backup", &BaseEntityWithCellAndClient::base_disaster_backup); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "cell_recover_by_disaster_backup_success", &BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "respect_from_cell", &BaseEntityWithCell::respect_from_cell); \
         } \
         else if (entity_type == EntityType::EntityType_CellWithClient) { \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_reconnect_fromclient", &CellEntityWithClient::on_reconnect_fromclient); \
@@ -229,6 +231,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "base_recover_by_disaster_backup_success", &CellEntityWithClient::base_recover_by_disaster_backup_success); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "ready", &CellEntityWithClient::ready); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &CellEntityWithClient::destroy_self); \
+            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "respect_from_base", &CellEntityWithClient::respect_from_base); \
         } \
         else if (entity_type == EntityType::EntityType_Client) { \
             rpc_manager.entity_rpc_regist(RpcType::CLIENT, "prop_sync_from_base", &ClientEntity::prop_sync_from_base); \

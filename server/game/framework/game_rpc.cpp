@@ -182,7 +182,7 @@ void on_game_disappear(const GString& game_addr) {
 
     static std::unordered_map<GString, int64_t> next_disaster_times;
 
-    auto now = nowms_timestamp(true);
+    auto now = nowms_timestamp();
     auto iter = next_disaster_times.find(game_addr);
     if (iter != next_disaster_times.end() && now < iter->second) {
         // ±‹√‚÷ÿ∏¥¥¶¿Ì

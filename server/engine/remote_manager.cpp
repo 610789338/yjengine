@@ -77,7 +77,7 @@ void Remote::on_read(boost::system::error_code ec, std::size_t length) {
     //GString thread_id = boost::lexical_cast<GString>(_id);
     //INFO_LOG("thread.%s on_read: length.%d from %s\n", thread_id.c_str(), int(length), get_remote_addr().c_str());
 
-    m_last_active_time = nowms_timestamp(true);
+    m_last_active_time = nowms_timestamp();
 
     // Õ³°ü
     memmove(m_buffer_cache + m_cache_idx, m_buffer, length);

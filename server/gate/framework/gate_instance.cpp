@@ -31,7 +31,7 @@ void HeatbeatThreadObj::operator()() {
 }
 
 void HeatbeatThreadObj::heart_beat_check() {
-    auto nowms = nowms_timestamp(true);
+    auto nowms = nowms_timestamp();
     vector<shared_ptr<Remote>> remote_tobe_remove;
     g_remote_mgr.foreach_remote([this, nowms, &remote_tobe_remove](const GString& remote_name, shared_ptr<Remote> remote) {
         if (remote->get_last_active_time() != 0 && remote->get_last_active_time() + 3000 < nowms) {

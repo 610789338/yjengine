@@ -52,6 +52,7 @@ public:
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
     virtual void on_create(const GDict& create_data);
     virtual void ready_check_timer();
+    virtual void create_heart_beat_timer() {}
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) { ASSERT(false); } // for base and cell
     virtual void on_reconnect_success(const GDict& create_data) { ASSERT(false); } // for client
     virtual void on_destroy() = 0;
@@ -147,6 +148,7 @@ public:
     TimerID next_timer_id = 1;
     unordered_map<TimerID, TimerBase*> timer_ids;
     TimerID ready_check_timerid = 0;
+    TimerID heart_beat_timerid = 0;
 
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
@@ -183,6 +185,9 @@ public:
     virtual void create_cell(const GDict& create_data);
     virtual void on_cell_create(const GString& cell_addr);
     virtual void ready() { Entity::ready(); } // must exist
+    virtual void create_heart_beat_timer();
+    virtual void heart_beat_timer();
+    virtual void respect_from_cell();
     virtual void on_destroy() {}
 
     // migrate
@@ -190,6 +195,7 @@ public:
     virtual void new_cell_migrate_in(const GString& new_cell_addr);
 
     CellMailBox cell;
+    int64_t last_respect_from_cell = 0;
 };
 
 class BaseEntityWithCellAndClient : public BaseEntityWithCell {
@@ -288,6 +294,9 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void ready_check_timer();
     virtual void ready(); // must exist
+    virtual void create_heart_beat_timer();
+    virtual void heart_beat_timer();
+    virtual void respect_from_base();
     virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
     virtual void on_client_reconnect_success();
     virtual void destroy_self();
@@ -319,6 +328,7 @@ public:
 
     ClientMailBox client;
     bool is_reqack_from_client = false;
+    int64_t last_respect_from_base = 0;
 };
 
 // ------------------------------- client ------------------------------- //

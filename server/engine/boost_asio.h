@@ -36,7 +36,7 @@ public:
                 on_write(ec, length);
             });
 
-        set_next_heartbeat_time(nowms_timestamp(true) + 1000);
+        set_next_heartbeat_time(nowms_timestamp() + 1000);
     }
 
     template<class... T>

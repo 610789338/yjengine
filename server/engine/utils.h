@@ -26,10 +26,10 @@ extern void byte_print(const char* buf, uint16_t length);
 extern string gen_uuid();
 
 
-extern string now_format(bool use_cache = false);
-extern int64_t now_timestamp(bool use_cache = false);
-extern int64_t nowms_timestamp(bool use_cache = false);
-extern int64_t nowmicro_timestamp(bool use_cache = false);
+extern string now_format(bool use_cache = true);
+extern int64_t now_timestamp(bool use_cache = true);
+extern int64_t nowms_timestamp(bool use_cache = true);
+extern int64_t nowmicro_timestamp(bool use_cache = true);
 extern uint32_t bkdr_hash(const char* str);
 extern string get_listen_addr();
 
