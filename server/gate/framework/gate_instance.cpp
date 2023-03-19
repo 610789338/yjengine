@@ -23,14 +23,14 @@ void heartbeat_from_game() {
     // here do nothing
 }
 
-void HeatbeatThreadObj::operator()() {
+void HeartbeatThreadObj::operator()() {
     while (true) {
         heart_beat_check();
         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
     }
 }
 
-void HeatbeatThreadObj::heart_beat_check() {
+void HeartbeatThreadObj::heart_beat_check() {
     auto nowms = nowms_timestamp();
     vector<shared_ptr<Remote>> remote_tobe_remove;
     g_remote_mgr.foreach_remote([this, nowms, &remote_tobe_remove](const GString& remote_name, shared_ptr<Remote> remote) {
@@ -55,6 +55,7 @@ void HeatbeatThreadObj::heart_beat_check() {
 }
 
 void assist_thread_start() {
-    HeatbeatThreadObj thread_obj;
-    boost::thread t(thread_obj);
+    HeartbeatThreadObj thread_obj;
+    // TODO - open heart beat check
+    //boost::thread t(thread_obj);
 }

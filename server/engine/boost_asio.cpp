@@ -11,7 +11,7 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
-boost::asio::io_context io_context;
+boost::asio::io_context g_io_context;
 
 SessionManager g_session_mgr;
 
@@ -105,6 +105,20 @@ GString& Session::get_remote_addr() {
         m_remote_addr = ip + ":" + std::to_string(port);
     }
     return m_remote_addr;
+}
+
+void Session::push_remote_rpc_ele_to_queue(shared_ptr<RemoteRpcQueueEleBase>& remote_queue_rpc_ele) {
+    m_remote_rpc_queue.push(remote_queue_rpc_ele);
+}
+
+shared_ptr<RemoteRpcQueueEleBase> Session::pop_remote_rpc_ele_from_queue() {
+    if (m_remote_rpc_queue.empty()) {
+        return nullptr;
+    }
+
+    auto rpc_method = m_remote_rpc_queue.front();
+    m_remote_rpc_queue.pop();
+    return rpc_method;
 }
 
 // -----------------------------------------------------------------------------
@@ -221,6 +235,20 @@ shared_ptr<Session> SessionManager::get_gate(const GString& gate_addr) {
 
 // -----------------------------------------------------------------------------
 
+Server::Server(boost::asio::io_context& io_context, const char* _ip, const uint16_t& port)
+    : m_acceptor(io_context) {
+
+    try {
+        m_acceptor.open(tcp::v4());
+        boost::asio::ip::tcp::endpoint endpoint(address::from_string(_ip), port);
+        m_acceptor.bind(endpoint);
+        m_acceptor.listen();
+    }
+    catch (boost::system::system_error& e) {
+        ASSERT_LOG(false, "tcp::acceptor(%s) error %s\n", IPPORT_STRING(string(_ip), port).c_str(), e.what());
+    }
+}
+
 void Server::do_accept() {
     m_acceptor.async_accept([this](boost::system::error_code ec, tcp::socket socket) {
         if (!ec) {
@@ -258,7 +286,7 @@ void set_engine_listen_ipport(GString ip, uint16_t port) {
 
 void boost_asio_init() {
     if (!listen_ip.empty() && listen_port != 0) {
-        server = make_shared<Server>(io_context, listen_ip.c_str(), listen_port);
+        server = make_shared<Server>(g_io_context, listen_ip.c_str(), listen_port);
 
         // 单线程要先run，do_accpet之后再run会阻塞
         // io_context.run();
@@ -271,7 +299,7 @@ void boost_asio_init() {
 // boost_asio_tick是asio的主tick函数，可以放在主线程也可以在子线程
 void boost_asio_tick() {
 
-    io_context.run();
+    g_io_context.run();
 
     //INFO_LOG("tick\n");
 }

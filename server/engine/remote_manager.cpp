@@ -115,6 +115,20 @@ GString& Remote::get_remote_addr() {
     return m_remote_addr;
 }
 
+void Remote::push_remote_rpc_ele_to_queue(shared_ptr<RemoteRpcQueueEleBase>& remote_queue_rpc_ele) {
+    m_remote_rpc_queue.push(remote_queue_rpc_ele);
+}
+
+shared_ptr<RemoteRpcQueueEleBase> Remote::pop_remote_rpc_ele_from_queue() {
+    if (m_remote_rpc_queue.empty()) {
+        return nullptr;
+    }
+
+    auto rpc_method = m_remote_rpc_queue.front();
+    m_remote_rpc_queue.pop();
+    return rpc_method;
+}
+
 void Remote::on_write(boost::system::error_code ec, std::size_t length) {
     if (ec) {
         ERROR_LOG("write error : %s\n", ec.message().c_str());
@@ -133,7 +147,7 @@ void Remote::set_next_heartbeat_time(int64_t next_heartbeat_time) {
 // ------------------------------ rpc manager ------------------------------
 
 void RemoteManager::connect_remote(const GString& ip, const GString& port) {
-    make_shared<Remote>(io_context)->start(ip, port);
+    make_shared<Remote>(g_io_context)->start(ip, port);
 }
 
 void RemoteManager::on_remote_connected(const shared_ptr<Remote>& remote) {

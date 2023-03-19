@@ -17,9 +17,6 @@ static unordered_map<string, int8_t> log_levels{
     {"DEBUG", 4}
 };
 
-extern int32_t ini_get_int(const char* node_name, const char* child_name, int32_t _defaul);
-extern string ini_get_string(const char* node_name, const char* child_name, string _default);
-
 // window debug模式下打印一条日志的平均耗时是800 micro second = 0.8ms
 // 两次ini_get_string耗时0.4ms，改成static
 // 一次now_format耗时0.2ms，改成每帧开始时cache一次 - TODO

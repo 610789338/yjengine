@@ -23,10 +23,10 @@ public:
 
 extern BaseGameInstance* g_game_instance;
 
-class HeatbeatThreadObj {
+class HeartbeatThreadObj {
 public:
-    HeatbeatThreadObj() {}
-    ~HeatbeatThreadObj(){}
+    HeartbeatThreadObj() {}
+    ~HeartbeatThreadObj(){}
 
     void operator()();
     void heart_beat_check();

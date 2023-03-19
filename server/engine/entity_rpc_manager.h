@@ -111,8 +111,8 @@ struct EntityRpcMethod5 : public RpcMethodBase {
 };
 
 extern GArray* get_local_entity_rpc_names();
-extern unordered_map<GString, uint16_t> g_entity_rpc_name_l2s;
-extern unordered_map<uint16_t, GString> g_entity_rpc_name_s2l;
+extern unordered_map<GString, uint16_t> all_rpc_names_l2s;
+extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
 
 // entity rpc manager
 template<class EntityClassType>
@@ -174,18 +174,18 @@ public:
         get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
-    GString rpc_name_decode(Decoder& decoder) {
-        uint8_t rpc_name_s = decoder.read_uint16();
-        auto iter = g_entity_rpc_name_s2l.find(rpc_name_s);
-        ASSERT_LOG(iter != g_entity_rpc_name_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
-        return iter->second;
-    }
+    //GString rpc_name_decode(Decoder& decoder) {
+    //    uint8_t rpc_name_s = decoder.read_uint16();
+    //    auto iter = g_entity_rpc_name_s2l.find(rpc_name_s);
+    //    ASSERT_LOG(iter != g_entity_rpc_name_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+    //    return iter->second;
+    //}
 
-    void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {
-        auto iter = g_entity_rpc_name_l2s.find(rpc_name);
-        ASSERT_LOG(iter != g_entity_rpc_name_l2s.end(), "rpc.%s can not compress\n", rpc_name.c_str());
-        encoder.write_uint16(iter->second);
-    }
+    //void rpc_name_encode(Encoder& encoder, const GString& rpc_name) {
+    //    auto iter = g_entity_rpc_name_l2s.find(rpc_name);
+    //    ASSERT_LOG(iter != g_entity_rpc_name_l2s.end(), "rpc.%s can not compress\n", rpc_name.c_str());
+    //    encoder.write_uint16(iter->second);
+    //}
 
     EntityClassType* tclass;
 };

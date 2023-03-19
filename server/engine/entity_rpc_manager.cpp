@@ -1,7 +1,7 @@
 #include "entity_rpc_manager.h"
 
-unordered_map<GString, uint16_t> g_entity_rpc_name_l2s;
-unordered_map<uint16_t, GString> g_entity_rpc_name_s2l;
+unordered_map<GString, uint16_t> all_rpc_names_l2s;
+unordered_map<uint16_t, GString> all_rpc_names_s2l;
 
 GArray* get_local_entity_rpc_names() {
     // 全局变量的内存分配和构造不具备原子性，在构造之前进行的操作可能导致问题

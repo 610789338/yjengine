@@ -615,16 +615,19 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
     }
 }
 
-void CellEntityWithClient::begin_migrate(const GString& new_addr) {
+void CellEntityWithClient::begin_migrate(const GString& ignore) {
+
+    GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
+
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
-        WARN_LOG("ignore migrate to local addr\n");
+        WARN_LOG("ignore migrate, new addr(%s) equal to local addr(%s)\n", new_addr.c_str(), get_listen_addr().c_str());
         return;
     }
 
     if (new_addr == base.get_addr()) {
         // new cell addr == base addr
-        WARN_LOG("ignore migrate to base addr\n");
+        WARN_LOG("ignore migrate, new addr(%s) equal to base addr(%s)\n", new_addr.c_str(), base.get_addr().c_str());
         return;
     }
 

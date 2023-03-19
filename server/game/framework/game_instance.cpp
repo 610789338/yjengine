@@ -20,14 +20,14 @@ void heartbeat_from_gate() {
     // here do nothing
 }
 
-void HeatbeatThreadObj::operator()() {
+void HeartbeatThreadObj::operator()() {
     while (true) {
         heart_beat_check();
         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
     }
 }
 
-void HeatbeatThreadObj::heart_beat_check() {
+void HeartbeatThreadObj::heart_beat_check() {
     auto nowms = nowms_timestamp();
     vector<shared_ptr<Session>> session_tobe_remove;
     g_session_mgr.foreach_session([this, nowms, &session_tobe_remove](const GString& session_name, shared_ptr<Session> session) {
@@ -53,6 +53,7 @@ void HeatbeatThreadObj::heart_beat_check() {
 }
 
 void assist_thread_start() {
-    HeatbeatThreadObj thread_obj;
-    boost::thread t(thread_obj);
+    HeartbeatThreadObj thread_obj;
+    // TODO - open heart beat check
+    //boost::thread t(thread_obj);
 }

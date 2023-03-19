@@ -45,7 +45,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
+        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
         GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
 
         if (m_side == "server") {
@@ -91,7 +91,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
+        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
         GBin* inner_rpc = new GBin(encoder.get_buf(), encoder.get_offset());
         if (is_rpc_cache) {
             m_inner_rpc_cache.push(inner_rpc);
@@ -173,7 +173,7 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        Encoder encoder = get_entity_rpc_mgr(m_owner)->rpc_encode(rpc_name, args...);
+        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
         GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
 
         auto gate = g_session_mgr.get_gate(m_gate_addr);

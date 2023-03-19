@@ -5,6 +5,44 @@
 
 using namespace std;
 
+unordered_map<GString, uint16_t> g_rpc_names_l2s;
+unordered_map<uint16_t, GString> g_rpc_names_s2l;
+
+static void gen_global_rpc_name_turn() {
+    uint8_t idx = 0;
+    // game
+    g_rpc_names_l2s.insert(make_pair("connect_from_client", idx++));
+    g_rpc_names_l2s.insert(make_pair("disconnect_from_client", idx++));
+    g_rpc_names_l2s.insert(make_pair("regist_from_gate", idx++));
+    g_rpc_names_l2s.insert(make_pair("get_client_entity_rpc_names_ack", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_base_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_cell_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("call_base_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("call_cell_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
+    g_rpc_names_l2s.insert(make_pair("heartbeat_from_game", idx++));
+    g_rpc_names_l2s.insert(make_pair("on_game_disappear", idx++));
+    g_rpc_names_l2s.insert(make_pair("base_recover_by_disaster_backup", idx++));
+    g_rpc_names_l2s.insert(make_pair("cell_recover_by_disaster_backup", idx++));
+    // gate
+    g_rpc_names_l2s.insert(make_pair("on_remote_connected", idx++));
+    g_rpc_names_l2s.insert(make_pair("on_remote_disconnected", idx++));
+    g_rpc_names_l2s.insert(make_pair("regist_ack_from_game", idx++));
+    g_rpc_names_l2s.insert(make_pair("regist_from_client", idx++));
+    g_rpc_names_l2s.insert(make_pair("get_client_entity_rpc_names_from_game", idx++));
+    g_rpc_names_l2s.insert(make_pair("get_game_entity_rpc_names_from_client", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_client_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_client_entity_onreconnect", idx++));
+    g_rpc_names_l2s.insert(make_pair("call_client_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("heartbeat_from_gate", idx++));
+    // client
+    g_rpc_names_l2s.insert(make_pair("regist_ack_from_gate", idx++));
+    g_rpc_names_l2s.insert(make_pair("get_game_entity_rpc_names_ack", idx++));
+    for (auto iter = g_rpc_names_l2s.begin(); iter != g_rpc_names_l2s.end(); ++iter) {
+        g_rpc_names_s2l.insert(make_pair(iter->second, iter->first));
+    }
+}
+
 RpcImp::~RpcImp() {
     if (m_rpc_method) {
         delete m_rpc_method;
@@ -30,6 +68,35 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     return ret;
 }
 
+extern unordered_map<GString, uint16_t> all_rpc_names_l2s;
+extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
+
+GString RpcManagerBase::rpc_name_decode(Decoder& decoder) {
+    uint16_t rpc_name_s = decoder.read_uint16();
+
+    auto iter = all_rpc_names_s2l.find(rpc_name_s);
+    if (iter != all_rpc_names_s2l.end()) {
+        return iter->second;
+    }
+
+    auto iter2 = g_rpc_names_s2l.find(rpc_name_s);
+    ASSERT_LOG(iter2 != g_rpc_names_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+    return iter2->second;
+}
+
+void RpcManagerBase::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
+    auto iter = all_rpc_names_l2s.find(rpc_name_l);
+
+    if (iter != all_rpc_names_l2s.end()) {
+        encoder.write_uint16(iter->second);
+        return;
+    }
+
+    auto iter2 = g_rpc_names_l2s.find(rpc_name_l);
+    ASSERT_LOG(iter2 != g_rpc_names_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
+    encoder.write_uint16(iter2->second);
+}
+
 void RpcManagerBase::add_rpc_method(const GString& rpc_name, RpcMethodBase* method) {
     m_rpc_methods.emplace(rpc_name, method);
 }
@@ -42,59 +109,22 @@ RpcMethodBase* RpcManagerBase::find_rpc_method(const GString& rpc_name) {
     return iter->second;
 }
 
-RpcManager g_rpc_manager;
-
 RpcManager::RpcManager() {
-    uint8_t idx = 0;
-
-    // game
-    m_l2s.insert(make_pair("connect_from_client", idx++));
-    m_l2s.insert(make_pair("disconnect_from_client", idx++));
-    m_l2s.insert(make_pair("regist_from_gate", idx++));
-    m_l2s.insert(make_pair("get_client_entity_rpc_names_ack", idx++));
-    m_l2s.insert(make_pair("create_base_entity", idx++));
-    m_l2s.insert(make_pair("create_cell_entity", idx++));
-    m_l2s.insert(make_pair("call_base_entity", idx++));
-    m_l2s.insert(make_pair("call_cell_entity", idx++));
-    m_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
-    m_l2s.insert(make_pair("heartbeat_from_game", idx++));
-    m_l2s.insert(make_pair("on_game_disappear", idx++));
-    m_l2s.insert(make_pair("base_recover_by_disaster_backup", idx++));
-    m_l2s.insert(make_pair("cell_recover_by_disaster_backup", idx++));
-
-    // gate
-    m_l2s.insert(make_pair("on_remote_connected", idx++));
-    m_l2s.insert(make_pair("on_remote_disconnected", idx++));
-    m_l2s.insert(make_pair("regist_ack_from_game", idx++));
-    m_l2s.insert(make_pair("regist_from_client", idx++));
-    m_l2s.insert(make_pair("get_client_entity_rpc_names_from_game", idx++));
-    m_l2s.insert(make_pair("get_game_entity_rpc_names_from_client", idx++));
-    m_l2s.insert(make_pair("create_client_entity", idx++));
-    m_l2s.insert(make_pair("create_client_entity_onreconnect", idx++));
-    m_l2s.insert(make_pair("call_client_entity", idx++));
-    m_l2s.insert(make_pair("heartbeat_from_gate", idx++));
-
-    // client
-    m_l2s.insert(make_pair("regist_ack_from_gate", idx++));
-    m_l2s.insert(make_pair("get_game_entity_rpc_names_ack", idx++));
-
-    for (auto iter = m_l2s.begin(); iter != m_l2s.end(); ++iter) {
-        m_s2l.insert(make_pair(iter->second, iter->first));
-    }
+    gen_global_rpc_name_turn();
 }
 
-GString RpcManager::rpc_name_decode(Decoder& decoder) {
-    uint8_t rpc_name_s = decoder.read_uint8();
-    auto iter = m_s2l.find(rpc_name_s);
-    ASSERT_LOG(iter != m_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
-    return iter->second;
-}
+//GString RpcManager::rpc_name_decode(Decoder& decoder) {
+//    uint8_t rpc_name_s = decoder.read_uint8();
+//    auto iter = m_s2l.find(rpc_name_s);
+//    ASSERT_LOG(iter != m_s2l.end(), "rpc.%d can not decompress\n", rpc_name_s);
+//    return iter->second;
+//}
 
-void RpcManager::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
-    auto iter = m_l2s.find(rpc_name_l);
-    ASSERT_LOG(iter != m_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
-    encoder.write_uint8(iter->second);
-}
+//void RpcManager::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
+//    auto iter = m_l2s.find(rpc_name_l);
+//    ASSERT_LOG(iter != m_l2s.end(), "rpc.%s can not compress\n", rpc_name_l.c_str());
+//    encoder.write_uint8(iter->second);
+//}
 
 #define READ_PRE_CHECK(pre, max) {if( (pre) > (max) ) break;}
 uint16_t RpcManager::rpc_imp_generate(const char *buf, uint16_t length, shared_ptr<Session> session, shared_ptr<Remote> remote) {
@@ -144,7 +174,10 @@ bool RpcManager::imp_queue_empty() {
     return m_rpc_imp_queue.empty();
 }
 
-shared_ptr<RpcImp> g_cur_imp = nullptr;
+RpcManager g_rpc_manager;
+
+RemoteRpcQueueEleManager g_remote_rpc_queue_ele_mgr;
+
 void _rpc_imp_input_tick();
 void rpc_imp_input_tick() {
     if (g_rpc_manager.imp_queue_empty())
@@ -160,6 +193,7 @@ void rpc_imp_input_tick() {
     }
 }
 
+shared_ptr<RpcImp> g_cur_imp = nullptr;
 void _rpc_imp_input_tick() {
     auto imp = g_rpc_manager.imp_queue_pop();
     if (nullptr == imp) return;

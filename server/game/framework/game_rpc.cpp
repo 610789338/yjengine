@@ -38,28 +38,28 @@ void regist_from_gate(const GString& gate_listen_addr) {
     REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
 }
 
-void get_client_entity_rpc_names_ack(const GArray& client_rpc_names) {
+void get_client_entity_rpc_names_ack(const GArray& client_entity_rpc_names) {
 
-    if (client_rpc_names.empty()) {
+    if (client_entity_rpc_names.empty()) {
         auto session = g_session_mgr.get_rand_session();
         REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
         return;
     }
 
-    g_entity_rpc_name_l2s.clear();
-    g_entity_rpc_name_s2l.clear();
+    all_rpc_names_l2s.clear();
+    all_rpc_names_s2l.clear();
 
     for (size_t i = 0; i < get_local_entity_rpc_names()->size(); ++i) {
-        g_entity_rpc_name_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
+        all_rpc_names_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
     }
 
-    auto& client_rpc_name_array = client_rpc_names;
+    auto& client_rpc_name_array = client_entity_rpc_names;
     for (size_t i = 0; i < client_rpc_name_array.size(); ++i) {
-        g_entity_rpc_name_l2s.insert(make_pair(client_rpc_name_array[i].as_string(), (uint16_t)g_entity_rpc_name_l2s.size()));
+        all_rpc_names_l2s.insert(make_pair(client_rpc_name_array[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
     }
 
-    for (auto iter = g_entity_rpc_name_l2s.begin(); iter != g_entity_rpc_name_l2s.end(); ++iter) {
-        g_entity_rpc_name_s2l.insert(make_pair(iter->second, iter->first));
+    for (auto iter = all_rpc_names_l2s.begin(); iter != all_rpc_names_l2s.end(); ++iter) {
+        all_rpc_names_s2l.insert(make_pair(iter->second, iter->first));
     }
 }
 
