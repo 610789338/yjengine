@@ -352,7 +352,6 @@ void BaseEntityWithCellAndClient::on_client_reconnect_success() {
 }
 
 void BaseEntityWithCellAndClient::propertys_sync2client(bool force_all) {
-
     Encoder encoder;
     serialize_client(encoder, force_all);
     encoder.write_end();

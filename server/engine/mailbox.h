@@ -45,8 +45,10 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
-        GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
+        //const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        //GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
+
+        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
 
         if (m_side == "server") {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
@@ -91,18 +93,21 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
-        GBin* inner_rpc = new GBin(encoder.get_buf(), encoder.get_offset());
+        //const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        //GBin* inner_rpc = new GBin(encoder.get_buf(), encoder.get_offset());
+
+        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
+
         if (is_rpc_cache) {
             m_inner_rpc_cache.push(inner_rpc);
         }
         else {
             send_rpc(inner_rpc);
-            delete inner_rpc;
+            //delete inner_rpc;
         }
     }
 
-    void send_rpc(GBin* inner_rpc) {
+    void send_rpc(InnerRpcPtr inner_rpc) {
         if (m_side == "server") {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
                 m_session_cache = g_session_mgr.get_fixed_session(m_addr);
@@ -114,7 +119,7 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, *inner_rpc);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
         }
         else if (m_side == "client") {
             if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
@@ -127,7 +132,7 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, *inner_rpc);
+            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
         }
     }
 
@@ -140,7 +145,7 @@ public:
         while (!m_inner_rpc_cache.empty()) {
             auto inner_rpc = m_inner_rpc_cache.front();
             send_rpc(inner_rpc);
-            delete inner_rpc;
+            //delete inner_rpc;
             m_inner_rpc_cache.pop();
         }
         is_rpc_cache = false;
@@ -149,7 +154,7 @@ public:
     void clear_cache_rpc() {
         while (!m_inner_rpc_cache.empty()) {
             auto inner_rpc = m_inner_rpc_cache.front();
-            delete inner_rpc;
+            //delete inner_rpc;
             m_inner_rpc_cache.pop();
         }
         is_rpc_cache = false;
@@ -160,7 +165,7 @@ private:
     shared_ptr<Remote> m_remote_cache = nullptr;
 
     bool is_rpc_cache = false;
-    queue<GBin*> m_inner_rpc_cache;
+    queue<InnerRpcPtr> m_inner_rpc_cache;
 };
 
 class ClientMailBox : public MailBox {
@@ -173,8 +178,10 @@ public:
     template<class... T>
     void call(GString rpc_name, T... args) {
 
-        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
-        GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
+        //const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        //GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
+
+        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
 
         auto gate = g_session_mgr.get_gate(m_gate_addr);
         if (nullptr == gate) {

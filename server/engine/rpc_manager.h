@@ -348,13 +348,16 @@ struct RemoteRpcQueueEleBase {
     virtual Encoder encode() = 0;
 };
 
+#define GEN_INNER_RPC(rpc_name, ...) g_remote_rpc_queue_ele_mgr.gen_remote_rpc_queue_ele(rpc_name, ##__VA_ARGS__);
+typedef shared_ptr<RemoteRpcQueueEleBase> InnerRpcPtr;
+
 struct RemoteRpcQueueEle0 : public RemoteRpcQueueEleBase {
     RemoteRpcQueueEle0(const GString& _rpc_name)
         : RemoteRpcQueueEleBase(_rpc_name) {}
     virtual ~RemoteRpcQueueEle0() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name)));
     }
 };
 
@@ -365,7 +368,7 @@ struct RemoteRpcQueueEle1 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle1() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1)));
     }
 
     RMCVR(T1) t1;
@@ -378,7 +381,7 @@ struct RemoteRpcQueueEle2 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle2() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2)));
     }
 
     RMCVR(T1) t1;
@@ -392,12 +395,29 @@ struct RemoteRpcQueueEle3 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle3() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3)));
     }
 
     RMCVR(T1) t1;
     RMCVR(T2) t2;
     RMCVR(T3) t3;
+};
+
+// special for entity rpc
+struct RemoteRpcQueueEle3_Special : public RemoteRpcQueueEleBase {
+    RemoteRpcQueueEle3_Special(const GString& _rpc_name, GString _addr, GString _entity_uuid, InnerRpcPtr _inner_rpc)
+        : addr(_addr), entity_uuid(_entity_uuid), inner_rpc(_inner_rpc), RemoteRpcQueueEleBase(_rpc_name) {}
+    virtual ~RemoteRpcQueueEle3_Special() {}
+
+    virtual Encoder encode() {
+        Encoder encoder = std::move(inner_rpc->encode());
+        GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, addr, entity_uuid, inner_rpc_bin)));
+    }
+
+    GString addr;
+    GString entity_uuid;
+    shared_ptr<RemoteRpcQueueEleBase> inner_rpc;
 };
 
 template<class T1, class T2, class T3, class T4>
@@ -407,7 +427,7 @@ struct RemoteRpcQueueEle4 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle4() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4)));
     }
 
     RMCVR(T1) t1;
@@ -423,7 +443,7 @@ struct RemoteRpcQueueEle5 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle5() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5)));
     }
 
     RMCVR(T1) t1;
@@ -440,7 +460,7 @@ struct RemoteRpcQueueEle6 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle6() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6)));
     }
 
     RMCVR(T1) t1;
@@ -458,7 +478,7 @@ struct RemoteRpcQueueEle7 : public RemoteRpcQueueEleBase {
     virtual ~RemoteRpcQueueEle7() {}
 
     virtual Encoder encode() {
-        return g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6, t7);
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6, t7)));
     }
 
     RMCVR(T1) t1;
@@ -493,6 +513,11 @@ public:
     template<class T1, class T2, class T3>
     shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, T1 t1, T2 t2, T3 t3) {
         return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle3<T1, T2, T3>(rpc_name, t1, t2, t3));
+    }
+
+    // special for entity rpc
+    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, GString addr, GString entity_uuid, InnerRpcPtr inner_rpc) {
+        return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle3_Special(rpc_name, addr, entity_uuid, inner_rpc));
     }
 
     template<class T1, class T2, class T3, class T4>

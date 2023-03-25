@@ -67,7 +67,7 @@ public:
             }
         }
 
-        const Encoder& encoder = remote_rpc_queue_ele->encode();
+        Encoder encoder = std::move(remote_rpc_queue_ele->encode());
         boost::asio::async_write(
             m_socket,
             boost::asio::buffer(encoder.get_buf(), encoder.get_offset()),
@@ -96,7 +96,7 @@ public:
 
     template<class... T>
     void local_rpc_call(const GString& rpc_name, const T&... args) {
-        const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+        Encoder encoder = std::move(g_rpc_manager.rpc_encode(rpc_name, args...));
         auto imp = g_rpc_manager.rpc_decode(encoder.get_buf() + 2, encoder.get_offset() - 2);
         imp->set_remote(shared_from_this());
         g_rpc_manager.imp_queue_push(imp);

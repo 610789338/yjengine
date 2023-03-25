@@ -6,73 +6,73 @@
 
 
 void Encoder::write_bool(bool v) {
-    OFFSET_CHECK(m_offset, 1);
+    OFFSET_CHECK(1);
     *(bool*)(m_buf + m_offset) = v;
     m_offset += 1;
 }
 
 void Encoder::write_int8(int8_t v) {
-    OFFSET_CHECK(m_offset, 1);
+    OFFSET_CHECK(1);
     *(int8_t*)(m_buf + m_offset) = v;
     m_offset += 1;
 }
 
 void Encoder::write_int16(int16_t v) {
-    OFFSET_CHECK(m_offset, 2);
+    OFFSET_CHECK(2);
     *(int16_t*)(m_buf + m_offset) = v;
     m_offset += 2;
 }
 
 void Encoder::write_int32(int32_t v) {
-    OFFSET_CHECK(m_offset, 4);
+    OFFSET_CHECK(4);
     *(int32_t*)(m_buf + m_offset) = v;
     m_offset += 4;
 }
 
 void Encoder::write_int64(int64_t v) {
-    OFFSET_CHECK(m_offset, 8);
+    OFFSET_CHECK(8);
     *(int64_t*)(m_buf + m_offset) = v;
     m_offset += 8;
 }
 
 void Encoder::write_uint8(uint8_t v) {
-    OFFSET_CHECK(m_offset, 1);
+    OFFSET_CHECK(1);
     *(uint8_t*)(m_buf + m_offset) = v;
     m_offset += 1;
 }
 
 void Encoder::write_uint16(uint16_t v) {
-    OFFSET_CHECK(m_offset, 2);
+    OFFSET_CHECK(2);
     *(uint16_t*)(m_buf + m_offset) = v;
     m_offset += 2;
 }
 
 void Encoder::write_uint32(uint32_t v) {
-    OFFSET_CHECK(m_offset, 4);
+    OFFSET_CHECK(4);
     *(uint32_t*)(m_buf + m_offset) = v;
     m_offset += 4;
 }
 
 void Encoder::write_uint64(uint64_t v) {
-    OFFSET_CHECK(m_offset, 8);
+    OFFSET_CHECK(8);
     *(uint64_t*)(m_buf + m_offset) = v;
     m_offset += 8;
 }
 
 void Encoder::write_float(float v) {
-    OFFSET_CHECK(m_offset, 4);
+    OFFSET_CHECK(4);
     *(float*)(m_buf + m_offset) = v;
     m_offset += 4;
 }
 
 void Encoder::write_double(double v) {
-    OFFSET_CHECK(m_offset, 8);
+    OFFSET_CHECK(8);
     *(double*)(m_buf + m_offset) = v;
     m_offset += 8;
 }
 
 void Encoder::write_string(const GString& v) {
-    OFFSET_CHECK(m_offset, v.length() + 1);
+    OFFSET_CHECK(uint32_t(v.length() + 1));
 
     memmove(m_buf + m_offset, v.c_str(), v.length());
     memset(m_buf + m_offset + v.length(), 0, 1);  // GString end
@@ -80,8 +80,6 @@ void Encoder::write_string(const GString& v) {
 }
 
 void Encoder::write_array(const GArray& v) {
-    ASSERT(v.size() < 0xffff);
-
     write_uint16(uint16_t(v.size()));
 
     for (auto iter = v.begin(); iter != v.end(); ++iter) {
@@ -90,8 +88,6 @@ void Encoder::write_array(const GArray& v) {
 }
 
 void Encoder::write_dict(const GDict& v) {
-    ASSERT(v.size() < 0xffff);
-
     write_uint16(uint16_t(v.size()));
 
     for (auto iter = v.begin(); iter != v.end(); ++iter) {
@@ -101,10 +97,9 @@ void Encoder::write_dict(const GDict& v) {
 }
 
 void Encoder::write_bin(const GBin& v) {
-    OFFSET_CHECK(m_offset, v.size);
-
     write_uint16(uint16_t(v.size));
 
+    OFFSET_CHECK(v.size);
     memmove(m_buf + m_offset, v.buf, v.size);
     m_offset += uint16_t(v.size);
 }
