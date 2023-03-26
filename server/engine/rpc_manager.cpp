@@ -2,6 +2,7 @@
 #include "rpc_manager.h"
 #include "boost_asio.h"
 #include "log.h"
+#include "entity.h"
 
 using namespace std;
 
@@ -58,6 +59,7 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
 
     auto ret = make_shared<RpcImp>(rpc_name, iter->create_self());
+    ret->get_rpc_method()->set_rpc_name(rpc_name);
     ret->get_rpc_method()->decode(decoder);
 
     if (decoder.get_offset() < decoder.get_max_offset()) {
@@ -178,12 +180,48 @@ RpcManager g_rpc_manager;
 
 RemoteRpcQueueEleManager g_remote_rpc_queue_ele_mgr;
 
+void RpcMethod3_Special::decode(Decoder& decoder) {
+    from_client = decoder_read<bool>(decoder);
+    entity_uuid = decoder_read<GString>(decoder);
+    GBin inner_rpc_bin = decoder_read<GBin>(decoder);
+
+    Decoder inner_decoder(inner_rpc_bin.buf, inner_rpc_bin.size);
+    auto const pkg_len = inner_decoder.read_uint16();
+    Entity* entity = nullptr;
+    if (rpc_name == "call_base_entity") {
+        entity = thread_safe_get_base_entity(entity_uuid);
+        if (!entity) {
+            ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
+            return;
+        }
+    }
+    else if (rpc_name == "call_cell_entity") {
+        entity = thread_safe_get_cell_entity(entity_uuid);
+        if (!entity) {
+            ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
+            return;
+        }
+    }
+    else if (rpc_name == "call_client_entity") {
+        entity = thread_safe_get_client_entity(entity_uuid);
+        if (!entity) {
+            ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.c_str());
+            return;
+        }
+    }
+    else {
+        ASSERT_LOG("error special rpc.%s\n", rpc_name.c_str());
+    }
+
+    rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc_bin.buf + inner_decoder.get_offset(), pkg_len);
+}
+
 void _rpc_imp_input_tick();
 void rpc_imp_input_tick() {
     if (g_rpc_manager.imp_queue_empty())
         return;
 
-    int8_t max_loop = 50;
+    int8_t max_loop = 100;
     while (--max_loop > 0) {
 
         _rpc_imp_input_tick();

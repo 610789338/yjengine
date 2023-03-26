@@ -104,7 +104,25 @@ void create_client_entity_onreconnect(const GString& entity_class_name, const GS
     }
 }
 
-void call_client_entity(const GString& entity_uuid, const GBin& inner_rpc) {
+//void call_client_entity(const GString& entity_uuid, const GBin& inner_rpc) {
+//
+//    auto iter = g_client_entities.find(entity_uuid);
+//    if (iter == g_client_entities.end()) {
+//        ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.c_str());
+//        return;
+//    }
+//
+//    Entity* entity = iter->second;
+//
+//    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+//    auto const pkg_len = decoder.read_uint16();
+//    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+//
+//    DEBUG_LOG("call_client_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+//    entity->rpc_call(false, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
+//}
+
+void call_client_entity(bool placeholder, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
 
     auto iter = g_client_entities.find(entity_uuid);
     if (iter == g_client_entities.end()) {
@@ -113,13 +131,8 @@ void call_client_entity(const GString& entity_uuid, const GBin& inner_rpc) {
     }
 
     Entity* entity = iter->second;
-
-    Decoder decoder(inner_rpc.buf, inner_rpc.size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
-
     DEBUG_LOG("call_client_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
-    entity->rpc_call(false, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
+    entity->rpc_call(placeholder, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
 

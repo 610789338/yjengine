@@ -142,7 +142,43 @@ void create_cell_entity(const GString& entity_class_name, const GString& entity_
     entity->on_create(create_data);
 }
 
-void call_base_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
+//void call_base_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
+//
+//    auto iter = g_base_entities.find(entity_uuid);
+//    if (iter == g_base_entities.end()) {
+//        ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
+//        return;
+//    }
+//
+//    Entity* entity = iter->second;
+//
+//    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+//    auto const pkg_len = decoder.read_uint16();
+//    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+//
+//    DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+//    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
+//}
+//
+//void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
+//
+//    auto iter = g_cell_entities.find(entity_uuid);
+//    if (iter == g_cell_entities.end()) {
+//        ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
+//        return;
+//    }
+//
+//    Entity* entity = iter->second;
+//
+//    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+//    auto const pkg_len = decoder.read_uint16();
+//    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
+//
+//    DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
+//    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
+//}
+
+void call_base_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
 
     auto iter = g_base_entities.find(entity_uuid);
     if (iter == g_base_entities.end()) {
@@ -151,16 +187,11 @@ void call_base_entity(bool from_client, const GString& entity_uuid, const GBin& 
     }
 
     Entity* entity = iter->second;
-
-    Decoder decoder(inner_rpc.buf, inner_rpc.size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
-
     DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
     entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
-void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
+void call_cell_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
 
     auto iter = g_cell_entities.find(entity_uuid);
     if (iter == g_cell_entities.end()) {
@@ -169,11 +200,6 @@ void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& 
     }
 
     Entity* entity = iter->second;
-
-    Decoder decoder(inner_rpc.buf, inner_rpc.size);
-    auto const pkg_len = decoder.read_uint16();
-    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
-
     DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
     entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }

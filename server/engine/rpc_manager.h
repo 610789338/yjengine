@@ -46,6 +46,7 @@ private:
     shared_ptr<Remote> m_remote = nullptr;
 };
 
+typedef shared_ptr<RpcImp> InnerRpcPtr_Decode;
 
 enum RpcType {
     SERVER_ONLY,
@@ -64,10 +65,11 @@ struct RpcMethodBase {
     RpcType type = RpcType::SERVER_ONLY;
 
     virtual void decode(Decoder& decoder) {}
-    virtual void exec() {}
-    virtual void exec(void* _this) {}
+    virtual void exec() { ASSERT(false); }
+    virtual void exec(void* _this) { ASSERT(false); }
     virtual RpcMethodBase* create_self() { return nullptr; }
     virtual RpcMethodBase* copy_self() { return nullptr; }
+    virtual void set_rpc_name(const GString& rpc_name) {}
 };
 
 struct RpcMethod0 : public RpcMethodBase {
@@ -129,6 +131,23 @@ struct RpcMethod3 : public RpcMethodBase {
     }
     void exec() { cb(t1, t2, t3); }
     RpcMethodBase* create_self() { return new RpcMethod3(cb); }
+};
+
+// special for entity rpc
+struct RpcMethod3_Special : public RpcMethodBase {
+    typedef void(*CBType)(bool, const GString&, InnerRpcPtr_Decode);
+    RpcMethod3_Special(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    bool from_client;
+    GString entity_uuid;
+    InnerRpcPtr_Decode rpc_imp;
+
+    void decode(Decoder& decoder);
+    void exec() { cb(from_client, entity_uuid, rpc_imp); }
+    RpcMethodBase* create_self() { return new RpcMethod3_Special(cb); }
+
+    void set_rpc_name(const GString& _rpc_name) { rpc_name = _rpc_name; }
+    GString rpc_name;
 };
 
 template<class T1, class T2, class T3, class T4>
@@ -294,6 +313,12 @@ public:
         add_rpc_method(rpc_name, method);
     }
 
+    // special for entity rpc
+    void rpc_regist(const GString& rpc_name, void(*cb)(bool, const GString&, InnerRpcPtr_Decode)) {
+        RpcMethodBase* method = new RpcMethod3_Special(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
     template<class T1, class T2, class T3, class T4>
     void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2, T3, T4)) {
         RpcMethodBase* method = new RpcMethod4<T1, T2, T3, T4>(cb);
@@ -349,7 +374,8 @@ struct RemoteRpcQueueEleBase {
 };
 
 #define GEN_INNER_RPC(rpc_name, ...) g_remote_rpc_queue_ele_mgr.gen_remote_rpc_queue_ele(rpc_name, ##__VA_ARGS__);
-typedef shared_ptr<RemoteRpcQueueEleBase> InnerRpcPtr;
+typedef shared_ptr<RemoteRpcQueueEleBase> InnerRpcPtr_Encode;
+
 
 struct RemoteRpcQueueEle0 : public RemoteRpcQueueEleBase {
     RemoteRpcQueueEle0(const GString& _rpc_name)
@@ -405,7 +431,7 @@ struct RemoteRpcQueueEle3 : public RemoteRpcQueueEleBase {
 
 // special for entity rpc
 struct RemoteRpcQueueEle3_Special : public RemoteRpcQueueEleBase {
-    RemoteRpcQueueEle3_Special(const GString& _rpc_name, GString _addr, GString _entity_uuid, InnerRpcPtr _inner_rpc)
+    RemoteRpcQueueEle3_Special(const GString& _rpc_name, GString _addr, GString _entity_uuid, InnerRpcPtr_Encode _inner_rpc)
         : addr(_addr), entity_uuid(_entity_uuid), inner_rpc(_inner_rpc), RemoteRpcQueueEleBase(_rpc_name) {}
     virtual ~RemoteRpcQueueEle3_Special() {}
 
@@ -516,7 +542,7 @@ public:
     }
 
     // special for entity rpc
-    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, GString addr, GString entity_uuid, InnerRpcPtr inner_rpc) {
+    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, GString addr, GString entity_uuid, InnerRpcPtr_Encode inner_rpc) {
         return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle3_Special(rpc_name, addr, entity_uuid, inner_rpc));
     }
 

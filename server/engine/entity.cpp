@@ -904,6 +904,59 @@ void ClientEntity::new_cell_migrate_in(const GString& new_cell_addr) {
 unordered_map<GString, Entity*> g_base_entities; // uuid -> entity
 unordered_map<GString, Entity*> g_cell_entities; // uuid -> entity
 unordered_map<GString, Entity*> g_client_entities; // uuid -> entity
+
+boost::shared_mutex g_base_entity_mutex;
+boost::shared_mutex g_cell_entity_mutex;
+boost::shared_mutex g_client_entity_mutex;
+
+inline void thread_safe_add_base_entity(Entity* entity) {
+    unique_lock<boost::shared_mutex> lock(g_base_entity_mutex);
+    g_base_entities.insert(make_pair(entity->uuid, entity));
+}
+
+inline void thread_safe_remove_base_entity(GString entity_uuid) {
+    unique_lock<boost::shared_mutex> lock(g_base_entity_mutex);
+    g_base_entities.erase(entity_uuid);
+}
+
+inline Entity* thread_safe_get_base_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_base_entity_mutex);
+    auto iter = g_base_entities.find(entity_uuid);
+    return iter != g_base_entities.end() ? iter->second : nullptr;
+}
+
+inline void thread_safe_add_cell_entity(Entity* entity) {
+    unique_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
+    g_cell_entities.insert(make_pair(entity->uuid, entity));
+}
+
+inline void thread_safe_remove_cell_entity(GString entity_uuid) {
+    unique_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
+    g_cell_entities.erase(entity_uuid);
+}
+
+inline Entity* thread_safe_get_cell_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
+    auto iter = g_cell_entities.find(entity_uuid);
+    return iter != g_cell_entities.end() ? iter->second : nullptr;
+}
+
+inline void thread_safe_add_client_entity(Entity* entity) {
+    unique_lock<boost::shared_mutex> lock(g_client_entity_mutex);
+    g_client_entities.insert(make_pair(entity->uuid, entity));
+}
+
+inline void thread_safe_remove_client_entity(GString entity_uuid) {
+    unique_lock<boost::shared_mutex> lock(g_client_entity_mutex);
+    g_client_entities.erase(entity_uuid);
+}
+
+inline Entity* thread_safe_get_client_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_client_entity_mutex);
+    auto iter = g_client_entities.find(entity_uuid);
+    return iter != g_client_entities.end() ? iter->second : nullptr;
+}
+
 typedef unordered_map<GString, function<Entity*()>> EntityCreatorMap;
 EntityCreatorMap* get_entity_creator_map() {
     static EntityCreatorMap _entity_creator;
@@ -938,10 +991,12 @@ Entity* create_local_base_entity(const GString& entity_class_name, const GString
     if (iter != g_base_entities.end()) {
         WARN_LOG("lose base entity.%s unexcept\n", entity->uuid.c_str());
         delete iter->second;
-        g_base_entities.erase(iter);
+        //g_base_entities.erase(iter);
+        thread_safe_remove_base_entity(entity_uuid);
     }
 
-    g_base_entities.insert(make_pair(entity->uuid, entity));
+    //g_base_entities.insert(make_pair(entity->uuid, entity));
+    thread_safe_add_base_entity(entity);
 
     DEBUG_LOG("create_local_base_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
 
@@ -963,10 +1018,12 @@ Entity* create_local_cell_entity(const GString& entity_class_name, const GString
     if (iter != g_cell_entities.end()) {
         WARN_LOG("lose cell entity.%s unexcept\n", entity->uuid.c_str());
         delete iter->second;
-        g_cell_entities.erase(iter);
+        //g_cell_entities.erase(iter);
+        thread_safe_remove_cell_entity(entity_uuid);
     }
 
-    g_cell_entities.insert(make_pair(entity->uuid, entity));
+    //g_cell_entities.insert(make_pair(entity->uuid, entity));
+    thread_safe_add_cell_entity(entity);
 
     DEBUG_LOG("create_local_cell_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
 
@@ -988,10 +1045,12 @@ Entity* create_local_client_entity(const GString& entity_class_name, const GStri
     if (iter != g_client_entities.end()) {
         WARN_LOG("lose client entity.%s unexcept\n", entity->uuid.c_str());
         delete iter->second;
-        g_client_entities.erase(iter);
+        //g_client_entities.erase(iter);
+        thread_safe_remove_client_entity(entity_uuid);
     }
 
-    g_client_entities.insert(make_pair(entity->uuid, entity));
+    //g_client_entities.insert(make_pair(entity->uuid, entity));
+    thread_safe_add_client_entity(entity);
 
     DEBUG_LOG("create_local_client_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
 
@@ -1007,7 +1066,8 @@ void destroy_local_base_entity(const GString& entity_uuid) {
     const auto& entity = iter->second;
     entity->on_destroy();
     delete entity;
-    g_base_entities.erase(iter);
+    //g_base_entities.erase(iter);
+    thread_safe_remove_base_entity(entity_uuid);
 }
 
 void destroy_local_cell_entity(const GString& entity_uuid) {
@@ -1019,7 +1079,8 @@ void destroy_local_cell_entity(const GString& entity_uuid) {
     const auto& entity = iter->second;
     entity->on_destroy();
     delete entity;
-    g_cell_entities.erase(iter);
+    //g_cell_entities.erase(iter);
+    thread_safe_remove_cell_entity(entity_uuid);
 }
 
 void destroy_local_client_entity(const GString& entity_uuid) {
@@ -1031,7 +1092,8 @@ void destroy_local_client_entity(const GString& entity_uuid) {
     const auto& entity = iter->second;
     entity->on_destroy();
     delete entity;
-    g_client_entities.erase(iter);
+    //g_client_entities.erase(iter);
+    thread_safe_remove_client_entity(entity_uuid);
 }
 
 RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {

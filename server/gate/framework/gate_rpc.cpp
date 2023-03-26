@@ -166,7 +166,7 @@ void call_client_entity(const GString& client_addr, const GString& entity_uuid, 
 
     //INFO_LOG("call_client_entity %s\n", entity_uuid.c_str());
 
-    REMOTE_RPC_CALL(session, "call_client_entity", entity_uuid, inner_rpc);
+    REMOTE_RPC_CALL(session, "call_client_entity", /*placeholder for rpc decode*/false, entity_uuid, inner_rpc);
 }
 
 void base_recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_class_name, 

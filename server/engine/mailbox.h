@@ -107,7 +107,7 @@ public:
         }
     }
 
-    void send_rpc(InnerRpcPtr inner_rpc) {
+    void send_rpc(InnerRpcPtr_Encode inner_rpc) {
         if (m_side == "server") {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
                 m_session_cache = g_session_mgr.get_fixed_session(m_addr);
@@ -165,7 +165,7 @@ private:
     shared_ptr<Remote> m_remote_cache = nullptr;
 
     bool is_rpc_cache = false;
-    queue<InnerRpcPtr> m_inner_rpc_cache;
+    queue<InnerRpcPtr_Encode> m_inner_rpc_cache;
 };
 
 class ClientMailBox : public MailBox {
