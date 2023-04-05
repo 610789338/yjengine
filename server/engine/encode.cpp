@@ -161,3 +161,12 @@ void Encoder::write_gvalue(const GValue& v) {
 void Encoder::write_end() {
     *(uint16_t*)m_buf = m_offset - 2; // pkg len = total offset - 2
 }
+
+void Encoder::move_to_bin(GBin& bin) {
+    bin.release();
+    bin.buf = m_buf;
+    bin.size = m_offset;
+
+    m_buf = nullptr;
+    m_offset = 0;
+}

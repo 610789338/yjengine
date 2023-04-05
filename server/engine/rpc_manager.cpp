@@ -76,9 +76,12 @@ extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
 GString RpcManagerBase::rpc_name_decode(Decoder& decoder) {
     uint16_t rpc_name_s = decoder.read_uint16();
 
-    auto iter = all_rpc_names_s2l.find(rpc_name_s);
-    if (iter != all_rpc_names_s2l.end()) {
-        return iter->second;
+    {
+        shared_lock<boost::shared_mutex> lock(g_rpc_name_turn_mutex);
+        auto iter = all_rpc_names_s2l.find(rpc_name_s);
+        if (iter != all_rpc_names_s2l.end()) {
+            return iter->second;
+        }
     }
 
     auto iter2 = g_rpc_names_s2l.find(rpc_name_s);
@@ -87,11 +90,13 @@ GString RpcManagerBase::rpc_name_decode(Decoder& decoder) {
 }
 
 void RpcManagerBase::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
-    auto iter = all_rpc_names_l2s.find(rpc_name_l);
-
-    if (iter != all_rpc_names_l2s.end()) {
-        encoder.write_uint16(iter->second);
-        return;
+    {
+        shared_lock<boost::shared_mutex> lock(g_rpc_name_turn_mutex);
+        auto iter = all_rpc_names_l2s.find(rpc_name_l);
+        if (iter != all_rpc_names_l2s.end()) {
+            encoder.write_uint16(iter->second);
+            return;
+        }
     }
 
     auto iter2 = g_rpc_names_l2s.find(rpc_name_l);

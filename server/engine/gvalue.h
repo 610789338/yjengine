@@ -78,6 +78,7 @@ public:
         if (buf != nullptr) {
             delete[]buf;
             buf = nullptr;
+            size = 0;
         }
     }
 

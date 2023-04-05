@@ -437,7 +437,9 @@ struct RemoteRpcQueueEle3_Special : public RemoteRpcQueueEleBase {
 
     virtual Encoder encode() {
         Encoder encoder = std::move(inner_rpc->encode());
-        GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
+        GBin inner_rpc_bin;
+        encoder.move_to_bin(inner_rpc_bin);
+        //GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
         return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, addr, entity_uuid, inner_rpc_bin)));
     }
 

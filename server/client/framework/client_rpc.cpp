@@ -42,20 +42,24 @@ void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
         return;
     }
 
-    all_rpc_names_l2s.clear();
-    all_rpc_names_s2l.clear();
+    {
+        unique_lock<boost::shared_mutex> lock(g_rpc_name_turn_mutex);
 
-    auto& game_entity_rpc_name_array = game_entity_rpc_names;
-    for (size_t i = 0; i < game_entity_rpc_name_array.size(); ++i) {
-        all_rpc_names_l2s.insert(make_pair(game_entity_rpc_name_array[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
-    }
+        all_rpc_names_l2s.clear();
+        all_rpc_names_s2l.clear();
 
-    for (size_t i = 0; i < get_local_entity_rpc_names()->size(); ++i) {
-        all_rpc_names_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
-    }
+        auto& game_entity_rpc_name_array = game_entity_rpc_names;
+        for (size_t i = 0; i < game_entity_rpc_name_array.size(); ++i) {
+            all_rpc_names_l2s.insert(make_pair(game_entity_rpc_name_array[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
+        }
 
-    for (auto iter = all_rpc_names_l2s.begin(); iter != all_rpc_names_l2s.end(); ++iter) {
-        all_rpc_names_s2l.insert(make_pair(iter->second, iter->first));
+        for (size_t i = 0; i < get_local_entity_rpc_names()->size(); ++i) {
+            all_rpc_names_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
+        }
+
+        for (auto iter = all_rpc_names_l2s.begin(); iter != all_rpc_names_l2s.end(); ++iter) {
+            all_rpc_names_s2l.insert(make_pair(iter->second, iter->first));
+        }
     }
 
     if (g_client_instance->get_should_call_create()) {

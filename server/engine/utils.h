@@ -41,4 +41,5 @@ char* str_format(const char* format, Args... args) {
 }
 
 extern int32_t ini_get_int(const char* node_name, const char* child_name, int32_t _default = 0xF0F00F0F);
+extern float ini_get_float(const char* node_name, const char* child_name, float _default = 0xF0F00F0F);
 extern string ini_get_string(const char* node_name, const char* child_name, string _default = "");

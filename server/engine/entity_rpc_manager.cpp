@@ -2,6 +2,7 @@
 
 unordered_map<GString, uint16_t> all_rpc_names_l2s;
 unordered_map<uint16_t, GString> all_rpc_names_s2l;
+boost::shared_mutex g_rpc_name_turn_mutex;
 
 GArray* get_local_entity_rpc_names() {
     // 全局变量的内存分配和构造不具备原子性，在构造之前进行的操作可能导致问题

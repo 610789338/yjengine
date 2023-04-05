@@ -416,7 +416,8 @@ void BaseEntityWithCellAndClient::base_disaster_backup(const GBin& cell_all_db, 
     Encoder self_all_db;
     serialize_all(self_all_db);
     self_all_db.write_end();
-    disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
+    self_all_db.move_to_bin(disaster_backup_of_self);
+    //disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
     packet_migrate_data(disaster_backup_of_self_migrate_data);
 
     disaster_backup_of_cell = std::move(cell_all_db);

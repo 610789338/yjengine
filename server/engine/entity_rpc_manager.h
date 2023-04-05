@@ -113,6 +113,7 @@ struct EntityRpcMethod5 : public RpcMethodBase {
 extern GArray* get_local_entity_rpc_names();
 extern unordered_map<GString, uint16_t> all_rpc_names_l2s;
 extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
+extern boost::shared_mutex g_rpc_name_turn_mutex;
 
 // entity rpc manager
 template<class EntityClassType>

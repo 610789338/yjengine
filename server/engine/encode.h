@@ -127,5 +127,7 @@ public:
     const char* get_buf() const { return m_buf; }
     uint16_t get_offset() const { return m_offset; }
 
+    void move_to_bin(GBin& bin);
+
     void write_gvalue(const GValue& v);
 };

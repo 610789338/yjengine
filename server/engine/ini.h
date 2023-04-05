@@ -18,6 +18,7 @@ public:
 
     void parser_ini(const char* ini_file);
     int32_t get_int(const char* node_name, const char* child_name);
+    float get_float(const char* node_name, const char* child_name);
     GString get_string(const char* node_name, const char* child_name);
 
 private:
