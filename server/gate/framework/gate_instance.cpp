@@ -1,4 +1,5 @@
 #include "engine/utils.h"
+#include "engine/log.h"
 
 #include "gate_instance.h"
 
@@ -16,6 +17,7 @@ BaseGateInstance* g_gate_instance = nullptr;
 void create_gate_instance() {
     g_gate_instance = (BaseGateInstance*)create_local_base_entity("GateInstance", gen_uuid());
     g_gate_instance->on_create(GDict());
+    g_gate_instance->ready();
 }
 
 void heartbeat_from_game() {
@@ -23,17 +25,10 @@ void heartbeat_from_game() {
     // here do nothing
 }
 
-void HeartbeatThreadObj::operator()() {
-    while (true) {
-        heart_beat_check();
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-    }
-}
-
-void HeartbeatThreadObj::heart_beat_check() {
+void heart_beat_tick() {
     auto nowms = nowms_timestamp();
     vector<shared_ptr<Remote>> remote_tobe_remove;
-    g_remote_mgr.foreach_remote([this, nowms, &remote_tobe_remove](const GString& remote_name, shared_ptr<Remote> remote) {
+    g_remote_mgr.foreach_remote([nowms, &remote_tobe_remove](const GString& remote_name, shared_ptr<Remote> remote) {
         if (remote->get_last_active_time() != 0 && remote->get_last_active_time() + 3000 < nowms) {
             // 3s³¬Ê±
             remote->close();
@@ -54,8 +49,15 @@ void HeartbeatThreadObj::heart_beat_check() {
     }
 }
 
+void assist_thread() {
+    while (true) {
+        // TODO - open heart beat check
+        // heart_beat_tick();
+        log_queue_tick();
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+}
+
 void assist_thread_start() {
-    HeartbeatThreadObj thread_obj;
-    // TODO - open heart beat check
-    //boost::thread t(thread_obj);
+    boost::thread t(assist_thread);
 }

@@ -22,12 +22,3 @@ public:
 };
 
 extern BaseGameInstance* g_game_instance;
-
-class HeartbeatThreadObj {
-public:
-    HeartbeatThreadObj() {}
-    ~HeartbeatThreadObj(){}
-
-    void operator()();
-    void heart_beat_check();
-};

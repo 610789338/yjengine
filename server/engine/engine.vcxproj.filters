@@ -114,5 +114,6 @@
     </ClCompile>
     <ClCompile Include="entity_property_tree.cpp" />
     <ClCompile Include="entity_event_manager.cpp" />
+    <ClCompile Include="log.cpp" />
   </ItemGroup>
 </Project>

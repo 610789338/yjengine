@@ -433,7 +433,10 @@ public:
 template<class EntityClassType>
 class TimerManager : public TimerManagerBase {
 public:
-    TimerManager() { EntityClassType::migrate_timer_define(); }
+    TimerManager() {
+        EntityClassType::migrate_timer_def_inside();
+        EntityClassType::migrate_timer_define(); 
+    }
 
     EntityClassType* tclass;
 };
@@ -443,3 +446,14 @@ public:
 #define CANCEL_TIMER(timer_id) cancel_timer(timer_id)
 #define MIGRATE_TIMER_DEF(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
 #define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)
+
+#define MIGRATE_TIMER_DEF_INSIDE(TCLASS) \
+    static void migrate_timer_def_inside() { \
+        EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
+        if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
+            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &BaseEntityWithCell::heart_beat_timer); \
+        } \
+        else if (entity_type == EntityType::EntityType_CellWithClient) { \
+            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &CellEntityWithClient::heart_beat_timer); \
+        } \
+    }

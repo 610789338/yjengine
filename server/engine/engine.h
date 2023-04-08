@@ -22,12 +22,13 @@ public: \
     static EntityRpcManager<TCLASS> rpc_manager; \
     RpcManagerBase* get_rpc_mgr() { return &rpc_manager; } \
     RpcMethodBase* find_rpc_method(const GString& rpc_name) { return rpc_manager.find_rpc_method(rpc_name); } \
-    RPC_METHOD_DEFINE_BASE(TCLASS); \
-    RPC_CALL_DEFINE(TCLASS) \
+    RPC_METHOD_DEFINE_INSIDE(TCLASS); \
+    RPC_CALL_DEFINE(TCLASS); \
     static EntityComponentManager<TCLASS> component_manager; \
     ComponentManagerBase* get_comp_mgr() { return &component_manager; } \
     static TimerManager<TCLASS> timer_manager; \
     TimerManagerBase* get_timer_manager() { return &timer_manager; } \
+    MIGRATE_TIMER_DEF_INSIDE(TCLASS); \
     static PropertyTree property_tree; \
     static void generate_property_tree(); \
     int16_t prop_str2int(const GString& prop_name) { return property_manager.s2i_map.at(prop_name); } \

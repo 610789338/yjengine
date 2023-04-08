@@ -123,7 +123,7 @@ public:
     EntityRpcManager() = delete;
     EntityRpcManager(const GString& entity_class_name, const function<Entity*()>& creator) {
         regist_entity_creator(entity_class_name, creator);
-        EntityClassType::rpc_method_define_base();
+        EntityClassType::rpc_method_define_inside();
         EntityClassType::rpc_method_define();
     }
 
@@ -208,8 +208,8 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     rpc_method->exec((void*)this); \
 }
 
-#define RPC_METHOD_DEFINE_BASE(TCLASS) \
-    static void rpc_method_define_base() { \
+#define RPC_METHOD_DEFINE_INSIDE(TCLASS) \
+    static void rpc_method_define_inside() { \
         EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
         if (entity_type == EntityType::EntityType_BaseWithCell) { \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCell::on_cell_create); \

@@ -257,11 +257,12 @@ void BaseEntityWithCell::create_heart_beat_timer() {
 void BaseEntityWithCell::heart_beat_timer() {
     cell.call("respect_from_base");
 
+    auto now = now_timestamp();
     if (last_respect_from_cell == 0) {
-        last_respect_from_cell = now_timestamp();
+        last_respect_from_cell = now;
     }
 
-    if (now_timestamp() - last_respect_from_cell > 60) {
+    if (now - last_respect_from_cell > 60) {
         WARN_LOG("%s lose touch with cell\n", uuid.c_str());
         destroy_self();
     }
@@ -704,7 +705,8 @@ void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
     client.call("new_cell_migrate_in", get_listen_addr());
     is_ready = true;
 
-    create_heart_beat_timer();
+    // move to timer restore
+    //create_heart_beat_timer();
 }
 
 void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
@@ -828,7 +830,8 @@ void CellEntityWithClient::recover_by_disaster_backup(const GString& base_addr, 
     is_ready = true;
     propertys_sync2client(true);
 
-    create_heart_beat_timer();
+    // move to timer restore
+    //create_heart_beat_timer();
 }
 
 void CellEntityWithClient::base_recover_by_disaster_backup_success(const GString& base_addr) {

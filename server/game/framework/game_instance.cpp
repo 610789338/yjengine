@@ -1,4 +1,5 @@
 #include "engine/utils.h"
+#include "engine/log.h"
 
 #include "game_instance.h"
 
@@ -13,6 +14,7 @@ BaseGameInstance* g_game_instance = nullptr;
 void create_game_instance() {
     g_game_instance = (BaseGameInstance*)create_local_base_entity("GameInstance", gen_uuid());
     g_game_instance->on_create(GDict());
+    g_game_instance->ready();
 }
 
 void heartbeat_from_gate() {
@@ -20,17 +22,10 @@ void heartbeat_from_gate() {
     // here do nothing
 }
 
-void HeartbeatThreadObj::operator()() {
-    while (true) {
-        heart_beat_check();
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-    }
-}
-
-void HeartbeatThreadObj::heart_beat_check() {
+void heart_beat_tick() {
     auto nowms = nowms_timestamp();
     vector<shared_ptr<Session>> session_tobe_remove;
-    g_session_mgr.foreach_session([this, nowms, &session_tobe_remove](const GString& session_name, shared_ptr<Session> session) {
+    g_session_mgr.foreach_session([nowms, &session_tobe_remove](const GString& session_name, shared_ptr<Session> session) {
         if (session->get_last_active_time() != 0 && session->get_last_active_time() + 3000 < nowms) {
             // 3s超时，断开连接
             session->close();
@@ -52,8 +47,15 @@ void HeartbeatThreadObj::heart_beat_check() {
     }
 }
 
+void assist_thread() {
+    while (true) {
+        // TODO - open heart beat check
+        // heart_beat_tick();
+        log_queue_tick();
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+}
+
 void assist_thread_start() {
-    HeartbeatThreadObj thread_obj;
-    // TODO - open heart beat check
-    //boost::thread t(thread_obj);
+    boost::thread t(assist_thread);
 }

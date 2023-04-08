@@ -22,12 +22,3 @@ public:
 };
 
 extern BaseGateInstance* g_gate_instance;
-
-class HeartbeatThreadObj {
-public:
-    HeartbeatThreadObj() {}
-    ~HeartbeatThreadObj() {}
-
-    void operator()();
-    void heart_beat_check();
-};
