@@ -384,6 +384,6 @@ extern void destroy_local_base_entity(const GString& entity_uuid);
 extern void destroy_local_cell_entity(const GString& entity_uuid);
 extern void destroy_local_client_entity(const GString& entity_uuid);
 
-extern Entity* thread_safe_get_base_entity(GString entity_uuid);
-extern Entity* thread_safe_get_cell_entity(GString entity_uuid);
-extern Entity* thread_safe_get_client_entity(GString entity_uuid);
+extern RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid);
+extern RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid);
+extern RpcManagerBase* thread_safe_get_client_entity_rpcmgr(GString entity_uuid);

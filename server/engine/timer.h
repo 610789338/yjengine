@@ -449,6 +449,8 @@ public:
 
 #define MIGRATE_TIMER_DEF_INSIDE(TCLASS) \
     static void migrate_timer_def_inside() { \
+        timer_manager.store_timer_cb_for_migrate("time_to_save", &TCLASS::time_to_save); \
+        timer_manager.store_timer_cb_for_migrate("time_to_disaster_backup", &TCLASS::time_to_disaster_backup); \
         EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
         if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
             timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &BaseEntityWithCell::heart_beat_timer); \

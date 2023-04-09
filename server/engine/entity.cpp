@@ -452,13 +452,6 @@ void BaseEntityWithCellAndClient::recover_by_disaster_backup(const GString& cell
 
     is_ready = true;
     propertys_sync2client(true);
-
-    if (need_create_save_timer()) {
-        create_dbsave_timer();
-        create_disater_backup_timer();
-    }
-
-    create_heart_beat_timer();
 }
 
 void BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success(const GString& cell_addr) {
@@ -923,10 +916,10 @@ inline void thread_safe_remove_base_entity(GString entity_uuid) {
     g_base_entities.erase(entity_uuid);
 }
 
-inline Entity* thread_safe_get_base_entity(GString entity_uuid) {
+inline RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_base_entity_mutex);
     auto iter = g_base_entities.find(entity_uuid);
-    return iter != g_base_entities.end() ? iter->second : nullptr;
+    return iter != g_base_entities.end() ? iter->second->rpc_mgr : nullptr;
 }
 
 inline void thread_safe_add_cell_entity(Entity* entity) {
@@ -939,10 +932,10 @@ inline void thread_safe_remove_cell_entity(GString entity_uuid) {
     g_cell_entities.erase(entity_uuid);
 }
 
-inline Entity* thread_safe_get_cell_entity(GString entity_uuid) {
+inline RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
     auto iter = g_cell_entities.find(entity_uuid);
-    return iter != g_cell_entities.end() ? iter->second : nullptr;
+    return iter != g_cell_entities.end() ? iter->second->rpc_mgr : nullptr;
 }
 
 inline void thread_safe_add_client_entity(Entity* entity) {
@@ -955,10 +948,10 @@ inline void thread_safe_remove_client_entity(GString entity_uuid) {
     g_client_entities.erase(entity_uuid);
 }
 
-inline Entity* thread_safe_get_client_entity(GString entity_uuid) {
+inline RpcManagerBase* thread_safe_get_client_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_client_entity_mutex);
     auto iter = g_client_entities.find(entity_uuid);
-    return iter != g_client_entities.end() ? iter->second : nullptr;
+    return iter != g_client_entities.end() ? iter->second->rpc_mgr : nullptr;
 }
 
 typedef unordered_map<GString, function<Entity*()>> EntityCreatorMap;

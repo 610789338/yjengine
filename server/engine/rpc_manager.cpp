@@ -192,24 +192,24 @@ void RpcMethod3_Special::decode(Decoder& decoder) {
 
     Decoder inner_decoder(inner_rpc_bin.buf, inner_rpc_bin.size);
     auto const pkg_len = inner_decoder.read_uint16();
-    Entity* entity = nullptr;
+    RpcManagerBase* rpcmgr = nullptr;
     if (rpc_name == "call_base_entity") {
-        entity = thread_safe_get_base_entity(entity_uuid);
-        if (!entity) {
+        rpcmgr = thread_safe_get_base_entity_rpcmgr(entity_uuid);
+        if (!rpcmgr) {
             ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
             return;
         }
     }
     else if (rpc_name == "call_cell_entity") {
-        entity = thread_safe_get_cell_entity(entity_uuid);
-        if (!entity) {
+        rpcmgr = thread_safe_get_cell_entity_rpcmgr(entity_uuid);
+        if (!rpcmgr) {
             ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
             return;
         }
     }
     else if (rpc_name == "call_client_entity") {
-        entity = thread_safe_get_client_entity(entity_uuid);
-        if (!entity) {
+        rpcmgr = thread_safe_get_client_entity_rpcmgr(entity_uuid);
+        if (!rpcmgr) {
             ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.c_str());
             return;
         }
@@ -218,7 +218,7 @@ void RpcMethod3_Special::decode(Decoder& decoder) {
         ASSERT_LOG("error special rpc.%s\n", rpc_name.c_str());
     }
 
-    rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc_bin.buf + inner_decoder.get_offset(), pkg_len);
+    rpc_imp = rpcmgr->rpc_decode(inner_rpc_bin.buf + inner_decoder.get_offset(), pkg_len);
 }
 
 void _rpc_imp_input_tick();
