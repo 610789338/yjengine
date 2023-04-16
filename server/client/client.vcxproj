@@ -131,6 +131,7 @@
     <ClCompile Include="framework\client_instance.cpp" />
     <ClCompile Include="framework\client_rpc.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />
+    <ClCompile Include="gameplay\entities\avatar.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
@@ -138,6 +139,7 @@
   <ItemGroup>
     <ClInclude Include="framework\client_instance.h" />
     <ClInclude Include="gameplay\entities\account.h" />
+    <ClInclude Include="gameplay\entities\avatar.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

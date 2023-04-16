@@ -16,6 +16,9 @@
     <ClInclude Include="utils\utils.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="prop_def\avatar_prop_def.h">
+      <Filter>prop_def</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils\utils.cpp">

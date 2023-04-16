@@ -137,12 +137,15 @@
     <ClCompile Include="gameplay\components\create_avatar_component.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />
     <ClCompile Include="gameplay\entities\account_prop_test.cpp" />
+    <ClCompile Include="gameplay\entities\avatar.cpp" />
+    <ClCompile Include="gameplay\entities\avatar_prop_test.cpp" />
     <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework\game_instance.h" />
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
+    <ClInclude Include="gameplay\entities\avatar.h" />
     <ClInclude Include="gameplay\game_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

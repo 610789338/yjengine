@@ -19,6 +19,7 @@ using namespace std;
 enum EntityType : int8_t {
     EntityType_Base,  // stub
     EntityType_BaseWithCell,  // monster
+    EntityType_BaseWithClient,  // account
     EntityType_BaseWithCellAndClient,  // player
     EntityType_Cell,  // monster
     EntityType_CellWithClient,  // player
@@ -184,7 +185,7 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void create_cell(const GDict& create_data);
     virtual void on_cell_create(const GString& cell_addr);
-    virtual void ready() { Entity::ready(); } // must exist
+    virtual void ready(); // must exist
     virtual void create_heart_beat_timer();
     virtual void heart_beat_timer();
     virtual void respect_from_cell();
@@ -196,6 +197,32 @@ public:
 
     CellMailBox cell;
     int64_t last_respect_from_cell = 0;
+};
+
+class BaseEntityWithClient : public BaseEntity {
+public:
+    enum {
+        ENTITY_TYPE = EntityType::EntityType_BaseWithClient
+    };
+
+public:
+    BaseEntityWithClient() { client.set_owner(this); }
+    virtual ~BaseEntityWithClient() {}
+
+    virtual void on_create(const GDict& create_data);
+    virtual void ready_check_timer();
+    virtual void create_client();
+    virtual void ready(); // must exist
+    virtual void destroy_self();
+    virtual void on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr);
+    virtual void on_client_reconnect_success();
+    virtual void on_destroy() {}
+    virtual void propertys_sync2client(bool force_all);
+    virtual void kick_client();
+
+    virtual void real_time_to_save();
+
+    ClientMailBox client;
 };
 
 class BaseEntityWithCellAndClient : public BaseEntityWithCell {

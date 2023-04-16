@@ -215,6 +215,9 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCell::on_cell_create); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "respect_from_cell", &BaseEntityWithCell::respect_from_cell); \
         } \
+        else if (entity_type == EntityType::EntityType_BaseWithClient) { \
+            rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithClient::ready); \
+        } \
         else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "on_cell_create", &BaseEntityWithCellAndClient::on_cell_create); \
             rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "on_client_reconnect_success", &BaseEntityWithCellAndClient::on_client_reconnect_success); \

@@ -23,6 +23,9 @@
       <Filter>framework</Filter>
     </ClCompile>
     <ClCompile Include="client_app.cpp" />
+    <ClCompile Include="gameplay\entities\avatar.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
@@ -33,6 +36,9 @@
     </ClInclude>
     <ClInclude Include="framework\client_instance.h">
       <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\entities\avatar.h">
+      <Filter>gameplay\entities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -19,14 +19,11 @@ public:
     ~ClientGameInstance() {}
 
     void on_gate_disappear(const GString& gate_addr);
-    void set_controller(Entity* entity);
-    Entity* get_controller();
 
     void set_should_call_create(bool should_call_create);
     bool get_should_call_create();
 
 private:
-    Entity* m_controller = nullptr;
     bool m_should_call_create = true;
 };
 

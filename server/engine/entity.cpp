@@ -250,6 +250,16 @@ void BaseEntityWithCell::on_cell_create(const GString& cell_addr) {
     ready();
 }
 
+void BaseEntityWithCell::ready() {
+    // ready通知意味base/cell entity都创建好了
+    if (is_ready) {
+        return;
+    }
+
+    Entity::ready();
+    cell.call("ready");
+}
+
 void BaseEntityWithCell::create_heart_beat_timer() {
     heart_beat_timerid = REGIST_TIMER_INNER(0, 45, true, "heart_beat_timer", &BaseEntityWithCell::heart_beat_timer);
 }
@@ -280,6 +290,118 @@ void BaseEntityWithCell::migrate_req_from_cell() {
 void BaseEntityWithCell::new_cell_migrate_in(const GString& new_cell_addr) {
     cell.set_entity_and_addr(cell.get_entity_uuid(), new_cell_addr);
     cell.stop_cache_rpc();
+}
+
+void BaseEntityWithClient::on_create(const GDict& create_data) {
+    Entity::on_create(create_data);
+
+    client.set_entity_and_addr(uuid, create_data.at("client_addr").as_string());
+    client.set_gate_addr(create_data.at("gate_addr").as_string());
+
+    create_client();
+}
+
+void BaseEntityWithClient::ready_check_timer() {
+    if (!is_ready) {
+        destroy_self();
+        client.call("destroy_self");
+    }
+}
+
+void BaseEntityWithClient::create_client() {
+    // game -> gate -> client
+    auto gate = g_session_mgr.get_gate(client.get_gate_addr());
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
+        /*entity uuid*/ uuid,
+        /*base addr*/ gate->get_local_addr(),
+        /*cell addr*/ ""
+    );
+}
+
+void BaseEntityWithClient::ready() {
+    // ready通知意味base/client entity都创建好了
+    if (is_ready) {
+        return;
+    }
+
+    Entity::ready();
+    client.call("ready");
+}
+
+void BaseEntityWithClient::destroy_self() {
+    Entity::destroy_self();
+}
+
+void BaseEntityWithClient::on_reconnect_fromclient(const GString& client_addr, const GString& gate_addr) {
+    INFO_LOG("[base] entity.%s reconnect from client\n", client.get_entity_uuid().c_str());
+
+    // kick old client
+    kick_client();
+
+    // recover client mailbox
+    client.set_entity_and_addr(client.get_entity_uuid(), client_addr);
+    client.set_gate_addr(gate_addr);
+
+    // create new client
+    auto gate = g_session_mgr.get_gate(gate_addr);
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
+        /*uuid*/ uuid,
+        /*base addr*/ get_listen_addr(),
+        /*cell addr*/ ""
+    );
+}
+
+void BaseEntityWithClient::on_client_reconnect_success() {
+    // 对于服务端，登陆会收到ready通知，断线重连会收到on_client_reconnect_success通知
+    // 对于客户端，无论是登陆还是断线重连，只有ready通知，也就是说客户端对断线重连是无感的
+    if (!is_ready) {
+        // 如果是登陆流程中途客户端断线，重连上来后重新走ready通知
+        ready();
+    }
+    else {
+        propertys_sync2client(true);
+        client.call("ready");
+    }
+}
+
+void BaseEntityWithClient::propertys_sync2client(bool force_all) {
+    Encoder encoder;
+    serialize_client(encoder, force_all);
+    encoder.write_end();
+
+    if (encoder.anything()) {
+        //byte_print(encoder.get_buf(), encoder.get_offset()); // TODO delete
+        client.call("prop_sync_from_base", GBin(encoder.get_buf(), encoder.get_offset()));
+    }
+}
+
+void BaseEntityWithClient::kick_client() {
+    client.call("on_kick");
+}
+
+void BaseEntityWithClient::real_time_to_save() {
+    // rpc to cell
+    Encoder base_db;
+    serialize_db(base_db);
+    base_db.write_end();
+
+    GBin base_bin;
+    base_db.move_to_bin(base_bin);
+
+    Encoder db;
+    db.write_bin(base_bin);
+    db.write_end();
+
+    // TODO - move to child thread
+    GString db_file_name = "./db/" + uuid + ".bin";
+    auto fp = fopen(db_file_name.c_str(), "wb");
+    if (fp == nullptr) {
+        ERROR_LOG("save - open db file %s error\n", db_file_name.c_str());
+        return;
+    }
+    fwrite(db.get_buf(), db.get_offset(), 1, fp);
+    fclose(fp);
+    return;
 }
 
 void BaseEntityWithCellAndClient::on_create(const GDict& create_data) {
@@ -619,11 +741,11 @@ void CellEntityWithClient::begin_migrate(const GString& ignore) {
         return;
     }
 
-    if (new_addr == base.get_addr()) {
-        // new cell addr == base addr
-        WARN_LOG("ignore migrate, new addr(%s) equal to base addr(%s)\n", new_addr.c_str(), base.get_addr().c_str());
-        return;
-    }
+    //if (new_addr == base.get_addr()) {
+    //    // new cell addr == base addr
+    //    WARN_LOG("ignore migrate, new addr(%s) equal to base addr(%s)\n", new_addr.c_str(), base.get_addr().c_str());
+    //    return;
+    //}
 
     if (!is_ready) {
         return;
@@ -756,7 +878,8 @@ void CellEntityWithClient::cell_real_time_to_save(const GString& base_uuid, cons
     serialize_db(cell_db);
     cell_db.write_end();
 
-    GBin cell_bin(cell_db.get_buf(), cell_db.get_offset());
+    GBin cell_bin;
+    cell_db.move_to_bin(cell_bin);
 
     Encoder db;
     db.write_bin(base_bin);

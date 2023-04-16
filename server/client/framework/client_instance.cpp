@@ -8,16 +8,7 @@ extern void connect_gate();
 GENERATE_ENTITY_OUT(ClientGameInstance);
 
 void ClientGameInstance::on_gate_disappear(const GString& gate_addr) {
-    //m_controller->on_gate_disappear(gate_addr);
     connect_gate();
-}
-
-void ClientGameInstance::set_controller(Entity* entity) {
-    m_controller = entity;
-}
-
-Entity* ClientGameInstance::get_controller() {
-    return m_controller;
 }
 
 void ClientGameInstance::set_should_call_create(bool should_call_create) {

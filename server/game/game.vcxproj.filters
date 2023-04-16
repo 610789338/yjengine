@@ -37,6 +37,12 @@
     <ClCompile Include="gameplay\entities\account_prop_test.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\avatar.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
+    <ClCompile Include="gameplay\entities\avatar_prop_test.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -50,6 +56,9 @@
     </ClInclude>
     <ClInclude Include="framework\game_instance.h">
       <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\entities\avatar.h">
+      <Filter>gameplay\entities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
