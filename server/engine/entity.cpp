@@ -502,14 +502,14 @@ void BaseEntityWithCellAndClient::new_cell_migrate_in(const GString& new_cell_ad
 }
 
 void BaseEntityWithCellAndClient::real_time_to_disaster_backup() {
+    Encoder self_all_db;
+    serialize_all(self_all_db);
+    self_all_db.write_end();
+    self_all_db.move_to_bin(disaster_backup_of_self);
+    //disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
+    packet_migrate_data(disaster_backup_of_self_migrate_data);
 
-    Encoder base_all_db;
-    serialize_all(base_all_db);
-    base_all_db.write_end();
-
-    GDict base_migrate_data;
-    packet_migrate_data(base_migrate_data);
-    cell.call("cell_disaster_backup", GBin(base_all_db.get_buf(), base_all_db.get_offset()), base_migrate_data);
+    cell.call("cell_disaster_backup", disaster_backup_of_self, disaster_backup_of_self_migrate_data);
 }
 
 void BaseEntityWithCellAndClient::packet_migrate_data(GDict& migrate_data) {
@@ -536,19 +536,17 @@ void BaseEntityWithCellAndClient::unpacket_migrate_data(const GDict& migrate_dat
 }
 
 void BaseEntityWithCellAndClient::base_disaster_backup(const GBin& cell_all_db, const GDict& cell_migrate_data) {
-    Encoder self_all_db;
-    serialize_all(self_all_db);
-    self_all_db.write_end();
-    self_all_db.move_to_bin(disaster_backup_of_self);
-    //disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
-    packet_migrate_data(disaster_backup_of_self_migrate_data);
-
     disaster_backup_of_cell = std::move(cell_all_db);
     disaster_backup_of_cell_migrate_data = cell_migrate_data;
 }
 
 void BaseEntityWithCellAndClient::on_game_disappear(const GString& game_addr) {
     if (cell.get_addr() != game_addr) {
+        return;
+    }
+
+    if (disaster_backup_of_cell.size == 0 || disaster_backup_of_cell_migrate_data.size() == 0) {
+        ERROR_LOG("try backup cell fail %s %s\n", disaster_backup_of_cell.size == 0, disaster_backup_of_cell_migrate_data.size());
         return;
     }
 
@@ -574,6 +572,8 @@ void BaseEntityWithCellAndClient::recover_by_disaster_backup(const GString& cell
 
     is_ready = true;
     propertys_sync2client(true);
+
+    real_time_to_disaster_backup();
 }
 
 void BaseEntityWithCellAndClient::cell_recover_by_disaster_backup_success(const GString& cell_addr) {
@@ -811,6 +811,8 @@ void CellEntityWithClient::packet_migrate_data(GDict& migrate_data) {
     migrate_data.insert(make_pair("timers", migrate_timers));
     migrate_data.insert(make_pair("next_timer_id", next_timer_id));
     migrate_data.insert(make_pair("last_respect_from_base", last_respect_from_base));
+    migrate_data.insert(make_pair("disaster_backup_of_base", disaster_backup_of_base));
+    migrate_data.insert(make_pair("disaster_backup_of_base_migrate_data", disaster_backup_of_base_migrate_data));
 }
 
 void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
@@ -835,6 +837,8 @@ void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
     last_respect_from_base = migrate_data.at("last_respect_from_base").as_int64();
+    disaster_backup_of_base = migrate_data.at("disaster_backup_of_base").as_bin();
+    disaster_backup_of_base_migrate_data = migrate_data.at("disaster_backup_of_base_migrate_data").as_dict();
 }
 
 void CellEntityWithClient::on_new_cell_migrate_finish() {
@@ -905,10 +909,11 @@ void CellEntityWithClient::cell_disaster_backup(const GBin& base_all_db, const G
     Encoder self_all_db;
     serialize_all(self_all_db);
     self_all_db.write_end();
-    disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
+    self_all_db.move_to_bin(disaster_backup_of_self);
+    //disaster_backup_of_self = std::move(GBin(self_all_db.get_buf(), self_all_db.get_offset()));
     packet_migrate_data(disaster_backup_of_self_migrate_data);
 
-    base.call("base_disaster_backup", GBin(self_all_db.get_buf(), self_all_db.get_offset()), disaster_backup_of_self_migrate_data);
+    base.call("base_disaster_backup", disaster_backup_of_self, disaster_backup_of_self_migrate_data);
 }
 
 void CellEntityWithClient::on_game_disappear(const GString& game_addr) {
@@ -920,6 +925,11 @@ void CellEntityWithClient::on_game_disappear(const GString& game_addr) {
         CANCEL_TIMER(migrate_check_timer_id);
         ready_check_timerid = 0;
         migrate_failed_rollback("on_game_disappear");
+    }
+
+    if (disaster_backup_of_base.size == 0 || disaster_backup_of_base_migrate_data.size() == 0) {
+        ERROR_LOG("try backup base fail %s %s\n", disaster_backup_of_base.size == 0, disaster_backup_of_base_migrate_data.size());
+        return;
     }
 
     // base recover by disaster backup

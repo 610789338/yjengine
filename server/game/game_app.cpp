@@ -33,7 +33,9 @@ int main(int argc, char* args[]) {
 
     init(argc, args);
 
-    INFO_LOG("main tick start\n");
+    auto _id = boost::this_thread::get_id();
+    GString thread_id = boost::lexical_cast<GString>(_id);
+    INFO_LOG("main tick start.0x%s\n", thread_id.c_str());
     main_tick(100);
     INFO_LOG("end\n");
 
