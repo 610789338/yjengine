@@ -11,6 +11,7 @@ void ClientAccount::on_ready() {
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, client_rpc_timer);
 
     base.call("create_avatar");
+    //base.call("create_monster");
 }
 
 void ClientAccount::msg_from_base(const GString& msg) {

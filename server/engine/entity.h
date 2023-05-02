@@ -79,6 +79,7 @@ public:
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
     bool need_create_save_timer();
+    bool need_create_disater_backup_timer();
     virtual void create_dbsave_timer() { ASSERT(false); }
     virtual void create_disater_backup_timer() { ASSERT(false); }
     double get_db_save_interval();
@@ -183,20 +184,38 @@ public:
     virtual ~BaseEntityWithCell() {}
 
     virtual void on_create(const GDict& create_data);
+    virtual void ready_check_timer();
     virtual void create_cell(const GDict& create_data);
     virtual void on_cell_create(const GString& cell_addr);
     virtual void ready(); // must exist
+    virtual void destroy_self();
     virtual void create_heart_beat_timer();
     virtual void heart_beat_timer();
     virtual void respect_from_cell();
     virtual void on_destroy() {}
 
+    virtual void real_time_to_save();
+    virtual void real_time_to_disaster_backup();
+
     // migrate
     virtual void migrate_req_from_cell();
     virtual void new_cell_migrate_in(const GString& new_cell_addr);
+    virtual void packet_migrate_data(GDict& migrate_data);
+    virtual void unpacket_migrate_data(const GDict& migrate_data);
+
+    // disaster backup
+    virtual void base_disaster_backup(const GBin& cell_all_db, const GDict& cell_migrate_data);
+    virtual void on_game_disappear(const GString& game_addr);
+    virtual void recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr);
+    virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
 
     CellMailBox cell;
     int64_t last_respect_from_cell = 0;
+
+    GBin disaster_backup_of_self;
+    GDict disaster_backup_of_self_migrate_data;
+    GBin disaster_backup_of_cell;
+    GDict disaster_backup_of_cell_migrate_data;
 };
 
 class BaseEntityWithClient : public BaseEntity {
@@ -237,6 +256,7 @@ public:
 
     virtual void on_create(const GDict& create_data);
     virtual void ready_check_timer();
+    virtual void create_cell(const GDict& create_data);
     virtual void on_cell_create(const GString& cell_addr);
     virtual void create_client();
     virtual void ready(); // must exist
@@ -250,10 +270,9 @@ public:
     virtual void real_time_to_save();
     virtual void real_time_to_disaster_backup();
 
-    void new_cell_migrate_in(const GString& new_cell_addr);
-
     // migrate
     void migrate_req_from_cell() { BaseEntityWithCell::migrate_req_from_cell(); }
+    void new_cell_migrate_in(const GString& new_cell_addr);
     void packet_migrate_data(GDict& migrate_data);
     void unpacket_migrate_data(const GDict& migrate_data);
 
@@ -264,10 +283,6 @@ public:
     virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
 
     ClientMailBox client;
-    GBin disaster_backup_of_self;
-    GDict disaster_backup_of_self_migrate_data;
-    GBin disaster_backup_of_cell;
-    GDict disaster_backup_of_cell_migrate_data;
 };
 
 
@@ -282,16 +297,37 @@ public:
     CellEntity() { base.set_owner(this); }
     virtual ~CellEntity() {}
 
-    virtual void on_create(const GDict& create_data) {}
+    virtual void on_create(const GDict& create_data);
+    virtual void ready_check_timer();
     virtual void ready() { Entity::ready(); } // must exist
+    virtual void create_heart_beat_timer();
+    virtual void heart_beat_timer();
+    virtual void respect_from_base();
     virtual void on_destroy() {}
+    virtual void destroy_self();
 
     // migrate
-    virtual void begin_migrate(const GString& new_addr);
+    virtual void begin_migrate(const GString& ignore);
     virtual void migrate_reqack_from_base(bool is_ok);
     virtual void real_begin_migrate();
     virtual void migrate_entity();
+    virtual void on_migrate_out(GDict& migrate_data);
+    virtual void packet_migrate_data(GDict& migrate_data);
+    virtual void on_migrate_in(const GDict& migrate_data);
+    virtual void unpacket_migrate_data(const GDict& migrate_data);
     virtual void on_new_cell_migrate_finish();
+
+    void migrate_check_timer();
+    void migrate_failed_rollback(const GString& reason);
+
+    // db save
+    void cell_real_time_to_save(const GString& base_uuid, const GBin& base_bin);
+
+    // disaster backup
+    virtual void cell_disaster_backup(const GBin& base_all_db, const GDict& base_migrate_data);
+    virtual void on_game_disappear(const GString& game_addr);
+    virtual void recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr);
+    virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
 
     BaseMailBox base;
 
@@ -304,6 +340,8 @@ public:
     GDict disaster_backup_of_base_migrate_data;
     GBin  disaster_backup_of_self;
     GDict disaster_backup_of_self_migrate_data;
+
+    int64_t last_respect_from_base = 0;
 };
 
 class CellEntityWithClient : public CellEntity {
@@ -313,9 +351,7 @@ public:
     };
 
 public:
-    CellEntityWithClient() {
-        client.set_owner(this);
-    }
+    CellEntityWithClient() { client.set_owner(this); }
     virtual ~CellEntityWithClient() {}
 
     virtual void on_create(const GDict& create_data);
@@ -355,7 +391,6 @@ public:
 
     ClientMailBox client;
     bool is_reqack_from_client = false;
-    int64_t last_respect_from_base = 0;
 };
 
 // ------------------------------- client ------------------------------- //

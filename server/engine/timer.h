@@ -452,10 +452,16 @@ public:
         timer_manager.store_timer_cb_for_migrate("time_to_save", &TCLASS::time_to_save); \
         timer_manager.store_timer_cb_for_migrate("time_to_disaster_backup", &TCLASS::time_to_disaster_backup); \
         EntityType entity_type = (EntityType)TCLASS::ENTITY_TYPE; \
-        if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
+        if (entity_type == EntityType::EntityType_BaseWithCell) { \
             timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &BaseEntityWithCell::heart_beat_timer); \
         } \
+        else if (entity_type == EntityType::EntityType_BaseWithCellAndClient) { \
+            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &BaseEntityWithCell::heart_beat_timer); \
+        } \
+        else if (entity_type == EntityType::EntityType_Cell) { \
+            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &CellEntity::heart_beat_timer); \
+        } \
         else if (entity_type == EntityType::EntityType_CellWithClient) { \
-            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &CellEntityWithClient::heart_beat_timer); \
+            timer_manager.store_timer_cb_for_migrate("heart_beat_timer", &CellEntity::heart_beat_timer); \
         } \
     }

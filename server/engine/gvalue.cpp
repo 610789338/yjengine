@@ -29,10 +29,10 @@ GValue::GValue(const GValue& rs) {
         m_v.s = new GString(rs.as_string());
         break;
     case ARRAY_T:
-        m_v.array = new GArray(std::move(rs.as_array()));
+        m_v.array = new GArray(rs.as_array());
         break;
     case DICT_T:
-        m_v.dict = new GDict(std::move(rs.as_dict()));
+        m_v.dict = new GDict(rs.as_dict());
         break;
     case BIN_T:
         m_v.bin = new GBin(rs.as_bin());

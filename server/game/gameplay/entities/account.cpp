@@ -28,6 +28,10 @@ void BaseAccount::create_avatar() {
     create_base_entity("Avatar", client.get_addr(), client.get_gate_addr(), "");
 }
 
+void BaseAccount::create_monster() {
+    create_base_entity("Monster", "", "", "");
+}
+
 void BaseAccount::msg_from_client(const GString& msg) {
     //INFO_LOG("[base] msg.%s from client\n", msg.c_str()); 
 }   

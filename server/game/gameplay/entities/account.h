@@ -16,13 +16,13 @@ class BaseAccount : public BaseEntityWithClient {
     }
     static void rpc_method_define() {
         RPC_METHOD(RpcType::EXPOSED, create_avatar);
+        RPC_METHOD(RpcType::EXPOSED, create_monster);
         RPC_METHOD(RpcType::EXPOSED, msg_from_client);
     }
     static void property_define() {
         account_property_define<BaseAccount>();
     }
-    static void migrate_timer_define() {
-    }
+    static void migrate_timer_define() {}
 
 public:
     BaseAccount() {}
@@ -31,6 +31,7 @@ public:
     void on_ready(); // call by engine
 
     void create_avatar();
+    void create_monster();
 
     void msg_from_client(const GString& msg);
 
