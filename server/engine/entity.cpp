@@ -228,8 +228,16 @@ void Entity::add_timer(TimerBase* timer) {
 }
 
 void Entity::remove_timer(TimerBase* timer) {
-    timers.erase(timer);
+    size_t erase_num = timers.erase(timer);
     timer_ids.erase(timer->m_id);
+
+    if (timer->m_cb_name == "base_rpc_timer") {
+        int a = 10;
+    }
+
+    if (erase_num > 1) {
+        WARN_LOG("@@@@@@@@@@@@@@@@ erase_num.%d\n", erase_num);
+    }
 }
 
 void BaseEntity::on_create(const GDict& create_data) {

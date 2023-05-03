@@ -48,7 +48,9 @@ struct TimerBase {
 class TimerCompare {
 public:
     bool operator()(const TimerBase* ls, const TimerBase* rs) const {
-        return ls->m_expiration < rs->m_expiration;
+        // 当timer相等时，multiset.erase(value)不止删除一个
+        // 所以在m_expiration相等情况下再比较id，确保timer不会相等
+        return ls->m_expiration != rs->m_expiration ? ls->m_expiration < rs->m_expiration : ls->m_id < rs->m_id;
     }
 };
 
