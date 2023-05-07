@@ -1,8 +1,8 @@
 // 反序列化模块
-// 暂未处理大小端
 
 #include "decode.h"
 #include "log.h"
+#include "byte_swap.h"
 
 Decoder::Decoder(const char* buf, uint16_t max_offset) {
     m_buf = buf;
@@ -35,7 +35,7 @@ int16_t Decoder::read_int16() {
 
     int16_t v = *(int16_t*)(m_buf + m_offset);
     m_offset += 2;
-    return v;
+    return byte_swap(v);
 }
 
 int32_t Decoder::read_int32() {
@@ -43,7 +43,7 @@ int32_t Decoder::read_int32() {
 
     int32_t v = *(int32_t*)(m_buf + m_offset);
     m_offset += 4;
-    return v;
+    return byte_swap(v);
 }
 
 int64_t Decoder::read_int64() {
@@ -51,7 +51,7 @@ int64_t Decoder::read_int64() {
 
     int64_t v = *(int64_t*)(m_buf + m_offset);
     m_offset += 8;
-    return v;
+    return byte_swap(v);
 }
 
 uint8_t Decoder::read_uint8() {
@@ -67,7 +67,7 @@ uint16_t Decoder::read_uint16() {
 
     uint16_t v = *(uint16_t*)(m_buf + m_offset);
     m_offset += 2;
-    return v;
+    return byte_swap(v);
 }
 
 uint32_t Decoder::read_uint32() {
@@ -75,7 +75,7 @@ uint32_t Decoder::read_uint32() {
 
     uint32_t v = *(uint32_t*)(m_buf + m_offset);
     m_offset += 4;
-    return v;
+    return byte_swap(v);
 }
 
 uint64_t Decoder::read_uint64() {
@@ -83,7 +83,7 @@ uint64_t Decoder::read_uint64() {
 
     uint64_t v = *(uint64_t*)(m_buf + m_offset);
     m_offset += 8;
-    return v;
+    return byte_swap(v);
 }
 
 float Decoder::read_float() {
@@ -91,7 +91,7 @@ float Decoder::read_float() {
 
     float v = *(float*)(m_buf + m_offset);
     m_offset += 4;
-    return v;
+    return byte_swap(v);
 }
 
 double Decoder::read_double() {
@@ -99,7 +99,7 @@ double Decoder::read_double() {
 
     double v = *(double*)(m_buf + m_offset);
     m_offset += 8;
-    return v;
+    return byte_swap(v);
 }
 
 GString Decoder::read_string() {

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost_asio.h" />
+    <ClInclude Include="byte_swap.h" />
     <ClInclude Include="entity_component_manager.h" />
     <ClInclude Include="decode.h" />
     <ClInclude Include="encode.h" />

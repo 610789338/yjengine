@@ -106,6 +106,18 @@ uint32_t bkdr_hash(const char* str) {
 
 extern void engine_tick();
 void main_tick(const int64_t ms_pertick = 100) {
+
+    auto _id = boost::this_thread::get_id();
+    GString thread_id = boost::lexical_cast<GString>(_id);
+
+    union {
+        int i;
+        char c;
+    }un;
+    un.i = 1;
+
+    INFO_LOG("main tick start - main thread.0x%s, %s endian\n", thread_id.c_str(), un.c == 1 ? "little" : "big");
+
     auto const tick_origin = nowms_timestamp(false);
     int32_t loop_num = 0;
 
@@ -129,6 +141,8 @@ void main_tick(const int64_t ms_pertick = 100) {
 
         ++loop_num;
     }
+
+    INFO_LOG("main tick end\n");
 }
 
 string get_listen_addr() {

@@ -110,6 +110,114 @@ struct EntityRpcMethod5 : public RpcMethodBase {
     RpcMethodBase* create_self() { return new EntityRpcMethod5(cb); }
 };
 
+template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6>
+struct EntityRpcMethod6 : public RpcMethodBase {
+    typedef void(TEntity::*CBType)(T1, T2, T3, T4, T5, T6);
+    EntityRpcMethod6(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
+    }
+    void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4, t5, t6); }
+    RpcMethodBase* create_self() { return new EntityRpcMethod6(cb); }
+};
+
+template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+struct EntityRpcMethod7 : public RpcMethodBase {
+    typedef void(TEntity::*CBType)(T1, T2, T3, T4, T5, T6, T7);
+    EntityRpcMethod7(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
+        t7 = decoder_read<RMCVR(T7)>(decoder);
+    }
+    void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4, t5, t6, t7); }
+    RpcMethodBase* create_self() { return new EntityRpcMethod7(cb); }
+};
+
+template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+struct EntityRpcMethod8 : public RpcMethodBase {
+    typedef void(TEntity::*CBType)(T1, T2, T3, T4, T5, T6, T7, T8);
+    EntityRpcMethod8(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+    RMCVR(T8) t8;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
+        t7 = decoder_read<RMCVR(T7)>(decoder);
+        t8 = decoder_read<RMCVR(T8)>(decoder);
+    }
+    void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4, t5, t6, t7, t8); }
+    RpcMethodBase* create_self() { return new EntityRpcMethod8(cb); }
+};
+
+template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
+struct EntityRpcMethod9 : public RpcMethodBase {
+    typedef void(TEntity::*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9);
+    EntityRpcMethod9(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+    RMCVR(T8) t8;
+    RMCVR(T9) t9;
+
+    void decode(Decoder& decoder) {
+        t1 = decoder_read<RMCVR(T1)>(decoder);
+        t2 = decoder_read<RMCVR(T2)>(decoder);
+        t3 = decoder_read<RMCVR(T3)>(decoder);
+        t4 = decoder_read<RMCVR(T4)>(decoder);
+        t5 = decoder_read<RMCVR(T5)>(decoder);
+        t6 = decoder_read<RMCVR(T6)>(decoder);
+        t7 = decoder_read<RMCVR(T7)>(decoder);
+        t8 = decoder_read<RMCVR(T8)>(decoder);
+        t9 = decoder_read<RMCVR(T9)>(decoder);
+    }
+    void exec(void* _this) { (((TEntity*)_this)->*cb)(t1, t2, t3, t4, t5, t6, t7, t8, t9); }
+    RpcMethodBase* create_self() { return new EntityRpcMethod9(cb); }
+};
+
 extern GArray* get_local_entity_rpc_names();
 extern unordered_map<GString, uint16_t> all_rpc_names_l2s;
 extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
@@ -170,6 +278,38 @@ public:
     template<class TEntity, class T1, class T2, class T3, class T4, class T5>
     void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T1, T2, T3, T4, T5)) {
         RpcMethodBase* method = new EntityRpcMethod5<TEntity, T1, T2, T3, T4, T5>(cb);
+        method->type = entity_rpc_type;
+        add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6>
+    void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T1, T2, T3, T4, T5, T6)) {
+        RpcMethodBase* method = new EntityRpcMethod6<TEntity, T1, T2, T3, T4, T5, T6>(cb);
+        method->type = entity_rpc_type;
+        add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+    void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T1, T2, T3, T4, T5, T6, T7)) {
+        RpcMethodBase* method = new EntityRpcMethod7<TEntity, T1, T2, T3, T4, T5, T6, T7>(cb);
+        method->type = entity_rpc_type;
+        add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+    void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T1, T2, T3, T4, T5, T6, T7, T8)) {
+        RpcMethodBase* method = new EntityRpcMethod8<TEntity, T1, T2, T3, T4, T5, T6, T7, T8>(cb);
+        method->type = entity_rpc_type;
+        add_rpc_method(rpc_name, method);
+        get_local_entity_rpc_names()->push_back(rpc_name);
+    }
+
+    template<class TEntity, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
+    void entity_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntity::*cb)(T1, T2, T3, T4, T5, T6, T7, T8, T9)) {
+        RpcMethodBase* method = new EntityRpcMethod9<TEntity, T1, T2, T3, T4, T5, T6, T7, T8, T9>(cb);
         method->type = entity_rpc_type;
         add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);

@@ -518,6 +518,47 @@ struct RemoteRpcQueueEle7 : public RemoteRpcQueueEleBase {
     RMCVR(T7) t7;
 };
 
+template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+struct RemoteRpcQueueEle8 : public RemoteRpcQueueEleBase {
+    RemoteRpcQueueEle8(const GString& _rpc_name, T1 _t1, T2 _t2, T3 _t3, T4 _t4, T5 _t5, T6 _t6, T7 _t7, T8 _t8)
+        : t1(_t1), t2(_t2), t3(_t3), t4(_t4), t5(_t5), t6(_t6), t7(_t7), t8(_t8), RemoteRpcQueueEleBase(_rpc_name) {}
+    virtual ~RemoteRpcQueueEle8() {}
+
+    virtual Encoder encode() {
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6, t7, t8)));
+    }
+
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+    RMCVR(T8) t8;
+};
+
+template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
+struct RemoteRpcQueueEle9 : public RemoteRpcQueueEleBase {
+    RemoteRpcQueueEle9(const GString& _rpc_name, T1 _t1, T2 _t2, T3 _t3, T4 _t4, T5 _t5, T6 _t6, T7 _t7, T8 _t8, T9 _t9)
+        : t1(_t1), t2(_t2), t3(_t3), t4(_t4), t5(_t5), t6(_t6), t7(_t7), t8(_t8), t9(_t9), RemoteRpcQueueEleBase(_rpc_name) {}
+    virtual ~RemoteRpcQueueEle9() {}
+
+    virtual Encoder encode() {
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, t1, t2, t3, t4, t5, t6, t7, t8, t9)));
+    }
+
+    RMCVR(T1) t1;
+    RMCVR(T2) t2;
+    RMCVR(T3) t3;
+    RMCVR(T4) t4;
+    RMCVR(T5) t5;
+    RMCVR(T6) t6;
+    RMCVR(T7) t7;
+    RMCVR(T8) t8;
+    RMCVR(T9) t9;
+};
+
 
 class RemoteRpcQueueEleManager {
 public:
@@ -566,6 +607,16 @@ public:
     template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
     shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7) {
         return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle7<T1, T2, T3, T4, T5, T6, T7>(rpc_name, t1, t2, t3, t4, t5, t6, t7));
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) {
+        return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle8<T1, T2, T3, T4, T5, T6, T7, T8>(rpc_name, t1, t2, t3, t4, t5, t6, t7, t8));
+    }
+
+    template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
+    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9) {
+        return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle9<T1, T2, T3, T4, T5, T6, T7, T8, T9>(rpc_name, t1, t2, t3, t4, t5, t6, t7, t8, t9));
     }
 };
 

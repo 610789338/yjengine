@@ -1,8 +1,8 @@
 // 序列化模块
-// 暂未处理大小端
 
 #include "encode.h"
 #include "log.h"
+#include "byte_swap.h"
 
 
 void Encoder::write_bool(bool v) {
@@ -19,19 +19,19 @@ void Encoder::write_int8(int8_t v) {
 
 void Encoder::write_int16(int16_t v) {
     OFFSET_CHECK(2);
-    *(int16_t*)(m_buf + m_offset) = v;
+    *(int16_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 2;
 }
 
 void Encoder::write_int32(int32_t v) {
     OFFSET_CHECK(4);
-    *(int32_t*)(m_buf + m_offset) = v;
+    *(int32_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 4;
 }
 
 void Encoder::write_int64(int64_t v) {
     OFFSET_CHECK(8);
-    *(int64_t*)(m_buf + m_offset) = v;
+    *(int64_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 8;
 }
 
@@ -43,31 +43,31 @@ void Encoder::write_uint8(uint8_t v) {
 
 void Encoder::write_uint16(uint16_t v) {
     OFFSET_CHECK(2);
-    *(uint16_t*)(m_buf + m_offset) = v;
+    *(uint16_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 2;
 }
 
 void Encoder::write_uint32(uint32_t v) {
     OFFSET_CHECK(4);
-    *(uint32_t*)(m_buf + m_offset) = v;
+    *(uint32_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 4;
 }
 
 void Encoder::write_uint64(uint64_t v) {
     OFFSET_CHECK(8);
-    *(uint64_t*)(m_buf + m_offset) = v;
+    *(uint64_t*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 8;
 }
 
 void Encoder::write_float(float v) {
     OFFSET_CHECK(4);
-    *(float*)(m_buf + m_offset) = v;
+    *(float*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 4;
 }
 
 void Encoder::write_double(double v) {
     OFFSET_CHECK(8);
-    *(double*)(m_buf + m_offset) = v;
+    *(double*)(m_buf + m_offset) = byte_swap(v);
     m_offset += 8;
 }
 
@@ -159,7 +159,7 @@ void Encoder::write_gvalue(const GValue& v) {
 }
 
 void Encoder::write_end() {
-    *(uint16_t*)m_buf = m_offset - 2; // pkg len = total offset - 2
+    *(uint16_t*)m_buf = byte_swap(uint16_t(m_offset - 2)); // pkg len = total offset - 2
 }
 
 void Encoder::move_to_bin(GBin& bin) {

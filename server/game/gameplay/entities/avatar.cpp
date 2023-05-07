@@ -41,7 +41,12 @@ void BaseAvatar::msg_from_cell(const GString& msg) {
 }
 
 void BaseAvatar::msg_from_client(const GString& msg) {
-    INFO_LOG("[base] msg.%s from client\n", msg.c_str()); 
+    INFO_LOG("[base] msg.%s from client\n", msg.c_str());
+}
+
+void BaseAvatar::byte_swap_test(const GString& msg, int16_t arg1, int32_t arg2, int64_t arg3, float arg4, uint16_t arg5, uint32_t arg6, uint64_t arg7, double arg8) {
+    INFO_LOG("[base] msg.%s from client arg1.%d arg2.%d arg3.%lld arg4.%f arg5.%u arg6.%u arg7.%llu arg8.%llf\n", 
+        msg.c_str(), arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 void BaseAvatar::avatar_timer_test(const GString& arg1) {

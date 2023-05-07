@@ -65,6 +65,9 @@
     <ClInclude Include="entity_event_manager.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="byte_swap.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boost_asio.cpp">

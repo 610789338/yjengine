@@ -50,9 +50,7 @@ int main(int argc, char* args[]) {
 
     connect_game();
 
-    INFO_LOG("main tick start\n");
     main_tick(100);
-    INFO_LOG("end\n");
 
     return 0;
 }

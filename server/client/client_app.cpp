@@ -72,9 +72,7 @@ int main(int argc, char* args[]) {
     // linux下boost asio先run再connect会阻塞...
     engine_init();
 
-    INFO_LOG("main tick start\n");
     main_tick(100);
-    INFO_LOG("end\n");
 
     return 0;
 }
