@@ -405,7 +405,7 @@ static void regist_components() {
     REGIST_COMPONENT(BaseAccount, CreateAvatarComponent);
 }
 ```
-component支持定义自己的rpc，定时器，以及属性（TODO），使component和entity解耦，做到component可插拔
+component支持定义自己的rpc，定时器，以及属性，使component和entity解耦，做到component可插拔
 
 ### component的定义
 ```
@@ -416,6 +416,8 @@ class CreateAvatarComponent : public EntityComponentBase {
         COMP_RPC_METHOD(RpcType::EXPOSED, component_rpc_test);
     }
 
+    COMP_PROPERTY_DEFINE() { ... }
+
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(component_timer_test);
     }
@@ -423,9 +425,10 @@ class CreateAvatarComponent : public EntityComponentBase {
     virtual void on_ready() { ... }
 };
 ```
-component继承自EntityComponentBase类，和entity类似，component的定义也类不开以下宏和方法：
+component继承自EntityComponentBase类，和entity类似，component的定义也离不开以下宏和方法：
 * GENERATE_COMPONENT_INNER - component的一些通用定义
 * COMP_RPC_DEFINE - component的rpc定义
+* COMP_PROPERTY_DEFINE - component的属性定义
 * COMP_MIGRATE_TIMER_DEFINE - 使component定时器支持迁移
 * on_ready - 一般用于注册component定时器和事件
 

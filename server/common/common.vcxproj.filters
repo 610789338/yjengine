@@ -8,6 +8,9 @@
     <Filter Include="utils">
       <UniqueIdentifier>{99a21ea6-eaaa-4194-9d56-6edac6aac6af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="prop_def\components">
+      <UniqueIdentifier>{fee5b974-286b-4387-a428-2d9a3576d7e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="prop_def\account_prop_def.h">
@@ -18,6 +21,9 @@
     </ClInclude>
     <ClInclude Include="prop_def\avatar_prop_def.h">
       <Filter>prop_def</Filter>
+    </ClInclude>
+    <ClInclude Include="prop_def\components\itembag_prop_def.h">
+      <Filter>prop_def\components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 
-struct AvatarData;
 
 class CreateAvatarComponent : public EntityComponentBase {
 
@@ -15,6 +14,8 @@ class CreateAvatarComponent : public EntityComponentBase {
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(component_timer_test);
     }
+
+    COMP_PROPERTY_DEFINE() {}
 
 public:
     CreateAvatarComponent() {}

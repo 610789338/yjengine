@@ -36,11 +36,13 @@ void ClientAvatar::prop_sync_compare(const GBin& v) {
         ASSERT_LOG(false, "server buf != client buf\n");
     }
 
-    INFO_LOG("prop syc compare %d.%d\n", server_len, client_len);
+    INFO_LOG("prop sync compare %d.%d\n", server_len, client_len);
 }
 
 void ClientAvatar::on_prop_sync_from_server() {
+#ifndef __PROP_SYNC_TEST__
     avatar_datas_print(get_prop("avatar_datas"));
+#endif
 }
 
 void ClientAvatar::avatar_migrate_timer() {

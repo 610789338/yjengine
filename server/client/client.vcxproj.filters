@@ -11,6 +11,9 @@
     <Filter Include="gameplay\entities">
       <UniqueIdentifier>{c010911b-5d63-4439-92ce-e86f5f21367e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gameplay\components">
+      <UniqueIdentifier>{05f62830-2d30-495b-b38e-b9a1c5bbec23}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framework\client_rpc.cpp">
@@ -26,6 +29,9 @@
     <ClCompile Include="gameplay\entities\avatar.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\components\itembag_component_client.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
@@ -39,6 +45,9 @@
     </ClInclude>
     <ClInclude Include="gameplay\entities\avatar.h">
       <Filter>gameplay\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\itembag_component_client.h">
+      <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

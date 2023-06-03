@@ -207,6 +207,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     component->set_owner(nullptr); \
     component_manager.component_regist(component); \
     TEntityComp::rpc_method_define<TEntity>(); \
+    TEntityComp::property_define<TEntity>(); \
     TEntityComp::migrate_timer_define<TEntity>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
@@ -224,4 +225,5 @@ public: \
     EventManagerBase* get_event_manager() { return &event_manager; }
 
 #define COMP_RPC_DEFINE template<class TEntity> static void rpc_method_define
+#define COMP_PROPERTY_DEFINE template<class TEntity> static void property_define
 #define COMP_MIGRATE_TIMER_DEFINE template<class TEntity> static void migrate_timer_define

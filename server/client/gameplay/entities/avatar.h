@@ -1,6 +1,9 @@
 #pragma once
 
 #include "engine/engine.h"
+
+#include "../components/itembag_component_client.h"
+
 #include "common/prop_def/avatar_prop_def.h"
 #include "common/utils/utils.h"
 
@@ -9,7 +12,9 @@ class ClientAvatar : public ClientEntity {
 
     GENERATE_ENTITY_INNER(ClientAvatar);
 
-    static void regist_components() {}
+    static void regist_components() {
+        REGIST_COMPONENT(ClientAvatar, ItemBagComponentClient);
+    }
     static void rpc_method_define() {
         RPC_METHOD(RpcType::CLIENT, msg_from_base);
         RPC_METHOD(RpcType::CLIENT, msg_from_cell);

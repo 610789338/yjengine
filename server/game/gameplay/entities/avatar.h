@@ -2,6 +2,8 @@
 
 #include "engine/engine.h"
 
+#include "../components/itembag_component.h"
+
 #include "common/prop_def/avatar_prop_def.h"
 #include "common/utils/utils.h"
 
@@ -11,6 +13,7 @@ class BaseAvatar : public BaseEntityWithCellAndClient {
     GENERATE_ENTITY_INNER(BaseAvatar);
 
     static void regist_components() {
+        REGIST_COMPONENT(BaseAvatar, ItemBagComponent);
     }
     static void rpc_method_define() {
         RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
