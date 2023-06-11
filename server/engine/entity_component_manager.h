@@ -23,6 +23,7 @@ public:
 
     virtual void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
     EntityPropertyBase* get_prop(const GString& prop_name) const;
+    EntityPropertyBase& get_prop_ref(const GString& prop_name) const;
 
     // event
     virtual EventManagerBase* get_event_manager() { return nullptr; }

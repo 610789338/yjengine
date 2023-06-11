@@ -21,7 +21,7 @@ void ClientAvatar::msg_from_cell(const GString& msg) {
 }
 
 void ClientAvatar::prop_sync_compare(const GBin& v) {
-    
+
     Encoder encoder;
     serialize_client(encoder, true);
     encoder.write_end();

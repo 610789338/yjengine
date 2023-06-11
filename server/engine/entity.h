@@ -65,6 +65,7 @@ public:
     virtual ComponentManagerBase* get_comp_mgr() { return nullptr; }
 
     EntityPropertyBase* get_prop(const GString& prop_name) const { return propertys.at(prop_name); }
+    EntityPropertyBase& get_prop_ref(const GString& prop_name) const { return *propertys.at(prop_name); }
     EntityComponentBase* get_component(const GString& componet_name) const { return components.at(componet_name); }
 
     void release_component();

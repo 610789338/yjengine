@@ -8,6 +8,10 @@ EntityPropertyBase* EntityComponentBase::get_prop(const GString& prop_name) cons
     return owner->get_prop(prop_name);
 }
 
+EntityPropertyBase& EntityComponentBase::get_prop_ref(const GString& prop_name) const {
+    EntityPropertyBase* prop = get_prop(prop_name);
+    return *prop;
+}
 
 void ComponentManagerBase::component_regist(EntityComponentBase* component) {
 

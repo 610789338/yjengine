@@ -55,6 +55,7 @@ struct EntityPropertyBase {
     virtual float as_float() const { ASSERT(false); return float(); }
     virtual double as_double() const { ASSERT(false); return double(); }
     virtual GString& as_string() const { ASSERT(false); static GString ret; return ret; }
+    virtual GBin& as_bin() const { ASSERT(false); static GBin ret; return ret; }
 
     template<class T>
     void update(const T& v);
@@ -72,7 +73,7 @@ struct EntityPropertyBase {
 
     void update_int(uint64_t v);
     void update_float(double v);
-    void update_cstr(const char*  v);
+    void update_cstr(const char* v);
 
     // array property - crud
     template<class T>
@@ -113,7 +114,9 @@ struct EntityPropertyBase {
     void update_float(int32_t idx, double v);
     void update_cstr(int32_t idx, const char*  v);
 
+    virtual bool has(const GString& prop_name) { ASSERT(false); return true; }
     virtual EntityPropertyBase* get(const int32_t idx) const { ASSERT(false); return nullptr; }
+    virtual EntityPropertyBase& get_ref(const int32_t idx) const { ASSERT(false); static EntityPropertyBase *p; return *p; }
 
     // map property - crud
     template<class T>
@@ -155,10 +158,12 @@ struct EntityPropertyBase {
     void update_cstr(const GString& k, const char*  v);
 
     virtual EntityPropertyBase* get(const GString& prop_name) const { ASSERT(false); return nullptr; }
+    virtual EntityPropertyBase& get_ref(const GString& prop_name) const { ASSERT(false); static EntityPropertyBase *p; return *p; }
     virtual vector<GString> keys() { ASSERT(false); return vector<GString>(); }
 
     virtual int32_t size() { ASSERT(false); return 0; }
-    virtual void clear() { ASSERT(false); };
+    virtual void clear() { ASSERT(false); }
+    virtual bool empty() { ASSERT(false); return true; }
 
     virtual void encode() { ASSERT(false); }
     virtual void decode() { ASSERT(false); }
@@ -197,7 +202,7 @@ struct EntityPropertyBase {
 
     // bit [0, 3] 代表属性类型，只对一级属性有用，不变
     // bit 4 预留
-    // bit 5 代表这是否是一级属性，不变
+    // bit 5 代表是否是一级属性，不变
     // bit 6 代表是否全脏，当complex/map/array属性发生赋值操作时为全脏，需要全同步，易变
     // bit 7 代表是否已脏，易变
     int8_t flag = 0x00;
@@ -244,6 +249,7 @@ struct EntityPropertySimple : public EntityPropertyBase {
     float as_float() const { return v.as_float(); }
     double as_double() const { return v.as_double(); }
     GString& as_string() const { return v.as_string(); }
+    GBin& as_bin() const { return v.as_bin(); }
 
     void serialize(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
     void serialize_all(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
@@ -349,10 +355,13 @@ struct EntityPropertyArray : public EntityPropertyBase {
         propertys[idx].set_parent_deep(this);
         propertys[idx].set_dirty();
     }
+
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; }
+    EntityPropertyBase& get_ref(const int32_t idx) const { return (EntityPropertyBase&)propertys[idx]; }
 
     int32_t size() { return (int32_t)propertys.size(); }
     void clear() { propertys.clear(); set_all_dirty(); };
+    bool empty() { return propertys.empty(); }
 
     bool is_array() { return true; }
     bool is_value_complex() { return true; }
@@ -500,9 +509,11 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
         propertys[idx].set_dirty(); \
     } \
     EntityPropertyBase* get(const int32_t idx) const { return (EntityPropertyBase*)&propertys[idx]; } \
+    EntityPropertyBase& get_ref(const int32_t idx) const { return (EntityPropertyBase&)propertys[idx]; } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
-    void clear() { propertys.clear(); set_all_dirty(); }; \
+    void clear() { propertys.clear(); set_all_dirty(); } \
+    bool empty() { return propertys.empty(); } \
     bool is_array() { return true; } \
 \
     void serialize(Encoder& encoder) { \
@@ -655,10 +666,14 @@ struct EntityPropertyMap : public EntityPropertyBase {
         propertys.at(k).set_parent_deep(this);
         propertys.at(k).set_dirty(); 
     }
+
+    bool has(const GString& prop_name) { return propertys.find(prop_name) != propertys.end(); }
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); }
+    EntityPropertyBase& get_ref(const GString& prop_name) const { return (EntityPropertyBase&)propertys.at(prop_name); }
 
     int32_t size() { return (int32_t)propertys.size(); }
-    void clear() { propertys.clear(); set_all_dirty(); };
+    void clear() { propertys.clear(); set_all_dirty(); }
+    bool empty() { return propertys.empty(); }
 
     vector<GString> keys() { 
         vector<GString> ret; 
@@ -794,10 +809,13 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
         propertys.at(k).set_parent_deep(this); \
         propertys.at(k).set_dirty(); \
     } \
+    bool has(const GString& prop_name) { return propertys.find(prop_name) != propertys.end(); } \
     EntityPropertyBase* get(const GString& prop_name) const { return (EntityPropertyBase*)&propertys.at(prop_name); } \
+    EntityPropertyBase& get_ref(const GString& prop_name) const { return (EntityPropertyBase&)propertys.at(prop_name); } \
 \
     int32_t size() { return (int32_t)propertys.size(); } \
-    void clear() { propertys.clear(); set_all_dirty(); }; \
+    void clear() { propertys.clear(); set_all_dirty(); } \
+    bool empty() { return propertys.empty(); } \
     vector<GString> keys() { \
         vector<GString> ret; \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) \
@@ -1004,24 +1022,24 @@ public:
     TEntity::property_manager.template regist_map_property<prop_class>(prop_type, #property_name)
 
 
-#define MEM_PROPERTY_SIMPLE(property_name, prop_class, default_value) \
+#define MEM_PROP_SIMPLE(property_name, prop_class, default_value) \
     EntityPropertySimple<prop_class> property_name = EntityPropertySimple<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);}, default_value)
-#define MEM_PROPERTY_COMPLEX(property_name, prop_class) \
+#define MEM_PROP_COMPLEX(property_name, prop_class) \
     prop_class property_name = prop_class([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
-#define MEM_PROPERTY_ARRAY(property_name, prop_class) \
+#define MEM_PROP_ARRAY(property_name, prop_class) \
     EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
-#define MEM_PROPERTY_MAP(property_name, prop_class) \
+#define MEM_PROP_MAP(property_name, prop_class) \
     EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
 
-#define MEM_PROP_BEGIN_One_MEM(TComplex, Mem1) MEM_PROP_BEGIN(TComplex, 1) COPY_CONSTRUCT_1(TComplex, Mem1)
-#define MEM_PROP_BEGIN_Two_MEM(TComplex, Mem1, Mem2) MEM_PROP_BEGIN(TComplex, 2) COPY_CONSTRUCT_2(TComplex, Mem1, Mem2)
-#define MEM_PROP_BEGIN_Three_MEM(TComplex, Mem1, Mem2, Mem3) MEM_PROP_BEGIN(TComplex, 3) COPY_CONSTRUCT_3(TComplex, Mem1, Mem2, Mem3)
-#define MEM_PROP_BEGIN_Four_MEM(TComplex, Mem1, Mem2, Mem3, Mem4) MEM_PROP_BEGIN(TComplex, 4) COPY_CONSTRUCT_4(TComplex, Mem1, Mem2, Mem3, Mem4)
-#define MEM_PROP_BEGIN_Five_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5) MEM_PROP_BEGIN(TComplex, 5) COPY_CONSTRUCT_5(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5)
-#define MEM_PROP_BEGIN_Six_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6) MEM_PROP_BEGIN(TComplex, 6) COPY_CONSTRUCT_6(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6)
-#define MEM_PROP_BEGIN_Seven_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7) MEM_PROP_BEGIN(TComplex, 7) COPY_CONSTRUCT_7(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7)
-#define MEM_PROP_BEGIN_Eight_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) MEM_PROP_BEGIN(TComplex, 8) COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8)
-#define MEM_PROP_BEGIN_Nine_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) MEM_PROP_BEGIN(TComplex, 9) COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9)
+#define MEM_PROP_BEGIN_1_MEM(TComplex, Mem1) MEM_PROP_BEGIN(TComplex, 1) COPY_CONSTRUCT_1(TComplex, Mem1)
+#define MEM_PROP_BEGIN_2_MEM(TComplex, Mem1, Mem2) MEM_PROP_BEGIN(TComplex, 2) COPY_CONSTRUCT_2(TComplex, Mem1, Mem2)
+#define MEM_PROP_BEGIN_3_MEM(TComplex, Mem1, Mem2, Mem3) MEM_PROP_BEGIN(TComplex, 3) COPY_CONSTRUCT_3(TComplex, Mem1, Mem2, Mem3)
+#define MEM_PROP_BEGIN_4_MEM(TComplex, Mem1, Mem2, Mem3, Mem4) MEM_PROP_BEGIN(TComplex, 4) COPY_CONSTRUCT_4(TComplex, Mem1, Mem2, Mem3, Mem4)
+#define MEM_PROP_BEGIN_5_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5) MEM_PROP_BEGIN(TComplex, 5) COPY_CONSTRUCT_5(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5)
+#define MEM_PROP_BEGIN_6_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6) MEM_PROP_BEGIN(TComplex, 6) COPY_CONSTRUCT_6(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6)
+#define MEM_PROP_BEGIN_7_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7) MEM_PROP_BEGIN(TComplex, 7) COPY_CONSTRUCT_7(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7)
+#define MEM_PROP_BEGIN_8_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8) MEM_PROP_BEGIN(TComplex, 8) COPY_CONSTRUCT_8(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8)
+#define MEM_PROP_BEGIN_9_MEM(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9) MEM_PROP_BEGIN(TComplex, 9) COPY_CONSTRUCT_9(TComplex, Mem1, Mem2, Mem3, Mem4, Mem5, Mem6, Mem7, Mem8, Mem9)
 
 
 typedef unordered_map<GString, unordered_map<GString, uint8_t> > PropIdxType;
@@ -1042,6 +1060,7 @@ extern PropIdxType& get_all_prop_idxs();
         return all_prop_idxs.at(#TComplex).at(prop_name); \
     } \
     EntityPropertyBase* get(const GString& prop_name) const { auto idx = get_prop_idx(prop_name); return propertys[idx]; } \
+    EntityPropertyBase& get_ref(const GString& prop_name) const { auto idx = get_prop_idx(prop_name); return *(propertys[idx]); } \
     EntityPropertyBase** get_propertys() { return propertys; } \
     int8_t get_propertys_len() { return Num; } \
     EntityPropertyBase* propertys[Num] = {0}; \
@@ -1307,3 +1326,7 @@ extern PropIdxType& get_all_prop_idxs();
         all_prop_idxs[#TComplex].insert(make_pair(#Mem8, (uint8_t)all_prop_idxs[#TComplex].size())); \
         all_prop_idxs[#TComplex].insert(make_pair(#Mem9, (uint8_t)all_prop_idxs[#TComplex].size())); \
     }
+
+#define GET_PROP(prop_name) get_prop_ref(#prop_name)
+#define MEM(mem_prop_name) get_ref(#mem_prop_name)
+#define GET(k) get_ref(k)
