@@ -59,6 +59,9 @@ public:
     virtual void on_destroy() = 0;
     virtual void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) = 0;
     virtual void destroy_self();
+    virtual BaseMailBox& get_base_mailbox() { ASSERT(false); static BaseMailBox* p = nullptr; return *p; }
+    virtual CellMailBox& get_cell_mailbox() { ASSERT(false); static CellMailBox* p = nullptr; return *p; }
+    virtual ClientMailBox& get_client_mailbox() { ASSERT(false); static ClientMailBox* p = nullptr; return *p; }
 
     virtual RpcMethodBase* find_rpc_method(const GString& rpc_name) = 0;
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
@@ -74,9 +77,10 @@ public:
 
     // proppertys
     virtual void propertys_sync2client(bool force_all = false);
-    void serialize_all(Encoder& encoder);
-    void serialize_client(Encoder& encoder, bool force_all = false);
-    void serialize_db(Encoder& encoder);
+    void serialize_all(Encoder& encoder, bool need_clean_dirty = false);
+    void serialize_db(Encoder& encoder, bool need_clean_dirty = false);
+    void serialize_client(Encoder& encoder, bool need_clean_dirty = false);
+    void serialize_all_client(Encoder& encoder, bool need_clean_dirty = false);
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
     bool need_create_save_timer();
@@ -210,6 +214,8 @@ public:
     virtual void recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr);
     virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
 
+    virtual CellMailBox& get_cell_mailbox() { return cell; }
+
     CellMailBox cell;
     int64_t last_respect_from_cell = 0;
 
@@ -241,6 +247,8 @@ public:
     virtual void kick_client();
 
     virtual void real_time_to_save();
+
+    virtual ClientMailBox& get_client_mailbox() { return client; }
 
     ClientMailBox client;
 };
@@ -282,6 +290,9 @@ public:
     virtual void on_game_disappear(const GString& game_addr);
     virtual void recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr);
     virtual void cell_recover_by_disaster_backup_success(const GString& cell_addr);
+
+    virtual CellMailBox& get_cell_mailbox() { return cell; }
+    virtual ClientMailBox& get_client_mailbox() { return client; }
 
     ClientMailBox client;
 };
@@ -329,6 +340,8 @@ public:
     virtual void on_game_disappear(const GString& game_addr);
     virtual void recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr);
     virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
+
+    virtual BaseMailBox& get_base_mailbox() { return base; }
 
     BaseMailBox base;
 
@@ -390,6 +403,9 @@ public:
     virtual void recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr);
     virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
 
+    virtual BaseMailBox& get_base_mailbox() { return base; }
+    virtual ClientMailBox& get_client_mailbox() { return client; }
+
     ClientMailBox client;
     bool is_reqack_from_client = false;
 };
@@ -430,6 +446,9 @@ public:
     // migrate
     void migrate_req_from_cell();
     void new_cell_migrate_in(const GString& new_cell_addr);
+
+    virtual BaseMailBox& get_base_mailbox() { return base; }
+    virtual CellMailBox& get_cell_mailbox() { return cell; }
 
     BaseMailBox base;
     CellMailBox cell;

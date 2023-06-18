@@ -21,7 +21,7 @@ public:
     ItemBagComponent() {}
     ~ItemBagComponent() {}
 
-    virtual void on_ready();
+    void on_ready();
     void init_itembag();
     void add_item(int8_t itembag_id, int32_t item_id, int16_t num);
     void del_item(int8_t itembag_id, int32_t item_id, int16_t num, const GString& uuid);

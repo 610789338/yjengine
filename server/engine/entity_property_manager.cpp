@@ -468,23 +468,23 @@ void EntityPropertyBase::update_cstr(const GString& k, const char*  v) {
     child->update(k, GString(v));
 }
 
-void EntityPropertyComplex::serialize(Encoder& encoder) {
+void EntityPropertyComplex::serialize(Encoder& encoder, bool need_clean_dirty) {
     if (is_all_dirty())
-        serialize_all(encoder);
+        serialize_all(encoder, need_clean_dirty);
     else
-        serialize_dirty(encoder);
+        serialize_dirty(encoder, need_clean_dirty);
 }
 
-void EntityPropertyComplex::serialize_all(Encoder& encoder) {
+void EntityPropertyComplex::serialize_all(Encoder& encoder, bool need_clean_dirty) {
     encoder.write_string("y");
     auto const& propertys = get_propertys();
     for (int8_t i = 0; i < get_propertys_len(); ++i) {
-        propertys[i]->serialize_all(encoder);
+        propertys[i]->serialize_all(encoder, need_clean_dirty);
     }
-    clean_dirty();
+    if(need_clean_dirty) clean_dirty();
 }
 
-void EntityPropertyComplex::serialize_dirty(Encoder& encoder) {
+void EntityPropertyComplex::serialize_dirty(Encoder& encoder, bool need_clean_dirty) {
     encoder.write_string("j");
     auto const& propertys = get_propertys();
 
@@ -502,9 +502,9 @@ void EntityPropertyComplex::serialize_dirty(Encoder& encoder) {
             continue;
         }
         encoder.write_int8(i);
-        propertys[i]->serialize(encoder);
+        propertys[i]->serialize(encoder, need_clean_dirty);
     }
-    clean_dirty();
+    if(need_clean_dirty) clean_dirty();
 }
 
 void EntityPropertyComplex::unserialize(Decoder& decoder) {

@@ -32,7 +32,7 @@ struct TimerBase {
     virtual void unserialize(Decoder& decoder);
 
     virtual TimerBase* create_self() { return nullptr; }
-    virtual void set_this(void* _this) {}
+    virtual void set_owner(void* _owner) {}
 
     TimerID m_id = 0;
     float m_interval = 0.0f;
@@ -42,7 +42,9 @@ struct TimerBase {
     int32_t m_fire_num = 0;
     int64_t m_expiration = 0; // ms timestamp
 
-    GString m_cb_name = ""; // for migrate
+    // for migrate
+    GString m_cb_name = "";
+    GString m_component_name = "";
 };
 
 class TimerCompare {
@@ -59,14 +61,14 @@ struct Timer0 : public TimerBase {
     typedef void(TEntity::*CBType)();
 
     Timer0() {}
-    Timer0(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer0(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(); }
+    void callback() { (owner->*m_cb)(); }
     TimerBase* create_self() { 
-        return new Timer0<TEntity>(__this, m_cb);
+        return new Timer0<TEntity>(owner, m_cb);
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args() {
@@ -74,7 +76,7 @@ struct Timer0 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
 };
 
 template<class TEntity, class T1>
@@ -82,9 +84,9 @@ struct Timer1 : public TimerBase {
     typedef void(TEntity::*CBType)(T1);
 
     Timer1() {}
-    Timer1(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer1(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(t1); }
+    void callback() { (owner->*m_cb)(t1); }
 
     void serialize(Encoder& encoder) {
         TimerBase::serialize(encoder);
@@ -97,12 +99,12 @@ struct Timer1 : public TimerBase {
     }
 
     TimerBase* create_self() { 
-        auto timer = new Timer1<TEntity, T1>(__this, m_cb);
+        auto timer = new Timer1<TEntity, T1>(owner, m_cb);
         timer->set_args(t1);
         return timer;
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args(T1 _t1) {
@@ -111,7 +113,7 @@ struct Timer1 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
     RMCVR(T1) t1;
 };
 
@@ -120,9 +122,9 @@ struct Timer2 : public TimerBase {
     typedef void(TEntity::*CBType)(T1, T2);
 
     Timer2() {}
-    Timer2(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer2(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(t1, t2); }
+    void callback() { (owner->*m_cb)(t1, t2); }
 
     void serialize(Encoder& encoder) {
         TimerBase::serialize(encoder);
@@ -137,12 +139,12 @@ struct Timer2 : public TimerBase {
     }
 
     TimerBase* create_self() { 
-        auto timer = new Timer2<TEntity, T1, T2>(__this, m_cb);
+        auto timer = new Timer2<TEntity, T1, T2>(owner, m_cb);
         timer->set_args(t1, t2);
         return timer;
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args(T1 _t1, T2 _t2) {
@@ -152,7 +154,7 @@ struct Timer2 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
 };
@@ -162,9 +164,9 @@ struct Timer3 : public TimerBase {
     typedef void(TEntity::*CBType)(T1, T2, T3);
 
     Timer3() {}
-    Timer3(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer3(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(t1, t2, t3); }
+    void callback() { (owner->*m_cb)(t1, t2, t3); }
 
     void serialize(Encoder& encoder) {
         TimerBase::serialize(encoder);
@@ -181,12 +183,12 @@ struct Timer3 : public TimerBase {
     }
 
     TimerBase* create_self() {
-        auto timer = new Timer3<TEntity, T1, T2, T3>(__this, m_cb);
+        auto timer = new Timer3<TEntity, T1, T2, T3>(owner, m_cb);
         timer->set_args(t1, t2, t3);
         return timer;
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args(T1 _t1, T2 _t2, T3 _t3) {
@@ -197,7 +199,7 @@ struct Timer3 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
     RMCVR(T3) t3;
@@ -208,9 +210,9 @@ struct Timer4 : public TimerBase {
     typedef void(TEntity::*CBType)(T1, T2, T3, T4);
 
     Timer4() {}
-    Timer4(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer4(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(t1, t2, t3, t4); }
+    void callback() { (owner->*m_cb)(t1, t2, t3, t4); }
 
     void serialize(Encoder& encoder) {
         TimerBase::serialize(encoder);
@@ -229,12 +231,12 @@ struct Timer4 : public TimerBase {
     }
 
     TimerBase* create_self() {
-        auto timer = new Timer4<TEntity, T1, T2, T3, T4>(__this, m_cb);
+        auto timer = new Timer4<TEntity, T1, T2, T3, T4>(owner, m_cb);
         timer->set_args(t1, t2, t3, t4);
         return timer;
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args(T1 _t1, T2 _t2, T3 _t3, T4 _t4) {
@@ -246,7 +248,7 @@ struct Timer4 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
     RMCVR(T3) t3;
@@ -258,9 +260,9 @@ struct Timer5 : public TimerBase {
     typedef void(TEntity::*CBType)(T1, T2, T3, T4, T5);
 
     Timer5() {}
-    Timer5(TEntity* _this, CBType _cb) : __this(_this), m_cb(_cb) {}
+    Timer5(TEntity* _owner, CBType _cb) : owner(_owner), m_cb(_cb) {}
 
-    void callback() { (__this->*m_cb)(t1, t2, t3, t4, t5); }
+    void callback() { (owner->*m_cb)(t1, t2, t3, t4, t5); }
 
     void serialize(Encoder& encoder) {
         TimerBase::serialize(encoder);
@@ -281,12 +283,12 @@ struct Timer5 : public TimerBase {
     }
 
     TimerBase* create_self() {
-        auto timer = new Timer5<TEntity, T1, T2, T3, T4, T5>(__this, m_cb);
+        auto timer = new Timer5<TEntity, T1, T2, T3, T4, T5>(owner, m_cb);
         timer->set_args(t1, t2, t3, t4, t5);
         return timer;
     }
-    void set_this(void* _this) {
-        __this = (TEntity*)_this;
+    void set_owner(void* _owner) {
+        owner = (TEntity*)_owner;
     }
 
     TimerID set_args(T1 _t1, T2 _t2, T3 _t3, T4 _t4, T5 _t5) {
@@ -299,7 +301,7 @@ struct Timer5 : public TimerBase {
     }
 
     CBType m_cb;
-    TEntity* __this;
+    TEntity* owner;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
     RMCVR(T3) t3;
@@ -426,6 +428,8 @@ public:
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
     }
+
+    void set_timer_component_name_for_restore(const GString& cb_name, const GString& component_name);
 
     void restore_timer(void* entity, const GString& cb_name, const GBin& timer_bin);
 

@@ -48,34 +48,25 @@ struct AvatarData : public EntityPropertyComplex {
 
 template<class TEntity>
 void avatar_property_sync_test() {
-    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, simple_test, int32_t, 1001);
-    PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, complex_test, AvatarData);
-    PROPERTY_ARRAY(PropType::BASE_AND_CLIENT, array_test, GString);
-    PROPERTY_MAP(PropType::BASE_AND_CLIENT, map_test, double);
-    PROPERTY_ARRAY(PropType::BASE_AND_CLIENT, complex_array_test, AvatarEquip);
-    PROPERTY_MAP(PropType::BASE_AND_CLIENT, complex_map_test, AvatarEquip);
-}
+    //PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, simple_test, int32_t, 1001);
+    //PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, complex_test, AvatarData);
+    //PROPERTY_ARRAY(PropType::BASE_AND_CLIENT, array_test, GString);
+    //PROPERTY_MAP(PropType::BASE_AND_CLIENT, map_test, double);
+    //PROPERTY_ARRAY(PropType::BASE_AND_CLIENT, complex_array_test, AvatarEquip);
+    //PROPERTY_MAP(PropType::BASE_AND_CLIENT, complex_map_test, AvatarEquip);
 
-template<class TEntity>
-void avatar_property_test() {
-
-    PROPERTY_SIMPLE(PropType::ALL, avatar_id, int32_t, 1001);
-    PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, avatar_id_base, int32_t, 1002);
-    PROPERTY_SIMPLE(PropType::CELL_AND_CLIENT, avatar_id_cell, int32_t, 1003);
-    PROPERTY_SIMPLE(PropType::BASE_PRIVATE, avatar_id_base_private, int32_t, 1004);
-    PROPERTY_SIMPLE(PropType::CELL_PRIVATE, avatar_id_cell_private, int32_t, 1005);
-    PROPERTY_MAP(PropType::BASE_AND_CLIENT, avatar_datas, AvatarData);
-
-    PROPERTY_SIMPLE(PropType::CELL_AND_CLIENT, migrate_int, int32_t, 0);
-    PROPERTY_SIMPLE(PropType::CELL_PRIVATE, test_timer, int32_t, 0);
+    PROPERTY_SIMPLE(PropType::CELL_AND_CLIENT, simple_test, int32_t, 1001);
+    PROPERTY_COMPLEX(PropType::CELL_AND_CLIENT, complex_test, AvatarData);
+    PROPERTY_ARRAY(PropType::CELL_AND_CLIENT, array_test, GString);
+    PROPERTY_MAP(PropType::CELL_AND_CLIENT, map_test, double);
+    PROPERTY_ARRAY(PropType::CELL_AND_CLIENT, complex_array_test, AvatarEquip);
+    PROPERTY_MAP(PropType::CELL_AND_CLIENT, complex_map_test, AvatarEquip);
 }
 
 template<class TEntity>
 void avatar_property_define() {
-
-#ifdef __PROP_SYNC_TEST__
     avatar_property_sync_test<TEntity>();
-#else
-    avatar_property_test<TEntity>();
-#endif
 }
+
+#define AVATAR_PROPERTY_TEST_DEFINE \
+    avatar_property_sync_test<TEntity>

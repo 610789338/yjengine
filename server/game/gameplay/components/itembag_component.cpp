@@ -32,6 +32,11 @@ void ItemBagComponent::init_itembag() {
     add_item(ITEMBAG_2, 100010, 10);
     add_item(ITEMBAG_2, 100011, 199);
     add_item(ITEMBAG_2, 100012, 199);
+
+    del_item(ITEMBAG_1, 100011, 100, "");
+    del_item(ITEMBAG_1, 100012, 100, "");
+    del_item(ITEMBAG_2, 100011, 100, "");
+    del_item(ITEMBAG_2, 100012, 100, "");
 }
 
 void ItemBagComponent::add_item(int8_t itembag_id, int32_t item_id, int16_t num) {
@@ -73,6 +78,29 @@ void ItemBagComponent::del_item(int8_t itembag_id, int32_t item_id, int16_t num,
         del_uuid_item(itembag_id, uuid);
         return;
     }
+
+    auto& item_bag = GET_PROP(itembags).GET(std::to_string(itembag_id));
+    auto& item_list = item_bag.MEM(item_list);
+
+    GArray items_tobe_delete;
+    auto item_uuids = item_list.keys();
+    for (auto iter = item_uuids.begin(); iter != item_uuids.end(); ++iter) {
+        auto& item = item_list.GET(*iter);
+        if (item.MEM(item_id).as_int32() == item_id) {
+            if (item.MEM(pile_cnt).as_int16() > num) {
+                item.MEM(pile_cnt).update(item.MEM(pile_cnt).as_int16() - num);
+                break;
+            }
+            else {
+                num -= item.MEM(pile_cnt).as_int16();
+                items_tobe_delete.push_back(*iter);
+            }
+        }
+    }
+
+    for (auto iter = items_tobe_delete.begin(); iter != items_tobe_delete.end(); ++iter) {
+        item_list.erase((*iter).as_string());
+    }
 }
 
 void ItemBagComponent::add_uuid_item(int8_t itembag_id, int32_t item_id, int16_t num) {
@@ -91,7 +119,9 @@ void ItemBagComponent::add_uuid_item(int8_t itembag_id, int32_t item_id, int16_t
 }
 
 void ItemBagComponent::del_uuid_item(int8_t itembag_id, const GString& uuid) {
-
+    auto& item_bag = GET_PROP(itembags).GET(std::to_string(itembag_id));
+    auto& item_list = item_bag.MEM(item_list);
+    item_list.erase(uuid);
 }
 
 bool ItemBagComponent::get_holdn_pile_item(int8_t itembag_id, int32_t item_id, Item** out_item) {

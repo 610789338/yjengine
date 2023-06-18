@@ -69,14 +69,14 @@ double Entity::get_db_save_interval() {
     return 10.0;
 }
 
-void Entity::serialize_all(Encoder& encoder) {
+void Entity::serialize_all(Encoder& encoder, bool need_clean_dirty) {
     for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
         encoder.write_uint16(prop_str2int(iter->first));
-        iter->second->serialize_all(encoder);
+        iter->second->serialize_all(encoder, need_clean_dirty);
     }
 }
 
-void Entity::serialize_db(Encoder& encoder) {
+void Entity::serialize_db(Encoder& encoder, bool need_clean_dirty) {
     for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
 
         if (!iter->second->need_sync2db()) {
@@ -84,41 +84,42 @@ void Entity::serialize_db(Encoder& encoder) {
         }
 
         encoder.write_uint16(prop_str2int(iter->first));
-        iter->second->serialize_all(encoder);
+        iter->second->serialize_all(encoder, need_clean_dirty);
     }
 }
 
-void Entity::serialize_client(Encoder& encoder, bool force_all) {
+void Entity::serialize_client(Encoder& encoder, bool need_clean_dirty) {
+    for (auto iter = dirty_propertys.begin(); iter != dirty_propertys.end(); ++iter) {
 
-    if (force_all) {
-        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
-
-            if (!iter->second->need_sync2client()) {
-                continue;
-            }
-
-            encoder.write_uint16(prop_str2int(iter->first));
-            iter->second->serialize_all(encoder);
+        if (!iter->second->need_sync2client()) {
+            continue;
         }
-    }
-    else {
-        for (auto iter = dirty_propertys.begin(); iter != dirty_propertys.end(); ++iter) {
 
-            if (!iter->second->need_sync2client()) {
-                continue;
-            }
-
-            if (!iter->second->is_dirty() && !iter->second->is_all_dirty()) {
-                continue;
-            }
-
-            encoder.write_uint16(prop_str2int(iter->first));
-            iter->second->serialize(encoder);
+        if (!iter->second->is_dirty() && !iter->second->is_all_dirty()) {
+            continue;
         }
+
+        encoder.write_uint16(prop_str2int(iter->first));
+        iter->second->serialize(encoder, need_clean_dirty);
     }
 
-    dirty_propertys.clear();
+    if(need_clean_dirty) dirty_propertys.clear();
 }
+
+void Entity::serialize_all_client(Encoder& encoder, bool need_clean_dirty) {
+    for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+
+        if (!iter->second->need_sync2client()) {
+            continue;
+        }
+
+        encoder.write_uint16(prop_str2int(iter->first));
+        iter->second->serialize_all(encoder, need_clean_dirty);
+    }
+
+    if (need_clean_dirty) dirty_propertys.clear();
+}
+
 
 void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_propertys) {
     propertys.clear();
@@ -495,7 +496,12 @@ void BaseEntityWithClient::on_client_reconnect_success() {
 
 void BaseEntityWithClient::propertys_sync2client(bool force_all) {
     Encoder encoder;
-    serialize_client(encoder, force_all);
+    if (force_all) {
+        serialize_all_client(encoder, true);
+    }
+    else {
+        serialize_client(encoder, true);
+    }
     encoder.write_end();
 
     if (encoder.anything()) {
@@ -615,7 +621,12 @@ void BaseEntityWithCellAndClient::on_client_reconnect_success() {
 
 void BaseEntityWithCellAndClient::propertys_sync2client(bool force_all) {
     Encoder encoder;
-    serialize_client(encoder, force_all);
+    if (force_all) {
+        serialize_all_client(encoder, true);
+    }
+    else {
+        serialize_client(encoder, true);
+    }
     encoder.write_end();
 
     if (encoder.anything()) {
@@ -1034,9 +1045,13 @@ void CellEntityWithClient::destroy_self() {
 }
 
 void CellEntityWithClient::propertys_sync2client(bool force_all) {
-
     Encoder encoder;
-    serialize_client(encoder, force_all);
+    if (force_all) {
+        serialize_all_client(encoder, true);
+    }
+    else {
+        serialize_client(encoder, true);
+    }
     encoder.write_end();
 
     if (encoder.anything()) {

@@ -180,9 +180,9 @@ struct EntityPropertyBase {
 
     bool need_sync2client();
     bool need_sync2db();
-    virtual void serialize(Encoder& encoder) { ASSERT(false); }
-    virtual void serialize_all(Encoder& encoder) { ASSERT(false); }
-    virtual void serialize_dirty(Encoder& encoder) { ASSERT(false); }
+    virtual void serialize(Encoder& encoder, bool need_clean_dirty) { ASSERT(false); }
+    virtual void serialize_all(Encoder& encoder, bool need_clean_dirty) { ASSERT(false); }
+    virtual void serialize_dirty(Encoder& encoder, bool need_clean_dirty) { ASSERT(false); }
     virtual void unserialize(Decoder& decoder) { ASSERT(false); }
 
     // flag
@@ -251,9 +251,9 @@ struct EntityPropertySimple : public EntityPropertyBase {
     GString& as_string() const { return v.as_string(); }
     GBin& as_bin() const { return v.as_bin(); }
 
-    void serialize(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
-    void serialize_all(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
-    void serialize_dirty(Encoder& encoder) { clean_dirty(); encoder.write_gvalue(v); }
+    void serialize(Encoder& encoder, bool need_clean_dirty) { if (need_clean_dirty) clean_dirty(); encoder.write_gvalue(v); }
+    void serialize_all(Encoder& encoder, bool need_clean_dirty) { if (need_clean_dirty) clean_dirty(); encoder.write_gvalue(v); }
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty) { if (need_clean_dirty) clean_dirty(); encoder.write_gvalue(v); }
     void unserialize(Decoder& decoder) { v = decoder.read_gvalue(); }
 
     GValue v;
@@ -289,9 +289,9 @@ struct EntityPropertyComplex : public EntityPropertyBase {
 
     bool is_complex() { return true; }
 
-    void serialize(Encoder& encoder);
-    void serialize_all(Encoder& encoder);
-    void serialize_dirty(Encoder& encoder);
+    void serialize(Encoder& encoder, bool need_clean_dirty);
+    void serialize_all(Encoder& encoder, bool need_clean_dirty);
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty);
     void unserialize(Decoder& decoder);
 };
 
@@ -366,23 +366,23 @@ struct EntityPropertyArray : public EntityPropertyBase {
     bool is_array() { return true; }
     bool is_value_complex() { return true; }
 
-    void serialize(Encoder& encoder) { 
+    void serialize(Encoder& encoder, bool need_clean_dirty) {
         if (is_all_dirty()) 
-            serialize_all(encoder); 
+            serialize_all(encoder, need_clean_dirty); 
         else 
-            serialize_dirty(encoder); 
+            serialize_dirty(encoder, need_clean_dirty); 
     }
 
-    void serialize_all(Encoder& encoder) {
+    void serialize_all(Encoder& encoder, bool need_clean_dirty) {
         encoder.write_string("y");
         encoder.write_int16((int16_t)propertys.size());
         for (int16_t i = 0; i < propertys.size(); ++i) {
-            propertys[i].serialize_all(encoder);
+            propertys[i].serialize_all(encoder, need_clean_dirty);
         }
-        clean_dirty();
+        if (need_clean_dirty) clean_dirty();
     }
 
-    void serialize_dirty(Encoder& encoder) {
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty) {
         encoder.write_string("j");
         int16_t num = 0;
         for (int16_t i = 0; i < propertys.size(); ++i) {
@@ -398,12 +398,12 @@ struct EntityPropertyArray : public EntityPropertyBase {
                 continue;
             }
             encoder.write_int16(i);
-            propertys[i].serialize(encoder);
+            propertys[i].serialize(encoder, need_clean_dirty);
         }
 
         // total num, for delete sync
         encoder.write_int16((int16_t)propertys.size());
-        clean_dirty();
+        if (need_clean_dirty) clean_dirty();
     }
 
     void unserialize(Decoder& decoder) {
@@ -516,23 +516,23 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
     bool empty() { return propertys.empty(); } \
     bool is_array() { return true; } \
 \
-    void serialize(Encoder& encoder) { \
+    void serialize(Encoder& encoder, bool need_clean_dirty) { \
         if (is_all_dirty()) \
-            serialize_all(encoder); \
+            serialize_all(encoder, need_clean_dirty); \
         else \
-            serialize_dirty(encoder); \
+            serialize_dirty(encoder, need_clean_dirty); \
     }\
 \
-    void serialize_all(Encoder& encoder) { \
+    void serialize_all(Encoder& encoder, bool need_clean_dirty) { \
         encoder.write_string("y"); \
         encoder.write_int16((int16_t)propertys.size()); \
         for (int16_t i = 0; i < propertys.size(); ++i) { \
-            propertys[i].serialize_all(encoder); \
+            propertys[i].serialize_all(encoder, need_clean_dirty); \
         } \
-        clean_dirty(); \
+        if (need_clean_dirty) clean_dirty(); \
     } \
 \
-    void serialize_dirty(Encoder& encoder) { \
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty) { \
         encoder.write_string("j"); \
         int16_t num = 0; \
         for (int16_t i = 0; i < propertys.size(); ++i) { \
@@ -548,10 +548,10 @@ struct EntityPropertyArray<T> : public EntityPropertyBase { \
                 continue; \
             } \
             encoder.write_int16(i); \
-            propertys[i].serialize(encoder); \
+            propertys[i].serialize(encoder, need_clean_dirty); \
         } \
         encoder.write_int16((int16_t)propertys.size()); \
-        clean_dirty(); \
+        if (need_clean_dirty) clean_dirty(); \
     } \
 \
     void unserialize(Decoder& decoder) { \
@@ -685,25 +685,24 @@ struct EntityPropertyMap : public EntityPropertyBase {
     bool is_map() { return true; }
     bool is_value_complex() { return true; }
 
-    void serialize(Encoder& encoder) {
+    void serialize(Encoder& encoder, bool need_clean_dirty) {
         if (is_all_dirty())
-            serialize_all(encoder);
+            serialize_all(encoder, need_clean_dirty);
         else
-            serialize_dirty(encoder);
+            serialize_dirty(encoder, need_clean_dirty);
     }
 
-    void serialize_all(Encoder& encoder) {
+    void serialize_all(Encoder& encoder, bool need_clean_dirty) {
         encoder.write_string("y");
         encoder.write_int16((int16_t)propertys.size());
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
             encoder.write_string(iter->first);
-            iter->second.serialize_all(encoder);
+            iter->second.serialize_all(encoder, need_clean_dirty);
         }
-        clean_dirty();
-        sync_tobe_delete.clear();
+        if (need_clean_dirty) { clean_dirty(); sync_tobe_delete.clear(); }
     }
 
-    void serialize_dirty(Encoder& encoder) {
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty) {
         encoder.write_string("j");
 
         // delete
@@ -717,7 +716,7 @@ struct EntityPropertyMap : public EntityPropertyBase {
         for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end(); ++iter) {
             encoder.write_string(*iter);
         }
-        sync_tobe_delete.clear();
+        if(need_clean_dirty) sync_tobe_delete.clear();
 
         // add && update
         int16_t num = 0;
@@ -734,9 +733,9 @@ struct EntityPropertyMap : public EntityPropertyBase {
                 continue;
             }
             encoder.write_string(iter->first);
-            iter->second.serialize(encoder);
+            iter->second.serialize(encoder, need_clean_dirty);
         }
-        clean_dirty();
+        if (need_clean_dirty) clean_dirty();
     }
 
     void unserialize(Decoder& decoder) {
@@ -825,25 +824,24 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
 \
     bool is_map() { return true; } \
 \
-    void serialize(Encoder& encoder) { \
+    void serialize(Encoder& encoder, bool need_clean_dirty) { \
         if (is_all_dirty()) \
-            serialize_all(encoder); \
+            serialize_all(encoder, need_clean_dirty); \
         else \
-            serialize_dirty(encoder); \
+            serialize_dirty(encoder, need_clean_dirty); \
     } \
 \
-    void serialize_all(Encoder& encoder) { \
+    void serialize_all(Encoder& encoder, bool need_clean_dirty) { \
         encoder.write_string("y"); \
         encoder.write_int16((int16_t)propertys.size()); \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
             encoder.write_string(iter->first); \
-            iter->second.serialize_all(encoder); \
+            iter->second.serialize_all(encoder, need_clean_dirty); \
         } \
-        clean_dirty(); \
-        sync_tobe_delete.clear(); \
+        if(need_clean_dirty) { clean_dirty(); sync_tobe_delete.clear(); } \
     } \
 \
-    void serialize_dirty(Encoder& encoder) { \
+    void serialize_dirty(Encoder& encoder, bool need_clean_dirty) { \
         encoder.write_string("j"); \
         for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end();) { \
             if (propertys.find(*iter) != propertys.end()) \
@@ -855,7 +853,7 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
         for (auto iter = sync_tobe_delete.begin(); iter != sync_tobe_delete.end(); ++iter) { \
             encoder.write_string(*iter); \
         } \
-        sync_tobe_delete.clear(); \
+        if(need_clean_dirty) sync_tobe_delete.clear(); \
  \
         int16_t num = 0; \
         for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) { \
@@ -871,9 +869,9 @@ struct EntityPropertyMap<T> : public EntityPropertyBase { \
                 continue; \
             } \
             encoder.write_string(iter->first); \
-            iter->second.serialize(encoder); \
+            iter->second.serialize(encoder, need_clean_dirty); \
         } \
-        clean_dirty(); \
+        if(need_clean_dirty) clean_dirty(); \
     } \
 \
     void unserialize(Decoder& decoder) { \

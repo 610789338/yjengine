@@ -27,6 +27,10 @@ void TimerBase::unserialize(Decoder& decoder) {
     m_cb_name = decoder.read_string();
 }
 
+void TimerManagerBase::set_timer_component_name_for_restore(const GString& cb_name, const GString& component_name) {
+    timer_cbs_store[cb_name]->m_component_name = component_name;
+}
+
 void TimerManagerBase::restore_timer(void* entity, const GString& cb_name, const GBin& timer_bin) {
     auto iter = timer_cbs_store.find(cb_name);
     if (iter == timer_cbs_store.end()) {
@@ -34,11 +38,17 @@ void TimerManagerBase::restore_timer(void* entity, const GString& cb_name, const
     }
 
     TimerBase* timer = iter->second->create_self();
-    timer->set_this(entity);
 
     Decoder decoder(timer_bin.buf, timer_bin.size);
     decoder.skip_head_len();
     timer->unserialize(decoder);
+    if (iter->second->m_component_name != "") {
+        auto component = ((Entity*)entity)->get_component(iter->second->m_component_name);
+        timer->set_owner(component);
+    }
+    else {
+        timer->set_owner(entity);
+    }
 
     ((Entity*)entity)->add_timer(timer);
 }

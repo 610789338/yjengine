@@ -13,6 +13,18 @@ EntityPropertyBase& EntityComponentBase::get_prop_ref(const GString& prop_name) 
     return *prop;
 }
 
+BaseMailBox& EntityComponentBase::Base() {
+    return owner->get_base_mailbox();
+}
+
+CellMailBox& EntityComponentBase::Cell() {
+    return owner->get_cell_mailbox();
+}
+
+ClientMailBox& EntityComponentBase::Client() {
+    return owner->get_client_mailbox();
+}
+
 void ComponentManagerBase::component_regist(EntityComponentBase* component) {
 
     if (components.find(component->get_name()) != components.end()) {

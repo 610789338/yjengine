@@ -4,6 +4,7 @@
 #include "timer.h"
 #include "entity_rpc_manager.h"
 #include "entity_event_manager.h"
+#include "mailbox.h"
 
 struct EntityPropertyBase;
 class EventManagerBase;
@@ -29,6 +30,11 @@ public:
     virtual EventManagerBase* get_event_manager() { return nullptr; }
     bool is_comp() { return true; }
     void comp_regist_event(const GString& event_name, EntityComponentBase* component) {}
+
+    // mailbox
+    BaseMailBox& Base();
+    CellMailBox& Cell();
+    ClientMailBox& Client();
 
 protected:
     GString name;
@@ -197,19 +203,23 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     rpc_method->exec((void*)this); \
 }
 
-#define COMP_RPC_METHOD(rpc_type, rpc_name) TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(youjun))::rpc_name)
-#define COMP_MIGRATE_TIMER_DEF(cb) TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb)
-#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
+#define COMP_RPC_METHOD(rpc_type, rpc_name) \
+    TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(youjun))::rpc_name)
+#define COMP_MIGRATE_TIMER_DEF(cb) \
+    TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb); \
+    TEntity::timer_manager.set_timer_component_name_for_restore(#cb, TEntityComp::get_name())
+#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) \
+    get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
 
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
-    TEntityComp* component = new TEntityComp; \
-    component->set_name(TEntityComp::get_name()); \
-    component->set_owner(nullptr); \
-    component_manager.component_regist(component); \
+    TEntityComp* component_##TEntityComp = new TEntityComp; \
+    component_##TEntityComp->set_name(TEntityComp::get_name()); \
+    component_##TEntityComp ->set_owner(nullptr); \
+    component_manager.component_regist(component_##TEntityComp ); \
     TEntityComp::rpc_method_define<TEntity>(); \
     TEntityComp::property_define<TEntity>(); \
-    TEntityComp::migrate_timer_define<TEntity>();
+    TEntityComp::migrate_timer_define<TEntity, TEntityComp>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \
@@ -227,4 +237,4 @@ public: \
 
 #define COMP_RPC_DEFINE template<class TEntity> static void rpc_method_define
 #define COMP_PROPERTY_DEFINE template<class TEntity> static void property_define
-#define COMP_MIGRATE_TIMER_DEFINE template<class TEntity> static void migrate_timer_define
+#define COMP_MIGRATE_TIMER_DEFINE template<class TEntity, class TEntityComp> static void migrate_timer_define

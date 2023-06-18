@@ -366,7 +366,7 @@ MAP用erase(const GString& key)方法
 
 * 改
 
-SIMPLE属性和COMPLEX属性用update(T value)方法
+SIMPLE和COMPLEX用update(T value)方法
 
 ARRAY用update(int32_t idx, T value)方法
 
@@ -374,21 +374,23 @@ MAP用update(const GString& key, T value)方法
 
 * 查
 
-get_prop方法用于访问属性树的第一层子节点，get用于访问COMPLEX属性的成员
+GET_PROP宏用于访问属性树的第一层子节点，MEM宏用于访问COMPLEX属性的成员
 
-ARRAY通过get(int32_t idx)方法访问指定下标元素
+ARRAY通过GET(int32_t idx)宏访问指定下标的元素
 
-MAP通过get(const GString& key)方法访问指定key的元素
+MAP通过GET(const GString& key)宏访问key对应的value
 
-ARRAY的遍历要先用size方法拿到大小，然后for循环配合get(int32_t idx)访问每个元素
+ARRAY的遍历要先用size方法拿到大小，然后for循环配合GET(int32_t idx)访问每个元素
 
-MAP的遍历要先用keys方法拿到所有key，然后for循环配合get(const GString& key)访问每个元素
+MAP的遍历要先用keys方法拿到所有key，然后for循环配合GET(const GString& key)访问每个元素
 
 * 注意
 
 属性系统的增删改查一定要用以上接口，否则会导致脏标记漏更新，从而导致属性同步错误
 
-详细的增删改查使用方法可以参考代码中的property_sync_test函数示例
+* 示例
+
+yjengine实现了一个简单的道具背包系统，用以展示属性的增删改查，具体可以查看代码中的ItemBagComponent
 
 
 ### 属性的同步

@@ -19,10 +19,10 @@
     <ClInclude Include="utils\utils.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="prop_def\avatar_prop_def.h">
-      <Filter>prop_def</Filter>
-    </ClInclude>
     <ClInclude Include="prop_def\components\itembag_prop_def.h">
+      <Filter>prop_def\components</Filter>
+    </ClInclude>
+    <ClInclude Include="prop_def\components\avatar_prop_def.h">
       <Filter>prop_def\components</Filter>
     </ClInclude>
   </ItemGroup>

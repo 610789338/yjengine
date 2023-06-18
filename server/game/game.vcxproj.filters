@@ -40,13 +40,13 @@
     <ClCompile Include="gameplay\entities\avatar.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
-    <ClCompile Include="gameplay\entities\avatar_prop_test.cpp">
-      <Filter>gameplay\entities</Filter>
-    </ClCompile>
     <ClCompile Include="gameplay\entities\monster.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
     <ClCompile Include="gameplay\components\itembag_component.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
+    <ClCompile Include="gameplay\components\avatar_prop_test_component.cpp">
       <Filter>gameplay\components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -70,6 +70,9 @@
       <Filter>gameplay\entities</Filter>
     </ClInclude>
     <ClInclude Include="gameplay\components\itembag_component.h">
+      <Filter>gameplay\components</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\avatar_prop_test_component.h">
       <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>

@@ -59,7 +59,7 @@ public:
 
 #define INIT_CAPACITY 64
 #define PKG_LEN_OFFSET 2
-#define MAX_OFFSET 4096
+#define MAX_OFFSET 4096 * 2
 
     void Reset() {
         m_buf = nullptr;
