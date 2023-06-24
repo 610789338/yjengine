@@ -2,7 +2,7 @@
 
 #include "account.h"
 
-extern void create_base_entity(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid);
+extern void create_entity(const GString& entity_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid, const GDict& init_data);
 
 GENERATE_ENTITY_OUT(BaseAccount)
 
@@ -25,11 +25,11 @@ void BaseAccount::base_rpc_timer() {
 }
 
 void BaseAccount::create_avatar() {
-    create_base_entity("Avatar", client.get_addr(), client.get_gate_addr(), "");
+    create_entity("Avatar", client.get_addr(), client.get_gate_addr(), "", GDict());
 }
 
 void BaseAccount::create_monster() {
-    create_base_entity("Monster", "", "", "");
+    create_entity("Monster", "", "", "", GDict());
 }
 
 void BaseAccount::msg_from_client(const GString& msg) {

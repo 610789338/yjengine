@@ -67,16 +67,17 @@ void get_client_entity_rpc_names_ack(const GArray& client_entity_rpc_names) {
     }
 }
 
-void create_base_entity_new(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr) {
-    Entity* entity = create_local_base_entity(entity_class_name, gen_uuid());
+void create_base_entity_new(const GString& entity_name, const GString& client_addr, const GString& gate_addr, const GDict& init_data) {
+    Entity* entity = create_local_base_entity(entity_name, gen_uuid());
     GDict create_data;
     create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
+    create_data.insert(make_pair("init_data", init_data));
     entity->on_create(create_data);
 }
 
-void create_base_entity_fromdb(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
+void create_base_entity_fromdb(const GString& entity_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
 
     // load from db - TODO: move to child thread
     GString db_file_name = "./db/" + entity_uuid + ".bin";
@@ -96,7 +97,7 @@ void create_base_entity_fromdb(const GString& entity_class_name, const GString& 
     Decoder base_db(base_bin.buf, base_bin.size);
     base_db.read_int16(); // skip pkg len offset
 
-    Entity* entity = create_local_base_entity(entity_class_name, entity_uuid);
+    Entity* entity = create_local_base_entity(entity_name, entity_uuid);
     entity->propertys_unserialize(base_db);
 
     const GBin& cell_bin = db.read_bin(); // cell_bin
@@ -112,14 +113,14 @@ void entity_reconnect_fromclient(Entity* entity, const GString& client_addr, con
     entity->on_reconnect_fromclient(client_addr, gate_addr);
 }
 
-void create_base_entity(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
+void create_entity(const GString& entity_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid, const GDict& init_data) {
     if (entity_uuid.empty()) {
-        create_base_entity_new(entity_class_name, client_addr, gate_addr);
+        create_base_entity_new(entity_name, client_addr, gate_addr, init_data);
     }
     else {
         auto iter = g_base_entities.find(entity_uuid);
         if (iter == g_base_entities.end()) {
-            create_base_entity_fromdb(entity_class_name, client_addr, gate_addr, entity_uuid);
+            create_base_entity_fromdb(entity_name, client_addr, gate_addr, entity_uuid);
         }
         else {
             if (iter->second->is_ready) {
@@ -129,8 +130,25 @@ void create_base_entity(const GString& entity_class_name, const GString& client_
     }
 }
 
-void create_cell_entity(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& gate_addr, const GString& client_addr, const GBin& bin) {
-    Entity* entity = create_local_cell_entity(entity_class_name, entity_uuid);
+//void create_base_entity(const GString& entity_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid, const GDict& init_data) {
+//    if (entity_uuid.empty()) {
+//        create_base_entity_new(entity_name, client_addr, gate_addr, init_data);
+//    }
+//    else {
+//        auto iter = g_base_entities.find(entity_uuid);
+//        if (iter == g_base_entities.end()) {
+//            create_base_entity_fromdb(entity_name, client_addr, gate_addr, entity_uuid);
+//        }
+//        else {
+//            if (iter->second->is_ready) {
+//                entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+//            }
+//        }
+//    }
+//}
+
+void create_cell_entity(const GString& entity_name, const GString& entity_uuid, const GString& base_addr, const GString& gate_addr, const GString& client_addr, const GBin& bin) {
+    Entity* entity = create_local_cell_entity(entity_name, entity_uuid);
 
     const GBin& cell_bin = bin;
     if (cell_bin.size != 0) {
@@ -145,42 +163,6 @@ void create_cell_entity(const GString& entity_class_name, const GString& entity_
     create_data.insert(make_pair("client_addr", client_addr));
     entity->on_create(create_data);
 }
-
-//void call_base_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
-//
-//    auto iter = g_base_entities.find(entity_uuid);
-//    if (iter == g_base_entities.end()) {
-//        ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
-//        return;
-//    }
-//
-//    Entity* entity = iter->second;
-//
-//    Decoder decoder(inner_rpc.buf, inner_rpc.size);
-//    auto const pkg_len = decoder.read_uint16();
-//    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
-//
-//    DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
-//    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
-//}
-//
-//void call_cell_entity(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
-//
-//    auto iter = g_cell_entities.find(entity_uuid);
-//    if (iter == g_cell_entities.end()) {
-//        ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
-//        return;
-//    }
-//
-//    Entity* entity = iter->second;
-//
-//    Decoder decoder(inner_rpc.buf, inner_rpc.size);
-//    auto const pkg_len = decoder.read_uint16();
-//    auto const rpc_imp = entity->rpc_mgr->rpc_decode(inner_rpc.buf + decoder.get_offset(), pkg_len);
-//
-//    DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
-//    entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
-//}
 
 void call_base_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
 
@@ -230,9 +212,9 @@ void on_game_disappear(const GString& game_addr) {
     }
 }
 
-void base_recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_class_name, 
+void base_recover_by_disaster_backup(const GString& cell_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_name,
                                         const GString& entity_uuid, const GBin& disaster_backup_of_base, const GDict& disaster_backup_of_base_migrate_data) {
-    Entity* entity = create_local_base_entity(entity_class_name, entity_uuid);
+    Entity* entity = create_local_base_entity(entity_name, entity_uuid);
     Decoder decoder(disaster_backup_of_base.buf, disaster_backup_of_base.size);
     decoder.skip_head_len();
     entity->propertys_unserialize(decoder);
@@ -240,9 +222,9 @@ void base_recover_by_disaster_backup(const GString& cell_addr, const GString& cl
     entity->recover_by_disaster_backup(cell_addr, client_addr, client_gate_addr);
 }
 
-void cell_recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_class_name, 
+void cell_recover_by_disaster_backup(const GString& base_addr, const GString& client_addr, const GString& client_gate_addr, const GString& entity_name,
                                         const GString& entity_uuid, const GBin& disaster_backup_of_cell, const GDict& disaster_backup_of_cell_migrate_data) {
-    Entity* entity = create_local_cell_entity(entity_class_name, entity_uuid);
+    Entity* entity = create_local_cell_entity(entity_name, entity_uuid);
     Decoder decoder(disaster_backup_of_cell.buf, disaster_backup_of_cell.size);
     decoder.skip_head_len();
     entity->propertys_unserialize(decoder);
@@ -256,19 +238,13 @@ void call_game(InnerRpcPtr_Decode rpc_imp) {
 }
 
 void create_stub(const GString& stub_name) {
-    Entity* entity = create_local_base_entity(stub_name, gen_uuid(), false);
+    Entity* entity = create_local_base_entity(stub_name, gen_uuid());
     entity->on_create(GDict());
 }
 
-//void create_dungeon(const int32_t& dungeon_id, const MailBox& dungeon_mgr) {
-//    Entity* stub = create_local_base_entity(stub_name, gen_uuid(), false);
-//
-//    dungeon_mgr.to_base().call("on_dungeon_create", stub->get_self_mailbox());
-//}
-
 extern void migrate_rpc_handle_regist();
 extern void heartbeat_from_gate();
-extern void on_stub_create(const GString& stub_name, const MailBox& mailbox);
+extern void on_stub_create(const GString& stub_name, MailBox& mailbox);
 
 void rpc_handle_regist() {
 
@@ -278,7 +254,8 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(get_client_entity_rpc_names_ack);
 
-    RPC_REGISTER(create_base_entity);
+    RPC_REGISTER(create_entity);
+    //RPC_REGISTER(create_base_entity);
     RPC_REGISTER(create_cell_entity);
 
     RPC_REGISTER(call_base_entity);
@@ -294,8 +271,6 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(create_stub);
     RPC_REGISTER(on_stub_create);
-
-    //RPC_REGISTER(create_dungeon);
 
     migrate_rpc_handle_regist();
 }

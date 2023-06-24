@@ -17,6 +17,17 @@ void Entity::tick() {
 }
 
 void Entity::on_create(const GDict& create_data) {
+
+    if (create_data.find("init_data") != create_data.end()) {
+        auto& init_data = create_data.at("init_data").as_dict();
+        if (is_base_entity() && init_data.find("base_data") != init_data.end()) {
+            apply_init_data(init_data.at("base_data").as_dict());
+        }
+        else if (is_cell_entity() && init_data.find("cell_data") != init_data.end()) {
+            apply_init_data(init_data.at("cell_data").as_dict());
+        }
+    }
+
     ready_check_timerid = REGIST_TIMER_INNER(10, 0, false, "ready_check_timer", &Entity::ready_check_timer);
     create_heart_beat_timer();
 }
@@ -169,6 +180,24 @@ void Entity::propertys_unserialize(Decoder& decoder) {
     }
 }
 
+bool Entity::is_base_entity() {
+    if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient || 
+        get_entity_type() == EntityType::EntityType_BaseWithClient || 
+        get_entity_type() == EntityType::EntityType_BaseWithCell || 
+        get_entity_type() == EntityType::EntityType_Base) {
+        return true;
+    }
+    return false;
+}
+
+bool Entity::is_cell_entity() {
+    if (get_entity_type() == EntityType::EntityType_CellWithClient ||
+        get_entity_type() == EntityType::EntityType_Cell) {
+        return true;
+    }
+    return false;
+}
+
 bool Entity::need_create_save_timer() {
     if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient) {
         return true;
@@ -177,8 +206,8 @@ bool Entity::need_create_save_timer() {
 }
 
 bool Entity::need_create_disater_backup_timer() {
-    if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient
-        || get_entity_type() == EntityType::EntityType_BaseWithCell) {
+    if (get_entity_type() == EntityType::EntityType_BaseWithCellAndClient || 
+        get_entity_type() == EntityType::EntityType_BaseWithCell) {
         return true;
     }
     return false;
@@ -270,7 +299,7 @@ void BaseEntityWithCell::create_cell(const GDict& create_data) {
 
     // game -> gate -> game
     auto const& session = g_session_mgr.get_rand_session();
-    REMOTE_RPC_CALL(session, "create_cell_entity", class_name, 
+    REMOTE_RPC_CALL(session, "create_cell_entity", entity_name, 
         /*entity uuid*/ uuid,
         /*base addr*/ session->get_local_addr(),
         /*gate addr*/ create_data.at("gate_addr").as_string(),
@@ -398,7 +427,7 @@ void BaseEntityWithCell::on_game_disappear(const GString& game_addr) {
         /*base addr*/get_listen_addr(),
         /*client addr*/GString(),
         /*client gate addr*/GString(),
-        /*entity class name*/class_name,
+        /*entity name*/entity_name,
         /*uuid*/uuid,
         /*disaster backup of cell*/disaster_backup_of_cell,
         /*disaster backup of cell migrate data*/disaster_backup_of_cell_migrate_data);
@@ -447,7 +476,7 @@ void BaseEntityWithClient::ready_check_timer() {
 void BaseEntityWithClient::create_client() {
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.get_gate_addr());
-    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), entity_name,
         /*entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
         /*cell addr*/ ""
@@ -480,7 +509,7 @@ void BaseEntityWithClient::on_reconnect_fromclient(const GString& client_addr, c
 
     // create new client
     auto gate = g_session_mgr.get_gate(gate_addr);
-    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), entity_name,
         /*uuid*/ uuid,
         /*base addr*/ get_listen_addr(),
         /*cell addr*/ ""
@@ -563,7 +592,7 @@ void BaseEntityWithCellAndClient::ready_check_timer() {
 void BaseEntityWithCellAndClient::create_cell(const GDict& create_data) {
     // game -> gate -> game
     auto const& session = g_session_mgr.get_rand_session();
-    REMOTE_RPC_CALL(session, "create_cell_entity", class_name,
+    REMOTE_RPC_CALL(session, "create_cell_entity", entity_name,
         /*entity uuid*/ uuid,
         /*base addr*/ session->get_local_addr(),
         /*gate addr*/ create_data.at("gate_addr").as_string(),
@@ -579,7 +608,7 @@ void BaseEntityWithCellAndClient::on_cell_create(const GString& cell_addr) {
 void BaseEntityWithCellAndClient::create_client() {
     // game -> gate -> client
     auto gate = g_session_mgr.get_gate(client.get_gate_addr());
-    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), class_name,
+    REMOTE_RPC_CALL(gate, "create_client_entity", client.get_addr(), entity_name,
         /*entity uuid*/ uuid,
         /*base addr*/ gate->get_local_addr(),
         /*cell addr*/ cell.get_addr()
@@ -685,7 +714,7 @@ void BaseEntityWithCellAndClient::on_game_disappear(const GString& game_addr) {
         /*base addr*/get_listen_addr(),
         /*client addr*/client.get_addr(),
         /*client gate addr*/client.get_gate_addr(),
-        /*entity class name*/class_name,
+        /*entity name*/entity_name,
         /*uuid*/uuid,
         /*disaster backup of cell*/disaster_backup_of_cell,
         /*disaster backup of cell migrate data*/disaster_backup_of_cell_migrate_data);
@@ -819,7 +848,7 @@ void CellEntity::migrate_entity() {
     REMOTE_RPC_CALL(session, "entity_property_migrate_from_oldcell",
         /*new cell addr*/new_cell_addr,
         /*old cell addr*/get_listen_addr(),
-        /*entity class name*/class_name,
+        /*entity name*/entity_name,
         /*create data*/migrate_data,
         /*entity property*/GBin(encoder.get_buf(), encoder.get_offset()));
 }
@@ -964,7 +993,7 @@ void CellEntity::on_game_disappear(const GString& game_addr) {
         /*base addr*/get_listen_addr(),
         /*client addr*/GString(),
         /*client gate addr*/GString(),
-        /*entity class name*/class_name,
+        /*entity name*/entity_name,
         /*uuid*/uuid,
         /*disaster backup of base*/disaster_backup_of_base,
         /*disaster backup of base migrate data*/disaster_backup_of_base_migrate_data
@@ -1033,7 +1062,7 @@ void CellEntityWithClient::on_reconnect_fromclient(const GString& client_addr, c
 
     // create new client
     auto gate = g_session_mgr.get_gate(gate_addr);
-    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), class_name,
+    REMOTE_RPC_CALL(gate, "create_client_entity_onreconnect", client.get_addr(), entity_name,
         /*uuid*/ uuid,
         /*base addr*/ base.get_addr(),
         /*cell addr*/ gate->get_local_addr()
@@ -1235,7 +1264,7 @@ void CellEntityWithClient::on_game_disappear(const GString& game_addr) {
         /*base addr*/get_listen_addr(),
         /*client addr*/client.get_addr(),
         /*client gate addr*/client.get_gate_addr(),
-        /*entity class name*/class_name,
+        /*entity name*/entity_name,
         /*uuid*/uuid,
         /*disaster backup of base*/disaster_backup_of_base,
         /*disaster backup of base migrate data*/disaster_backup_of_base_migrate_data
@@ -1393,12 +1422,12 @@ EntityCreatorMap* get_entity_creator_map() {
     return &_entity_creator;
 }
 
-void regist_entity_creator(const GString& entity_class_name, const function<Entity*()>& creator) {
-    get_entity_creator_map()->insert(make_pair(entity_class_name, creator));
+void regist_entity_creator(const GString& entity_name, const function<Entity*()>& creator) {
+    get_entity_creator_map()->insert(make_pair(entity_name, creator));
 }
 
-function<Entity*()> get_entity_creator(const GString& entity_class_name) {
-    auto iter = get_entity_creator_map()->find(entity_class_name);
+function<Entity*()> get_entity_creator(const GString& entity_name) {
+    auto iter = get_entity_creator_map()->find(entity_name);
     if (iter == get_entity_creator_map()->end()) {
         return nullptr;
     }
@@ -1406,16 +1435,16 @@ function<Entity*()> get_entity_creator(const GString& entity_class_name) {
     return iter->second;
 }
 
-Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
-    function<Entity*()> creator = get_entity_creator(add_prefix ? "Base" + entity_class_name : entity_class_name);
+Entity* create_local_base_entity(const GString& entity_name, const GString& entity_uuid) {
+    function<Entity*()> creator = get_entity_creator("Base" + entity_name);
     if (!creator) {
-        ERROR_LOG("base entity type(%s) error\n", entity_class_name.c_str());
+        ERROR_LOG("base entity type(%s) error\n", entity_name.c_str());
         return nullptr;
     }
 
     Entity* entity = creator();
     entity->uuid = entity_uuid;
-    entity->class_name = entity_class_name;
+    entity->entity_name = entity_name;
 
     auto iter = g_base_entities.find(entity->uuid);
     if (iter != g_base_entities.end()) {
@@ -1428,21 +1457,21 @@ Entity* create_local_base_entity(const GString& entity_class_name, const GString
     //g_base_entities.insert(make_pair(entity->uuid, entity));
     thread_safe_add_base_entity(entity);
 
-    DEBUG_LOG("create_local_base_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+    DEBUG_LOG("create_local_base_entity %s.%s\n", entity_name.c_str(), entity_uuid.c_str());
 
     return entity;
 }
 
-Entity* create_local_cell_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
-    function<Entity*()> creator = get_entity_creator(add_prefix ? "Cell" + entity_class_name : entity_class_name);
+Entity* create_local_cell_entity(const GString& entity_name, const GString& entity_uuid) {
+    function<Entity*()> creator = get_entity_creator("Cell" + entity_name);
     if (!creator) {
-        ERROR_LOG("cell entity type(%s) error\n", entity_class_name.c_str());
+        ERROR_LOG("cell entity type(%s) error\n", entity_name.c_str());
         return nullptr;
     }
 
     Entity* entity = creator();
     entity->uuid = entity_uuid;
-    entity->class_name = entity_class_name;
+    entity->entity_name = entity_name;
 
     auto iter = g_cell_entities.find(entity->uuid);
     if (iter != g_cell_entities.end()) {
@@ -1455,21 +1484,21 @@ Entity* create_local_cell_entity(const GString& entity_class_name, const GString
     //g_cell_entities.insert(make_pair(entity->uuid, entity));
     thread_safe_add_cell_entity(entity);
 
-    DEBUG_LOG("create_local_cell_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+    DEBUG_LOG("create_local_cell_entity %s.%s\n", entity_name.c_str(), entity_uuid.c_str());
 
     return entity;
 }
 
-Entity* create_local_client_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
-    function<Entity*()> creator = get_entity_creator(add_prefix ? "Client" + entity_class_name : entity_class_name);
+Entity* create_local_client_entity(const GString& entity_name, const GString& entity_uuid) {
+    function<Entity*()> creator = get_entity_creator("Client" + entity_name);
     if (!creator) {
-        ERROR_LOG("client entity type(%s) error\n", entity_class_name.c_str());
+        ERROR_LOG("client entity type(%s) error\n", entity_name.c_str());
         return nullptr;
     }
 
     Entity* entity = creator();
     entity->uuid = entity_uuid;
-    entity->class_name = entity_class_name;
+    entity->entity_name = entity_name;
 
     auto iter = g_client_entities.find(entity->uuid);
     if (iter != g_client_entities.end()) {
@@ -1482,7 +1511,7 @@ Entity* create_local_client_entity(const GString& entity_class_name, const GStri
     //g_client_entities.insert(make_pair(entity->uuid, entity));
     thread_safe_add_client_entity(entity);
 
-    DEBUG_LOG("create_local_client_entity %s.%s\n", entity_class_name.c_str(), entity_uuid.c_str());
+    DEBUG_LOG("create_local_client_entity %s.%s\n", entity_name.c_str(), entity_uuid.c_str());
 
     return entity;
 }
@@ -1528,6 +1557,13 @@ void destroy_local_client_entity(const GString& entity_uuid) {
 
 RpcManagerBase* get_entity_rpc_mgr(Entity* entity) {
     return entity->get_rpc_mgr();
+}
+
+bool is_base_only(int8_t entity_type) {
+    if ((EntityType)entity_type == EntityType::EntityType_Base) {
+        return true;
+    }
+    return false;
 }
 
 void entity_tick() {

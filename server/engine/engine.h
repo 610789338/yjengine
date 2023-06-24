@@ -46,7 +46,7 @@ public: \
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
-EntityRpcManager<TCLASS> TCLASS::rpc_manager(#TCLASS, []()->TCLASS* { \
+EntityRpcManager<TCLASS> TCLASS::rpc_manager(#TCLASS, (EntityType)TCLASS::ENTITY_TYPE, []()->TCLASS* { \
     auto entity = new TCLASS(); \
     entity->give_propertys(property_manager.propertys); \
     component_manager.generate_entity_components(entity); \

@@ -16,7 +16,8 @@ static void gen_global_rpc_name_turn() {
     g_rpc_names_l2s.insert(make_pair("disconnect_from_client", idx++));
     g_rpc_names_l2s.insert(make_pair("regist_from_gate", idx++));
     g_rpc_names_l2s.insert(make_pair("get_client_entity_rpc_names_ack", idx++));
-    g_rpc_names_l2s.insert(make_pair("create_base_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_entity", idx++));
+    //g_rpc_names_l2s.insert(make_pair("create_base_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("create_cell_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("call_base_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("call_cell_entity", idx++));

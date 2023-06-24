@@ -3,19 +3,19 @@
 
 #include "gate_instance.h"
 
-GENERATE_ENTITY_OUT(BaseGateInstance);
+GENERATE_ENTITY_OUT(GateInstance);
 
 
-void BaseGateInstance::on_game_disappear(const GString& game_addr) {
+void GateInstance::on_game_disappear(const GString& game_addr) {
     g_remote_mgr.foreach_remote([this, &game_addr](const GString& remote_name, shared_ptr<Remote> remote) {
         REMOTE_RPC_CALL(remote, "on_game_disappear", game_addr);
     });
 }
 
-BaseGateInstance* g_gate_instance = nullptr;
+GateInstance* g_gate_instance = nullptr;
 
 void create_gate_instance() {
-    g_gate_instance = (BaseGateInstance*)create_local_base_entity("GateInstance", gen_uuid());
+    g_gate_instance = (GateInstance*)create_local_base_entity("GateInstance", gen_uuid());
     g_gate_instance->on_create(GDict());
     g_gate_instance->ready();
 }

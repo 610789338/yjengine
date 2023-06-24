@@ -10,17 +10,17 @@
 
 using namespace std;
 
-GENERATE_ENTITY_OUT(BaseGameInstance);
+GENERATE_ENTITY_OUT(GameInstance);
 
 extern void create_stub(const GString& stub_name);
 
-void BaseGameInstance::on_ready() {
+void GameInstance::on_ready() {
     // 延时1s等待集群互连后广播通知
     // TODO - 等做了服务器发现再做动态通知
     REGIST_TIMER(1, 0, false, create_stubs);
 }
 
-void BaseGameInstance::create_stubs() {
+void GameInstance::create_stubs() {
     auto stub_names_ini = ini_get_string("Stub", "stub_names", "");
     if (stub_names_ini == "") {
         return;
@@ -33,13 +33,13 @@ void BaseGameInstance::create_stubs() {
     }
 }
 
-void BaseGameInstance::on_gate_disappear(const GString& gate_addr) {
+void GameInstance::on_gate_disappear(const GString& gate_addr) {
 }
 
-BaseGameInstance* g_game_instance = nullptr;
+GameInstance* g_game_instance = nullptr;
 
 void create_game_instance() {
-    g_game_instance = (BaseGameInstance*)create_local_base_entity("GameInstance", gen_uuid());
+    g_game_instance = (GameInstance*)create_local_base_entity("GameInstance", gen_uuid());
     g_game_instance->on_create(GDict());
     g_game_instance->ready();
 }

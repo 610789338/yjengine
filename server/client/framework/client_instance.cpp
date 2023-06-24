@@ -5,24 +5,24 @@
 
 extern void connect_gate();
 
-GENERATE_ENTITY_OUT(ClientGameInstance);
+GENERATE_ENTITY_OUT(ClientInstance);
 
-void ClientGameInstance::on_gate_disappear(const GString& gate_addr) {
+void ClientInstance::on_gate_disappear(const GString& gate_addr) {
     connect_gate();
 }
 
-void ClientGameInstance::set_should_call_create(bool should_call_create) {
+void ClientInstance::set_should_call_create(bool should_call_create) {
     m_should_call_create = should_call_create;
 }
 
-bool ClientGameInstance::get_should_call_create() {
+bool ClientInstance::get_should_call_create() {
     return m_should_call_create;
 }
 
-ClientGameInstance* g_client_instance = nullptr;
+ClientInstance* g_client_instance = nullptr;
 
 void create_client_instance() {
-    g_client_instance = (ClientGameInstance*)create_local_client_entity("GameInstance", gen_uuid());
+    g_client_instance = (ClientInstance*)create_local_base_entity("ClientInstance", gen_uuid());
     g_client_instance->Entity::on_create(GDict());
     g_client_instance->ready();
 }

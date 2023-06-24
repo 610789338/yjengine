@@ -51,6 +51,7 @@ public:
     void tick();
 
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
+    virtual void apply_init_data(const GDict& create_data) {}
     virtual void on_create(const GDict& create_data);
     virtual void ready_check_timer();
     virtual void create_heart_beat_timer() {}
@@ -83,6 +84,8 @@ public:
     void serialize_all_client(Encoder& encoder, bool need_clean_dirty = false);
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
+    bool is_base_entity();
+    bool is_cell_entity();
     bool need_create_save_timer();
     bool need_create_disater_backup_timer();
     virtual void create_dbsave_timer() { ASSERT(false); }
@@ -145,7 +148,7 @@ public:
     MailBox get_self_mailbox();
 
     GString uuid = "";
-    GString class_name = "";
+    GString entity_name = "";
 
     MAP<GString, EntityPropertyBase*> propertys;
     unordered_map<EntityPropertyBase*, GString> propertys_turn;
@@ -458,9 +461,9 @@ extern unordered_map<GString, Entity*> g_base_entities;
 extern unordered_map<GString, Entity*> g_cell_entities;
 extern unordered_map<GString, Entity*> g_client_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
-extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
-extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
-extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
+extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid);
 extern void destroy_local_base_entity(const GString& entity_uuid);
 extern void destroy_local_cell_entity(const GString& entity_uuid);
 extern void destroy_local_client_entity(const GString& entity_uuid);

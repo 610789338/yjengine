@@ -12,7 +12,9 @@ void DungeonMananger::enter_dungeon(const MailBox& avatar, int32_t dungeon_id) {
 }
 
 void DungeonMananger::req_create_dungeon(int32_t dungeon_id) {
-    //GAME_UNICAST_RANDOM(create_dungeon, dungeon_id, get_self_mailbox());
+    GDict init_data;
+    init_data.insert(make_pair("dungeon_id", dungeon_id));
+    GAME_UNICAST_RANDOM(create_entity, "Dungeon", "", "", "", init_data);
 }
 
 void DungeonMananger::on_dungeon_create(const GString& dungeon_uuid, int32_t dungeon_id, const MailBox& dungeon_mailbox) {

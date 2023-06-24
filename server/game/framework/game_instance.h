@@ -5,9 +5,9 @@
 #include "common/utils/utils.h"
 
 
-class BaseGameInstance : public BaseEntity {
+class GameInstance : public BaseEntity {
 
-    GENERATE_ENTITY_INNER(BaseGameInstance);
+    GENERATE_ENTITY_INNER(GameInstance);
 
     static void regist_components() {}
     static void rpc_method_define() {}
@@ -15,12 +15,12 @@ class BaseGameInstance : public BaseEntity {
     static void migrate_timer_define() {}
 
 public:
-    BaseGameInstance() {}
-    ~BaseGameInstance() {}
+    GameInstance() {}
+    ~GameInstance() {}
 
     void on_ready();
     void on_gate_disappear(const GString& gate_addr);
     void create_stubs();
 };
 
-extern BaseGameInstance* g_game_instance;
+extern GameInstance* g_game_instance;

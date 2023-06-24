@@ -222,6 +222,7 @@ extern GArray* get_local_entity_rpc_names();
 extern unordered_map<GString, uint16_t> all_rpc_names_l2s;
 extern unordered_map<uint16_t, GString> all_rpc_names_s2l;
 extern boost::shared_mutex g_rpc_name_turn_mutex;
+extern bool is_base_only(int8_t entity_type);
 
 // entity rpc manager
 template<class EntityClassType>
@@ -229,8 +230,11 @@ class EntityRpcManager : public RpcManagerBase {
 
 public:
     EntityRpcManager() = delete;
-    EntityRpcManager(const GString& entity_class_name, const function<Entity*()>& creator) {
-        regist_entity_creator(entity_class_name, creator);
+    EntityRpcManager(GString entity_name, int8_t entity_type, const function<Entity*()>& creator) {
+        if (is_base_only(entity_type)) {
+            entity_name = "Base" + entity_name;
+        }
+        regist_entity_creator(entity_name, creator);
         EntityClassType::rpc_method_define_inside();
         EntityClassType::rpc_method_define();
     }

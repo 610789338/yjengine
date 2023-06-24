@@ -71,7 +71,7 @@ void CellAvatar::on_ready() {
 
     INFO_LOG("CellAvatar on_ready\n");
 
-    REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, cell_rpc_timer);
+    //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, cell_rpc_timer);
 
     //get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, avatar_timer_test, "arg1"));
 }

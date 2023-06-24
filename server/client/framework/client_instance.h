@@ -5,9 +5,9 @@
 #include "common/utils/utils.h"
 
 
-class ClientGameInstance : public ClientEntity {
+class ClientInstance : public BaseEntity {
 
-    GENERATE_ENTITY_INNER(ClientGameInstance);
+    GENERATE_ENTITY_INNER(ClientInstance);
 
     static void regist_components() {}
     static void rpc_method_define() {}
@@ -15,8 +15,8 @@ class ClientGameInstance : public ClientEntity {
     static void migrate_timer_define() {}
 
 public:
-    ClientGameInstance() {}
-    ~ClientGameInstance() {}
+    ClientInstance() {}
+    ~ClientInstance() {}
 
     void on_gate_disappear(const GString& gate_addr);
 
@@ -27,4 +27,4 @@ private:
     bool m_should_call_create = true;
 };
 
-extern ClientGameInstance* g_client_instance;
+extern ClientInstance* g_client_instance;

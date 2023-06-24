@@ -63,20 +63,20 @@ void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
     }
 
     if (g_client_instance->get_should_call_create()) {
-        const GString& class_name = ini_get_string("Entity", "class_name", "Account");
-        const GString& base_uuid = ini_get_string("Entity", "uuid", "empty");
-        if (base_uuid == "empty") {
-            REMOTE_RPC_CALL(remote, "create_base_entity", class_name, "");
+        const GString& entity_name = ini_get_string("Entity", "entity_name", "Account");
+        const GString& base_uuid = ini_get_string("Entity", "uuid", "");
+        if (base_uuid == "") {
+            REMOTE_RPC_CALL(remote, "create_entity", entity_name, "");
         }
         else {
-            REMOTE_RPC_CALL(remote, "create_base_entity", class_name, base_uuid);
+            REMOTE_RPC_CALL(remote, "create_entity", entity_name, base_uuid);
         }
         g_client_instance->set_should_call_create(false);
     }
 }
 
-void create_client_entity(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
-    Entity* entity = create_local_client_entity(entity_class_name, entity_uuid);
+void create_client_entity(const GString& entity_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
+    Entity* entity = create_local_client_entity(entity_name, entity_uuid);
 
     GDict create_data;
     create_data.insert(make_pair("base_addr", base_addr));
@@ -84,12 +84,12 @@ void create_client_entity(const GString& entity_class_name, const GString& entit
     entity->on_create(create_data);
 }
 
-void create_client_entity_onreconnect(const GString& entity_class_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
+void create_client_entity_onreconnect(const GString& entity_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
     Entity* entity = nullptr;
 
     auto iter = g_client_entities.find(entity_uuid);
     if (iter == g_client_entities.end()) {
-        entity = create_local_client_entity(entity_class_name, entity_uuid);
+        entity = create_local_client_entity(entity_name, entity_uuid);
     }
     else {
         entity = iter->second;
