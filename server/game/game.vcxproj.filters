@@ -13,6 +13,9 @@
     <Filter Include="gameplay\components">
       <UniqueIdentifier>{4daba879-75ad-4d2d-9fdc-bc892ea3f013}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gameplay\entities\stubs">
+      <UniqueIdentifier>{3341e664-63b2-4d0e-8e9a-c03f78b95f15}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.ini" />
@@ -49,6 +52,15 @@
     <ClCompile Include="gameplay\components\avatar_prop_test_component.cpp">
       <Filter>gameplay\components</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\stubs\dungeon_manager.cpp">
+      <Filter>gameplay\entities\stubs</Filter>
+    </ClCompile>
+    <ClCompile Include="framework\stub_base.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
+    <ClCompile Include="framework\distributed_notify.cpp">
+      <Filter>framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -74,6 +86,15 @@
     </ClInclude>
     <ClInclude Include="gameplay\components\avatar_prop_test_component.h">
       <Filter>gameplay\components</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\entities\stubs\dungeon_manager.h">
+      <Filter>gameplay\entities\stubs</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\stub_base.h">
+      <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\distributed_notify.h">
+      <Filter>framework</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

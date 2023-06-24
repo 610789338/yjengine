@@ -18,7 +18,9 @@ public:
     BaseGameInstance() {}
     ~BaseGameInstance() {}
 
+    void on_ready();
     void on_gate_disappear(const GString& gate_addr);
+    void create_stubs();
 };
 
 extern BaseGameInstance* g_game_instance;

@@ -104,6 +104,23 @@ uint32_t bkdr_hash(const char* str) {
     return hash;
 }
 
+void split(string str, const string& pattern, vector<string>& result) {
+    result.clear();
+
+    string::size_type pos;
+    str += pattern; // TODO
+    int32_t size = (int32_t)str.size();
+
+    for (int32_t i = 0; i < size; i++) {
+        pos = str.find(pattern, i);
+        if (pos < size) {
+            string s = str.substr(i, pos - i);
+            result.push_back(s);
+            i = int32_t(pos + pattern.size() - 1);
+        }
+    }
+}
+
 extern void engine_tick();
 void main_tick(const int64_t ms_pertick = 100) {
 

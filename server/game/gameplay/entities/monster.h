@@ -15,8 +15,13 @@ class BaseMonster : public BaseEntityWithCell {
         RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
     }
     static void property_define() {
-        BaseMonster::property_manager.template regist_simple_property<int32_t>(PropType::ALL, "monster_id", 1001);
+        _property_define<BaseMonster>();
     }
+    template<class TEntity>
+    static void _property_define() {
+        PROPERTY_SIMPLE(PropType::ALL, monster_id, int32_t, 1001);
+    }
+
     static void migrate_timer_define() {
         MIGRATE_TIMER_DEF(monster_migrate_timer);
         MIGRATE_TIMER_DEF(base_rpc_timer);

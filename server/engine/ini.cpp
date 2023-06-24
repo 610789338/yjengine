@@ -52,12 +52,12 @@ float ini_get_float(const char* node_name, const char* child_name, float _defaul
     }
 }
 
-GString ini_get_string(const char* node_name, const char* child_name, GString _default/* = "" */) {
+GString ini_get_string(const char* node_name, const char* child_name, GString _default/* = "0xF0F00F0F" */) {
     try {
         return get_ini()->get_string(node_name, child_name);
     }
     catch (std::exception& e) {
-        if (_default == "") {
+        if (_default == "0xF0F00F0F") {
             ASSERT_LOG(false, "%s\n", e.what());
         }
         return _default;

@@ -142,6 +142,8 @@ public:
     virtual void on_game_disappear(const GString& game_addr) {}
     virtual void recover_by_disaster_backup(const GString& addr, const GString& client_addr, const GString& client_gate_addr) { ASSERT(false); }
 
+    MailBox get_self_mailbox();
+
     GString uuid = "";
     GString class_name = "";
 
@@ -421,10 +423,7 @@ public:
 
 public:
     ClientEntity() {
-        base.set_side("client");
         base.set_owner(this);
-
-        cell.set_side("client");
         cell.set_owner(this);
     }
     virtual ~ClientEntity() {}
@@ -459,9 +458,9 @@ extern unordered_map<GString, Entity*> g_base_entities;
 extern unordered_map<GString, Entity*> g_cell_entities;
 extern unordered_map<GString, Entity*> g_client_entities;
 extern void regist_entity_creator(const GString& entity, const function<Entity*()>& creator);
-extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid);
-extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid);
-extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
+extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
+extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid, bool add_prefix = true);
 extern void destroy_local_base_entity(const GString& entity_uuid);
 extern void destroy_local_cell_entity(const GString& entity_uuid);
 extern void destroy_local_client_entity(const GString& entity_uuid);

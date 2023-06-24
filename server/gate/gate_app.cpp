@@ -4,6 +4,8 @@
 
 using namespace std;
 
+bool g_is_server = true;
+
 GString ini_file("gate.ini");
 extern void create_gate_instance();
 

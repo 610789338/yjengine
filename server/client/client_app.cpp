@@ -9,6 +9,8 @@
 
 using namespace std;
 
+bool g_is_server = false;
+
 extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();

@@ -41,7 +41,8 @@ public: \
     } \
     void time_to_disaster_backup() { real_time_to_disaster_backup(); } \
     EventManager<TCLASS> event_manager; \
-    EventManagerBase* get_event_manager() { return &event_manager; }
+    EventManagerBase* get_event_manager() { return &event_manager; } \
+    GString get_entity_name() { return #TCLASS; }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \

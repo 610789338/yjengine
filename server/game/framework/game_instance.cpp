@@ -1,10 +1,37 @@
+#include <vector>
+#include <string>
+
+#include "boost/regex.hpp"
+
 #include "engine/utils.h"
 #include "engine/log.h"
 
 #include "game_instance.h"
 
+using namespace std;
 
 GENERATE_ENTITY_OUT(BaseGameInstance);
+
+extern void create_stub(const GString& stub_name);
+
+void BaseGameInstance::on_ready() {
+    // 延时1s等待集群互连后广播通知
+    // TODO - 等做了服务器发现再做动态通知
+    REGIST_TIMER(1, 0, false, create_stubs);
+}
+
+void BaseGameInstance::create_stubs() {
+    auto stub_names_ini = ini_get_string("Stub", "stub_names", "");
+    if (stub_names_ini == "") {
+        return;
+    }
+
+    vector<string> stub_names;
+    split(stub_names_ini, "|", stub_names);
+    for (auto iter1 = stub_names.begin(); iter1 != stub_names.end(); ++iter1) {
+        create_stub(*iter1);
+    }
+}
 
 void BaseGameInstance::on_gate_disappear(const GString& gate_addr) {
 }

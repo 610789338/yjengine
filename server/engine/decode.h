@@ -29,6 +29,7 @@ public:
     GArray read_array();
     GDict read_dict();
     GBin read_bin();
+    MailBox read_mailbox();
     GValue read_gvalue();
 
     uint16_t get_max_offset() { return m_max_offset; }
@@ -62,3 +63,4 @@ template<> GString decoder_read<GString>(Decoder& decoder);
 template<> GArray decoder_read<GArray>(Decoder& decoder);
 template<> GDict decoder_read<GDict>(Decoder& decoder);
 template<> GBin decoder_read<GBin>(Decoder& decoder);
+template<> MailBox decoder_read<MailBox>(Decoder& decoder);

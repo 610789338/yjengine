@@ -25,6 +25,10 @@ static void gen_global_rpc_name_turn() {
     g_rpc_names_l2s.insert(make_pair("on_game_disappear", idx++));
     g_rpc_names_l2s.insert(make_pair("base_recover_by_disaster_backup", idx++));
     g_rpc_names_l2s.insert(make_pair("cell_recover_by_disaster_backup", idx++));
+    g_rpc_names_l2s.insert(make_pair("call_game", idx++));
+    g_rpc_names_l2s.insert(make_pair("create_stub", idx++));
+    g_rpc_names_l2s.insert(make_pair("on_stub_create", idx++));
+
     // gate
     g_rpc_names_l2s.insert(make_pair("on_remote_connected", idx++));
     g_rpc_names_l2s.insert(make_pair("on_remote_disconnected", idx++));
@@ -36,6 +40,10 @@ static void gen_global_rpc_name_turn() {
     g_rpc_names_l2s.insert(make_pair("create_client_entity_onreconnect", idx++));
     g_rpc_names_l2s.insert(make_pair("call_client_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("heartbeat_from_gate", idx++));
+    g_rpc_names_l2s.insert(make_pair("game_broadcast", idx++));
+    g_rpc_names_l2s.insert(make_pair("game_unicast", idx++));
+    g_rpc_names_l2s.insert(make_pair("game_unicast_random", idx++));
+
     // client
     g_rpc_names_l2s.insert(make_pair("regist_ack_from_gate", idx++));
     g_rpc_names_l2s.insert(make_pair("get_game_entity_rpc_names_ack", idx++));
@@ -184,6 +192,13 @@ bool RpcManager::imp_queue_empty() {
 RpcManager g_rpc_manager;
 
 RemoteRpcQueueEleManager g_remote_rpc_queue_ele_mgr;
+
+void RpcMethod1_Special::decode(Decoder& decoder) {
+    GBin inner_rpc_bin = decoder_read<GBin>(decoder);
+    Decoder inner_decoder(inner_rpc_bin.buf, inner_rpc_bin.size);
+    auto const pkg_len = inner_decoder.read_uint16();
+    rpc_imp = g_rpc_manager.rpc_decode(inner_rpc_bin.buf + inner_decoder.get_offset(), pkg_len);
+}
 
 void RpcMethod3_Special::decode(Decoder& decoder) {
     from_client = decoder_read<bool>(decoder);

@@ -131,8 +131,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="prop_def\account_prop_def.h" />
+    <ClInclude Include="prop_def\alias.h" />
     <ClInclude Include="prop_def\components\avatar_prop_def.h" />
     <ClInclude Include="prop_def\components\itembag_prop_def.h" />
+    <ClInclude Include="prop_def\dungeon_manager_prop_def.h" />
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

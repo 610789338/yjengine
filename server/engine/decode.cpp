@@ -152,6 +152,17 @@ GBin Decoder::read_bin() {
     return bin;
 }
 
+MailBox Decoder::read_mailbox() {
+    if (is_finish()) return MailBox();
+
+    auto entity_uuid = read_string();
+    auto addr = read_string();
+
+    MailBox mailbox;
+    mailbox.set_entity_and_addr(entity_uuid, addr);
+
+    return mailbox;
+}
 
 GValue Decoder::read_gvalue() {
     uint8_t t = read_uint8();
@@ -186,6 +197,8 @@ GValue Decoder::read_gvalue() {
         return GValue(read_dict());
     case GType::BIN_T:
         return GValue(read_bin());
+    case GType::MAILBOX_T:
+        return GValue(read_mailbox());
     default:
         ERROR_LOG("error type.%d\n", t);
         ASSERT(false);
@@ -223,3 +236,4 @@ template<> GString decoder_read<GString>(Decoder& decoder) { return decoder.read
 template<> GArray decoder_read<GArray>(Decoder& decoder) { return decoder.read_array(); }
 template<> GDict decoder_read<GDict>(Decoder& decoder) { return decoder.read_dict(); }
 template<> GBin decoder_read<GBin>(Decoder& decoder) { return decoder.read_bin(); }
+template<> MailBox decoder_read<MailBox>(Decoder& decoder) { return decoder.read_mailbox(); }

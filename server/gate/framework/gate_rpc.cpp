@@ -189,6 +189,23 @@ void cell_recover_by_disaster_backup(const GString& base_addr, const GString& cl
     REMOTE_RPC_CALL(remote, "cell_recover_by_disaster_backup", base_addr, client_addr, client_gate_addr, entity_class_name, entity_uuid, disaster_backup_of_cell, disaster_backup_of_cell_migrate_data);
 }
 
+void game_broadcast(const GBin& inner_rpc) {
+    g_remote_mgr.foreach_remote([&inner_rpc](const GString& remote_name, shared_ptr<Remote> remote) {
+        REMOTE_RPC_CALL(remote, "call_game", inner_rpc);
+    });
+}
+
+void game_unicast(const GString& addr, const GBin& inner_rpc) {
+    auto remote = g_remote_mgr.get_remote(addr);
+    REMOTE_RPC_CALL(remote, "call_game", inner_rpc);
+}
+
+void game_unicast_random(const GBin& inner_rpc) {
+    auto remote = g_remote_mgr.get_rand_remote();
+    REMOTE_RPC_CALL(remote, "call_game", inner_rpc);
+}
+
+
 extern void migrate_rpc_handle_regist();
 extern void heartbeat_from_game();
 
@@ -218,6 +235,10 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(base_recover_by_disaster_backup);
     RPC_REGISTER(cell_recover_by_disaster_backup);
+
+    RPC_REGISTER(game_broadcast);
+    RPC_REGISTER(game_unicast);
+    RPC_REGISTER(game_unicast_random);
 
     migrate_rpc_handle_regist();
 }

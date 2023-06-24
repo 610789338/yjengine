@@ -12,15 +12,6 @@
 
 using namespace std;
 
-
-//#define __PROP_SYNC_TEST__
-
-#ifdef __PROP_SYNC_TEST__
-    #define MAP map
-#else
-    #define MAP unordered_map
-#endif
-
 #define RMCVR(T) typename std::remove_cv<typename std::remove_reference<T>::type>::type 
 #define RMP(T) std::remove_pointer<T>::type
 
@@ -28,6 +19,41 @@ class GValue;
 typedef string GString;
 typedef vector<GValue> GArray;
 typedef unordered_map<GString, GValue> GDict;
+
+
+class Entity;
+class Session;
+class Remote;
+class BaseMailBox;
+class CellMailBox;
+
+class MailBox {
+
+public:
+    MailBox();
+    MailBox(const MailBox& other)
+        : m_entity_uuid(other.m_entity_uuid)
+        , m_addr(other.m_addr)
+    {}
+    ~MailBox();
+
+    void set_entity_and_addr(const GString& entity_uuid, const GString& addr);
+    void set_owner(Entity* owner) { /*m_owner = owner;*/ }
+    GString& get_entity_uuid();
+    GString& get_addr();
+
+    BaseMailBox& to_base();
+    CellMailBox& to_cell();
+
+protected:
+    GString     m_entity_uuid = "";
+    GString     m_addr = "";
+    //Entity*     m_owner;
+
+public:
+    shared_ptr<Session> m_session_cache = nullptr;
+    shared_ptr<Remote> m_remote_cache = nullptr;
+};
 
 struct GBin {
 public:
@@ -87,7 +113,7 @@ public:
     uint16_t size = 0;
 };
 
-enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T, BIN_T, NONE_T};
+enum GType : uint8_t {BOOL_T, INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, UINT32_T, UINT64_T, FLOAT_T, DOUBLE_T, STRING_T, ARRAY_T, DICT_T, BIN_T, MAILBOX_T, NONE_T};
 
 class GValue {
 
@@ -111,6 +137,7 @@ class GValue {
         GArray* array;
         GDict* dict;
         GBin* bin;
+        MailBox* mailbox;
     };
 
 public:
@@ -137,6 +164,7 @@ public:
     GValue(const GArray& v) : m_t(GType::ARRAY_T) { m_v.array = new GArray(v); }
     GValue(const GDict& v) : m_t(GType::DICT_T) { m_v.dict = new GDict(v); }
     GValue(GBin&& v) : m_t(GType::BIN_T) { m_v.bin = new GBin(v); }
+    GValue(MailBox&& v);
 
     GValue(const GValue& rs);
     GValue& operator=(const GValue& rs);
@@ -159,6 +187,7 @@ public:
     GArray& as_array() const { ASSERT(m_t == GType::ARRAY_T); return *(m_v.array); }
     GDict& as_dict() const { ASSERT(m_t == GType::DICT_T); return *(m_v.dict); }
     GBin& as_bin() const { ASSERT(m_t == GType::BIN_T); return *(m_v.bin); }
+    MailBox& as_mailbox() const;
 
     GType type() const { return m_t; }
 private:

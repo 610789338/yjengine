@@ -104,6 +104,11 @@ void Encoder::write_bin(const GBin& v) {
     m_offset += uint16_t(v.size);
 }
 
+void Encoder::write_mailbox(const MailBox& v) {
+    write_string(const_cast<MailBox&>(v).get_entity_uuid());
+    write_string(const_cast<MailBox&>(v).get_addr());
+}
+
 void Encoder::write_gvalue(const GValue& v) {
     write_uint8(v.type());
 
@@ -150,6 +155,9 @@ void Encoder::write_gvalue(const GValue& v) {
         break;
     case GType::BIN_T:
         write_bin(v.as_bin());
+        break;
+    case GType::MAILBOX_T:
+        write_mailbox(v.as_mailbox());
         break;
     default:
         ERROR_LOG("error type.%d\n", v.type());

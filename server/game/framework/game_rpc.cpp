@@ -73,7 +73,7 @@ void create_base_entity_new(const GString& entity_class_name, const GString& cli
     create_data.insert(make_pair("cell_bin", GBin(nullptr, 0)));
     create_data.insert(make_pair("client_addr", client_addr));
     create_data.insert(make_pair("gate_addr", gate_addr));
-    entity->on_create(create_data);;
+    entity->on_create(create_data);
 }
 
 void create_base_entity_fromdb(const GString& entity_class_name, const GString& client_addr, const GString& gate_addr, const GString& entity_uuid) {
@@ -250,8 +250,25 @@ void cell_recover_by_disaster_backup(const GString& base_addr, const GString& cl
     entity->recover_by_disaster_backup(base_addr, client_addr, client_gate_addr);
 }
 
+void call_game(InnerRpcPtr_Decode rpc_imp) {
+    DEBUG_LOG("call_game %s\n", rpc_imp->get_rpc_name().c_str());
+    rpc_imp->get_rpc_method()->exec();
+}
+
+void create_stub(const GString& stub_name) {
+    Entity* entity = create_local_base_entity(stub_name, gen_uuid(), false);
+    entity->on_create(GDict());
+}
+
+//void create_dungeon(const int32_t& dungeon_id, const MailBox& dungeon_mgr) {
+//    Entity* stub = create_local_base_entity(stub_name, gen_uuid(), false);
+//
+//    dungeon_mgr.to_base().call("on_dungeon_create", stub->get_self_mailbox());
+//}
+
 extern void migrate_rpc_handle_regist();
 extern void heartbeat_from_gate();
+extern void on_stub_create(const GString& stub_name, const MailBox& mailbox);
 
 void rpc_handle_regist() {
 
@@ -272,6 +289,13 @@ void rpc_handle_regist() {
 
     RPC_REGISTER(base_recover_by_disaster_backup);
     RPC_REGISTER(cell_recover_by_disaster_backup);
+
+    RPC_REGISTER(call_game);
+
+    RPC_REGISTER(create_stub);
+    RPC_REGISTER(on_stub_create);
+
+    //RPC_REGISTER(create_dungeon);
 
     migrate_rpc_handle_regist();
 }

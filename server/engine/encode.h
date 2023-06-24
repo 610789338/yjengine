@@ -100,6 +100,7 @@ public:
     void write(const GArray& v) { write_array(v); }
     void write(const GDict& v) { write_dict(v); }
     void write(const GBin& v) { write_bin(v); }
+    void write(const MailBox& v) { write_mailbox(v); }
     void write(const GValue& v) { ASSERT_LOG(false, "can not use GValue type\n"); }
 
     void write_bool(bool v);
@@ -120,6 +121,7 @@ public:
     void write_array(const GArray& v);
     void write_dict(const GDict& v);
     void write_bin(const GBin& v);
+    void write_mailbox(const MailBox& v);
     void write_end();
 
     bool anything() { return m_offset > PKG_LEN_OFFSET; }

@@ -1,5 +1,15 @@
 #include "gvalue.h"
+#include "mailbox.h"
 
+
+GValue::GValue(MailBox&& v) : m_t(GType::MAILBOX_T) {
+    m_v.mailbox = new MailBox(v);
+}
+
+MailBox& GValue::as_mailbox() const { 
+    ASSERT(m_t == GType::MAILBOX_T); 
+    return *(m_v.mailbox); 
+}
 
 void GValue::release() {
     if (GType::STRING_T == m_t && m_v.s != nullptr) {
@@ -17,6 +27,10 @@ void GValue::release() {
     else if (GType::BIN_T == m_t && m_v.bin != nullptr) {
         delete m_v.bin;
         m_v.bin = nullptr;
+    }
+    else if (GType::MAILBOX_T == m_t && m_v.mailbox != nullptr) {
+        delete m_v.mailbox;
+        m_v.mailbox = nullptr;
     }
 }
 
@@ -36,6 +50,9 @@ GValue::GValue(const GValue& rs) {
         break;
     case BIN_T:
         m_v.bin = new GBin(rs.as_bin());
+        break;
+    case MAILBOX_T:
+        m_v.mailbox = new MailBox(rs.as_mailbox());
         break;
     default:
         memmove(this, &rs, sizeof(GValue));
@@ -61,6 +78,9 @@ GValue& GValue::operator=(const GValue& rs) {
         break;
     case BIN_T:
         m_v.bin = new GBin(rs.as_bin());
+        break;
+    case MAILBOX_T:
+        m_v.mailbox = new MailBox(rs.as_mailbox());
         break;
     default:
         memmove(this, &rs, sizeof(GValue));
@@ -92,6 +112,10 @@ GValue::GValue(GValue&& rs) {
         m_v.bin = rs.m_v.bin;
         rs.m_v.bin = nullptr;
         break;
+    case MAILBOX_T:
+        m_v.mailbox = rs.m_v.mailbox;
+        rs.m_v.mailbox = nullptr;
+        break;
     default:
         memmove(this, &rs, sizeof(GValue));
         break;
@@ -119,6 +143,10 @@ GValue& GValue::operator=(GValue&& rs) {
     case BIN_T:
         m_v.bin = rs.m_v.bin;
         rs.m_v.bin = nullptr;
+        break;
+    case MAILBOX_T:
+        m_v.mailbox = rs.m_v.mailbox;
+        rs.m_v.mailbox = nullptr;
         break;
     default:
         memmove(this, &rs, sizeof(GValue));

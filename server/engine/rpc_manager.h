@@ -99,6 +99,18 @@ struct RpcMethod1 : public RpcMethodBase {
     RpcMethodBase* copy_self() { return new RpcMethod1(cb, t1); }
 };
 
+// special for game rpc
+struct RpcMethod1_Special : public RpcMethodBase {
+    typedef void(*CBType)(InnerRpcPtr_Decode);
+    RpcMethod1_Special(CBType _cb) : cb(_cb) {}
+    CBType cb;
+    InnerRpcPtr_Decode rpc_imp;
+
+    void decode(Decoder& decoder);
+    void exec() { cb(rpc_imp); }
+    RpcMethodBase* create_self() { return new RpcMethod1_Special(cb); }
+};
+
 template<class T1, class T2>
 struct RpcMethod2 : public RpcMethodBase {
     typedef void(*CBType)(T1, T2);
@@ -301,6 +313,12 @@ public:
         add_rpc_method(rpc_name, method);
     }
 
+    // special for game rpc
+    void rpc_regist(const GString& rpc_name, void(*cb)(InnerRpcPtr_Decode)) {
+        RpcMethodBase* method = new RpcMethod1_Special(cb);
+        add_rpc_method(rpc_name, method);
+    }
+
     template<class T1, class T2>
     void rpc_regist(const GString& rpc_name, void(*cb)(T1, T2)) {
         RpcMethodBase* method = new RpcMethod2<T1, T2>(cb);
@@ -398,6 +416,23 @@ struct RemoteRpcQueueEle1 : public RemoteRpcQueueEleBase {
     }
 
     RMCVR(T1) t1;
+};
+
+// special for game rpc
+struct RemoteRpcQueueEle1_Special : public RemoteRpcQueueEleBase {
+    RemoteRpcQueueEle1_Special(const GString& _rpc_name, InnerRpcPtr_Encode _inner_rpc)
+        : inner_rpc(_inner_rpc), RemoteRpcQueueEleBase(_rpc_name) {}
+    virtual ~RemoteRpcQueueEle1_Special() {}
+
+    virtual Encoder encode() {
+        Encoder encoder = std::move(inner_rpc->encode());
+        GBin inner_rpc_bin;
+        encoder.move_to_bin(inner_rpc_bin);
+        //GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
+        return Encoder(std::move(g_rpc_manager.rpc_encode(rpc_name, inner_rpc_bin)));
+    }
+
+    shared_ptr<RemoteRpcQueueEleBase> inner_rpc;
 };
 
 template<class T1, class T2>
@@ -572,6 +607,11 @@ public:
     template<class T1>
     shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, T1 t1) {
         return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle1<T1>(rpc_name, t1));
+    }
+
+    // special for game rpc
+    shared_ptr<RemoteRpcQueueEleBase> gen_remote_rpc_queue_ele(const GString& rpc_name, InnerRpcPtr_Encode inner_rpc) {
+        return shared_ptr<RemoteRpcQueueEleBase>(new RemoteRpcQueueEle1_Special(rpc_name, inner_rpc));
     }
 
     template<class T1, class T2>

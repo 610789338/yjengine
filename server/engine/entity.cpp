@@ -241,6 +241,12 @@ void Entity::remove_timer(TimerBase* timer) {
     }
 }
 
+MailBox Entity::get_self_mailbox() {
+    MailBox mailbox;
+    mailbox.set_entity_and_addr(uuid, get_listen_addr());
+    return mailbox;
+}
+
 void BaseEntity::on_create(const GDict& create_data) {
     Entity::on_create(create_data);
 
@@ -890,7 +896,6 @@ void CellEntity::migrate_failed_rollback(const GString& reason) {
 
         // notify new cell destroy
         CellMailBox new_cell;
-        new_cell.set_side("server");
         new_cell.set_entity_and_addr(uuid, new_cell_addr);
         new_cell.set_owner(this);
         new_cell.call("on_new_cell_migrate_finish");
@@ -1194,7 +1199,6 @@ void CellEntityWithClient::migrate_failed_rollback(const GString& reason) {
 
         // notify new cell destroy
         CellMailBox new_cell;
-        new_cell.set_side("server");
         new_cell.set_entity_and_addr(uuid, new_cell_addr);
         new_cell.set_owner(this);
         new_cell.call("on_new_cell_migrate_finish");
@@ -1402,8 +1406,8 @@ function<Entity*()> get_entity_creator(const GString& entity_class_name) {
     return iter->second;
 }
 
-Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid) {
-    function<Entity*()> creator = get_entity_creator("Base" + entity_class_name);
+Entity* create_local_base_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
+    function<Entity*()> creator = get_entity_creator(add_prefix ? "Base" + entity_class_name : entity_class_name);
     if (!creator) {
         ERROR_LOG("base entity type(%s) error\n", entity_class_name.c_str());
         return nullptr;
@@ -1429,8 +1433,8 @@ Entity* create_local_base_entity(const GString& entity_class_name, const GString
     return entity;
 }
 
-Entity* create_local_cell_entity(const GString& entity_class_name, const GString& entity_uuid) {
-    function<Entity*()> creator = get_entity_creator("Cell" + entity_class_name);
+Entity* create_local_cell_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
+    function<Entity*()> creator = get_entity_creator(add_prefix ? "Cell" + entity_class_name : entity_class_name);
     if (!creator) {
         ERROR_LOG("cell entity type(%s) error\n", entity_class_name.c_str());
         return nullptr;
@@ -1456,8 +1460,8 @@ Entity* create_local_cell_entity(const GString& entity_class_name, const GString
     return entity;
 }
 
-Entity* create_local_client_entity(const GString& entity_class_name, const GString& entity_uuid) {
-    function<Entity*()> creator = get_entity_creator("Client" + entity_class_name);
+Entity* create_local_client_entity(const GString& entity_class_name, const GString& entity_uuid, bool add_prefix) {
+    function<Entity*()> creator = get_entity_creator(add_prefix ? "Client" + entity_class_name : entity_class_name);
     if (!creator) {
         ERROR_LOG("client entity type(%s) error\n", entity_class_name.c_str());
         return nullptr;

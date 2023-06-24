@@ -25,6 +25,12 @@
     <ClInclude Include="prop_def\components\avatar_prop_def.h">
       <Filter>prop_def\components</Filter>
     </ClInclude>
+    <ClInclude Include="prop_def\dungeon_manager_prop_def.h">
+      <Filter>prop_def</Filter>
+    </ClInclude>
+    <ClInclude Include="prop_def\alias.h">
+      <Filter>prop_def</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils\utils.cpp">

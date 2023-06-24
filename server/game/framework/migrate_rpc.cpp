@@ -15,7 +15,6 @@ void entity_property_migrate_from_oldcell(const GString& old_cell_addr, const GS
 
     // notify old cell destroy
     CellMailBox old_cell;
-    old_cell.set_side("server");
     old_cell.set_entity_and_addr(entity_uuid, old_cell_addr);
     old_cell.set_owner(entity);
     old_cell.call("on_new_cell_migrate_finish");

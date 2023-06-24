@@ -135,9 +135,11 @@
     <None Include="game.ini" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="framework\distributed_notify.cpp" />
     <ClCompile Include="framework\game_instance.cpp" />
     <ClCompile Include="framework\game_rpc.cpp" />
     <ClCompile Include="framework\migrate_rpc.cpp" />
+    <ClCompile Include="framework\stub_base.cpp" />
     <ClCompile Include="gameplay\components\avatar_prop_test_component.cpp" />
     <ClCompile Include="gameplay\components\create_avatar_component.cpp" />
     <ClCompile Include="gameplay\components\itembag_component.cpp" />
@@ -145,16 +147,20 @@
     <ClCompile Include="gameplay\entities\account_prop_test.cpp" />
     <ClCompile Include="gameplay\entities\avatar.cpp" />
     <ClCompile Include="gameplay\entities\monster.cpp" />
+    <ClCompile Include="gameplay\entities\stubs\dungeon_manager.cpp" />
     <ClCompile Include="game_app.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="framework\distributed_notify.h" />
     <ClInclude Include="framework\game_instance.h" />
+    <ClInclude Include="framework\stub_base.h" />
     <ClInclude Include="gameplay\components\avatar_prop_test_component.h" />
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
     <ClInclude Include="gameplay\components\itembag_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\entities\avatar.h" />
     <ClInclude Include="gameplay\entities\monster.h" />
+    <ClInclude Include="gameplay\entities\stubs\dungeon_manager.h" />
     <ClInclude Include="gameplay\game_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
