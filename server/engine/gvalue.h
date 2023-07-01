@@ -39,8 +39,8 @@ public:
 
     void set_entity_and_addr(const GString& entity_uuid, const GString& addr);
     void set_owner(Entity* owner) { /*m_owner = owner;*/ }
-    GString& get_entity_uuid();
-    GString& get_addr();
+    GString get_entity_uuid() const;
+    GString get_addr() const;
 
     BaseMailBox& to_base();
     CellMailBox& to_cell();
@@ -163,8 +163,8 @@ public:
     GValue(const GString& v) : m_t(GType::STRING_T) { m_v.s = new GString(v); }
     GValue(const GArray& v) : m_t(GType::ARRAY_T) { m_v.array = new GArray(v); }
     GValue(const GDict& v) : m_t(GType::DICT_T) { m_v.dict = new GDict(v); }
-    GValue(GBin&& v) : m_t(GType::BIN_T) { m_v.bin = new GBin(v); }
-    GValue(MailBox&& v);
+    GValue(const GBin& v) : m_t(GType::BIN_T) { m_v.bin = new GBin(v); }
+    GValue(const MailBox& v) : m_t(GType::MAILBOX_T) { m_v.mailbox = new MailBox(v); }
 
     GValue(const GValue& rs);
     GValue& operator=(const GValue& rs);
@@ -187,7 +187,7 @@ public:
     GArray& as_array() const { ASSERT(m_t == GType::ARRAY_T); return *(m_v.array); }
     GDict& as_dict() const { ASSERT(m_t == GType::DICT_T); return *(m_v.dict); }
     GBin& as_bin() const { ASSERT(m_t == GType::BIN_T); return *(m_v.bin); }
-    MailBox& as_mailbox() const;
+    MailBox& as_mailbox() const { ASSERT(m_t == GType::MAILBOX_T); return *(m_v.mailbox); }
 
     GType type() const { return m_t; }
 private:

@@ -2,9 +2,12 @@
 
 #include "distributed_notify.h"
 
-void StubBase::on_ready() {
-    INFO_LOG("stub(%s) ready\n", get_entity_name().c_str());
+
+void StubBase::on_create(const GDict& create_data) {
+    INFO_LOG("stub(%s) create\n", get_entity_name().c_str());
     GAME_BROADCAST(on_stub_create, get_entity_name(), get_self_mailbox());
+
+    BaseEntity::on_create(create_data);
 }
 
 

@@ -146,6 +146,7 @@
     <ClCompile Include="gameplay\entities\account.cpp" />
     <ClCompile Include="gameplay\entities\account_prop_test.cpp" />
     <ClCompile Include="gameplay\entities\avatar.cpp" />
+    <ClCompile Include="gameplay\entities\dungeon.cpp" />
     <ClCompile Include="gameplay\entities\monster.cpp" />
     <ClCompile Include="gameplay\entities\stubs\dungeon_manager.cpp" />
     <ClCompile Include="game_app.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="gameplay\components\itembag_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\entities\avatar.h" />
+    <ClInclude Include="gameplay\entities\dungeon.h" />
     <ClInclude Include="gameplay\entities\monster.h" />
     <ClInclude Include="gameplay\entities\stubs\dungeon_manager.h" />
     <ClInclude Include="gameplay\game_utils.h" />

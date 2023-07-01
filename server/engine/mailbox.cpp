@@ -13,11 +13,11 @@ void MailBox::set_entity_and_addr(const GString& entity_uuid, const GString& add
     m_addr = addr;
 }
 
-GString& MailBox::get_entity_uuid() { 
+GString MailBox::get_entity_uuid() const { 
     return m_entity_uuid; 
 }
 
-GString& MailBox::get_addr() { 
+GString MailBox::get_addr() const {
     return m_addr; 
 }
 

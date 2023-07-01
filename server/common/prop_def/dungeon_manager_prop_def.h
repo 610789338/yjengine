@@ -4,12 +4,16 @@
 #include "alias.h"
 
 struct DungeonProxy : public EntityPropertyComplex {
-    MEM_PROP_BEGIN_3_MEM(DungeonProxy, 
-        uuid, 
+    MEM_PROP_BEGIN_2_MEM(DungeonProxy, 
         id, 
-        addr);
+        mailbox);
 
-    MEM_PROP_SIMPLE(uuid, GString, "");
     MEM_PROP_SIMPLE(id, int32_t, 0);
-    MEM_PROP_SIMPLE(addr, GString, "");
+    MEM_PROP_SIMPLE(mailbox, MailBox, MailBox());
+};
+
+struct DungeonProxyContainer : public EntityPropertyComplex {
+    MEM_PROP_BEGIN_1_MEM(DungeonProxyContainer, proxys);
+
+    MEM_PROP_MAP(proxys, DungeonProxy);
 };

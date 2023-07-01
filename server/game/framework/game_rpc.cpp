@@ -238,8 +238,7 @@ void call_game(InnerRpcPtr_Decode rpc_imp) {
 }
 
 void create_stub(const GString& stub_name) {
-    Entity* entity = create_local_base_entity(stub_name, gen_uuid());
-    entity->on_create(GDict());
+    create_entity(stub_name, "", "", "", GDict());
 }
 
 extern void migrate_rpc_handle_regist();

@@ -224,7 +224,7 @@ struct EntityPropertySimple : public EntityPropertyBase {
 
     EntityPropertySimple() : v(T()) {}
     EntityPropertySimple(const T& _v) : v(_v) {}
-    EntityPropertySimple(const TCallBack& cb, T _v) : v(_v) { cb(this); }
+    EntityPropertySimple(const TCallBack& cb, const T& _v) : v(_v) { cb(this); }
     EntityPropertySimple(const EntityPropertySimple& other) : v(other.v) {};
 
     EntityPropertySimple<T>& operator=(const EntityPropertySimple<T>& other) { 
@@ -259,6 +259,7 @@ struct EntityPropertySimple : public EntityPropertyBase {
     double as_double() const { return v.as_double(); }
     GString& as_string() const { return v.as_string(); }
     GBin& as_bin() const { return v.as_bin(); }
+    MailBox& as_mailbox() const { return v.as_mailbox(); }
 
     void serialize(Encoder& encoder, bool need_clean_dirty) { if (need_clean_dirty) clean_dirty(); encoder.write_gvalue(v); }
     void serialize_all(Encoder& encoder, bool need_clean_dirty) { if (need_clean_dirty) clean_dirty(); encoder.write_gvalue(v); }
@@ -613,6 +614,7 @@ ENTITY_PROPERTY_ARRAY_PARTIAL(GString)
 ENTITY_PROPERTY_ARRAY_PARTIAL(float)
 ENTITY_PROPERTY_ARRAY_PARTIAL(double)
 ENTITY_PROPERTY_ARRAY_PARTIAL(GBin)
+ENTITY_PROPERTY_ARRAY_PARTIAL(MailBox)
 
 template<class T>
 void EntityPropertyBase::push_back(const T& v) {
@@ -925,6 +927,7 @@ ENTITY_PROPERTY_MAP_PARTIAL(GString)
 ENTITY_PROPERTY_MAP_PARTIAL(float)
 ENTITY_PROPERTY_MAP_PARTIAL(double)
 ENTITY_PROPERTY_MAP_PARTIAL(GBin)
+ENTITY_PROPERTY_MAP_PARTIAL(MailBox)
 
 
 template<class T>
@@ -1037,6 +1040,10 @@ public:
     EntityPropertyArray<prop_class> property_name = EntityPropertyArray<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
 #define MEM_PROP_MAP(property_name, prop_class) \
     EntityPropertyMap<prop_class> property_name = EntityPropertyMap<prop_class>([this](EntityPropertyBase* mem){ mem->link_node(this, #property_name);})
+
+#define GEN_ARRAY(prop_class) EntityPropertyArray<prop_class>()
+#define GEN_MAP(prop_class) EntityPropertyMap<prop_class>()
+
 
 #define MEM_PROP_BEGIN_1_MEM(TComplex, Mem1) MEM_PROP_BEGIN(TComplex, 1) COPY_CONSTRUCT_1(TComplex, Mem1)
 #define MEM_PROP_BEGIN_2_MEM(TComplex, Mem1, Mem2) MEM_PROP_BEGIN(TComplex, 2) COPY_CONSTRUCT_2(TComplex, Mem1, Mem2)

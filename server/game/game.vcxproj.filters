@@ -61,6 +61,9 @@
     <ClCompile Include="framework\distributed_notify.cpp">
       <Filter>framework</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\entities\dungeon.cpp">
+      <Filter>gameplay\entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -95,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="framework\distributed_notify.h">
       <Filter>framework</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\entities\dungeon.h">
+      <Filter>gameplay\entities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

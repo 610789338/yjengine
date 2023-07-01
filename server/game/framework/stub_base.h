@@ -9,9 +9,10 @@ public:
     StubBase() {}
     ~StubBase() {}
 
+    virtual void on_create(const GDict& create_data);
+
     virtual GString get_entity_name() { return ""; };
 
-    void on_ready();
 };
 
 
@@ -25,5 +26,5 @@ void call_stub(const GString& stub_name, const GString& rpc_name, T... args) {
         return;
     }
 
-    iter->as_mailbox().to_base().call(rpc_name, args...);
+    iter->second.as_mailbox().to_base().call(rpc_name, args...);
 }

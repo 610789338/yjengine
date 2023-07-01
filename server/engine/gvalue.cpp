@@ -2,15 +2,6 @@
 #include "mailbox.h"
 
 
-GValue::GValue(MailBox&& v) : m_t(GType::MAILBOX_T) {
-    m_v.mailbox = new MailBox(v);
-}
-
-MailBox& GValue::as_mailbox() const { 
-    ASSERT(m_t == GType::MAILBOX_T); 
-    return *(m_v.mailbox); 
-}
-
 void GValue::release() {
     if (GType::STRING_T == m_t && m_v.s != nullptr) {
         delete m_v.s;
