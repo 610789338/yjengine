@@ -24,8 +24,9 @@ typedef unordered_map<GString, GValue> GDict;
 class Entity;
 class Session;
 class Remote;
-class BaseMailBox;
-class CellMailBox;
+class MailBoxProxy;
+//class BaseMailBox;
+//class CellMailBox;
 
 class MailBox {
 
@@ -34,23 +35,41 @@ public:
     MailBox(const MailBox& other)
         : m_entity_uuid(other.m_entity_uuid)
         , m_addr(other.m_addr)
+        , m_flag(other.m_flag)
     {}
     ~MailBox();
 
+    bool is_valid();
+
     void set_entity_and_addr(const GString& entity_uuid, const GString& addr);
-    void set_owner(Entity* owner) { /*m_owner = owner;*/ }
+    void set_owner(Entity* owner) { m_owner = owner; }
+    void set_flag(int8_t flag);
+
     GString get_entity_uuid() const;
     GString get_addr() const;
+    int8_t get_flag() const;
+    Entity* get_owner();
 
-    BaseMailBox& to_base();
-    CellMailBox& to_cell();
+    void set_base() { m_flag |= 0x01; }
+    bool is_base() { return m_flag & 0x01; }
+    bool is_cell() { return !is_base(); }
+    void set_b2c() { m_flag |= 0x02; }
+    bool is_b2c() { return m_flag & 0x02; }
+
+    MailBoxProxy& to_proxy() const;
+    //BaseMailBox& to_base();
+    //CellMailBox& to_cell();
 
 protected:
     GString     m_entity_uuid = "";
     GString     m_addr = "";
-    //Entity*     m_owner;
+
+    // bit 0: 1 is base, 0 is cell
+    // bit 1: is b2c
+    int8_t      m_flag = 0x00;
 
 public:
+    Entity*     m_owner = nullptr;
     shared_ptr<Session> m_session_cache = nullptr;
     shared_ptr<Remote> m_remote_cache = nullptr;
 };

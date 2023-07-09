@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include "engine/gvalue.h"
-#include "engine/ini.h"
+#include "engine/engine.h"
 
 #include "client_instance.h"
 
@@ -85,14 +84,9 @@ void create_client_entity(const GString& entity_name, const GString& entity_uuid
 }
 
 void create_client_entity_onreconnect(const GString& entity_name, const GString& entity_uuid, const GString& base_addr, const GString& cell_addr) {
-    Entity* entity = nullptr;
-
-    auto iter = g_client_entities.find(entity_uuid);
-    if (iter == g_client_entities.end()) {
+    Entity* entity = thread_safe_get_cell_entity(entity_uuid);
+    if (entity == nullptr) {
         entity = create_local_client_entity(entity_name, entity_uuid);
-    }
-    else {
-        entity = iter->second;
     }
 
     GDict create_data;
@@ -102,14 +96,12 @@ void create_client_entity_onreconnect(const GString& entity_name, const GString&
 }
 
 void call_client_entity(bool placeholder, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
-
-    auto iter = g_client_entities.find(entity_uuid);
-    if (iter == g_client_entities.end()) {
+    auto entity = thread_safe_get_client_entity(entity_uuid);
+    if (entity == nullptr) {
         ERROR_LOG("call_client_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Entity* entity = iter->second;
     DEBUG_LOG("call_client_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
     entity->rpc_call(placeholder, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }

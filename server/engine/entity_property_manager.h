@@ -65,6 +65,7 @@ struct EntityPropertyBase {
     virtual double as_double() const { ASSERT(false); return double(); }
     virtual GString& as_string() const { ASSERT(false); static GString ret; return ret; }
     virtual GBin& as_bin() const { ASSERT(false); static GBin ret; return ret; }
+    virtual MailBox& as_mailbox() const { ASSERT(false); static MailBox ret; return ret; }
 
     template<class T>
     void update(const T& v);

@@ -145,7 +145,7 @@ public:
     virtual void on_game_disappear(const GString& game_addr) {}
     virtual void recover_by_disaster_backup(const GString& addr, const GString& client_addr, const GString& client_gate_addr) { ASSERT(false); }
 
-    MailBox get_self_mailbox();
+    virtual MailBox get_self_mailbox() { ASSERT(false); MailBox* p = nullptr; return *p; }
 
     GString uuid = "";
     GString entity_name = "";
@@ -181,6 +181,8 @@ public:
     virtual void on_create(const GDict& create_data);
     virtual void ready() { Entity::ready(); }  // must exist
     virtual void on_destroy() {}
+
+    virtual MailBox get_self_mailbox();
 };
 
 class BaseEntityWithCell : public BaseEntity {
@@ -324,7 +326,7 @@ public:
     virtual void destroy_self();
 
     // migrate
-    virtual void begin_migrate(const GString& ignore);
+    virtual void begin_migrate(const GString& new_addr);
     virtual void migrate_reqack_from_base(bool is_ok);
     virtual void real_begin_migrate();
     virtual void migrate_entity();
@@ -347,6 +349,7 @@ public:
     virtual void base_recover_by_disaster_backup_success(const GString& base_addr);
 
     virtual BaseMailBox& get_base_mailbox() { return base; }
+    MailBox get_self_mailbox();
 
     BaseMailBox base;
 
@@ -467,6 +470,10 @@ extern Entity* create_local_client_entity(const GString& entity_type, const GStr
 extern void destroy_local_base_entity(const GString& entity_uuid);
 extern void destroy_local_cell_entity(const GString& entity_uuid);
 extern void destroy_local_client_entity(const GString& entity_uuid);
+
+extern Entity* thread_safe_get_base_entity(GString entity_uuid);
+extern Entity* thread_safe_get_cell_entity(GString entity_uuid);
+extern Entity* thread_safe_get_client_entity(GString entity_uuid);
 
 extern RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid);
 extern RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid);

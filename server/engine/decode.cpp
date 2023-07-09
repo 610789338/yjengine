@@ -157,9 +157,11 @@ MailBox Decoder::read_mailbox() {
 
     auto entity_uuid = read_string();
     auto addr = read_string();
+    auto flag = read_int8();
 
     MailBox mailbox;
     mailbox.set_entity_and_addr(entity_uuid, addr);
+    mailbox.set_flag(flag);
 
     return mailbox;
 }

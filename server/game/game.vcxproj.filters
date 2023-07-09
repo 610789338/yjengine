@@ -64,6 +64,9 @@
     <ClCompile Include="gameplay\entities\dungeon.cpp">
       <Filter>gameplay\entities</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\components\dungeon_component.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -101,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="gameplay\entities\dungeon.h">
       <Filter>gameplay\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\dungeon_component.h">
+      <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

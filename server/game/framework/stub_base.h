@@ -26,5 +26,5 @@ void call_stub(const GString& stub_name, const GString& rpc_name, T... args) {
         return;
     }
 
-    iter->second.as_mailbox().to_base().call(rpc_name, args...);
+    iter->second.as_mailbox().to_proxy().call(rpc_name, args...);
 }

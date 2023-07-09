@@ -15,6 +15,7 @@ class DungeonManager : public StubBase {
         RPC_METHOD(RpcType::SERVER_ONLY, create_dungeon);
         RPC_METHOD(RpcType::SERVER_ONLY, on_dungeon_create);
         RPC_METHOD(RpcType::SERVER_ONLY, enter_dungeon);
+        RPC_METHOD(RpcType::SERVER_ONLY, enter_random_dungeon);
     }
     static void property_define() {
         _property_define<DungeonManager>();
@@ -34,5 +35,6 @@ public:
 
     void create_dungeon(int32_t dungeon_id);
     void on_dungeon_create(int32_t dungeon_id, const MailBox& dungeon_mailbox);
+    void enter_random_dungeon(const MailBox& avatar);
     void enter_dungeon(const MailBox& avatar, int32_t dungeon_id);
 };

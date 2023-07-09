@@ -91,6 +91,9 @@ public:
     template<class... T>
     void local_rpc_call(const GString& rpc_name, const T&... args) {
         Encoder encoder = std::move(g_rpc_manager.rpc_encode(rpc_name, args...));
+        //Decoder decoder(encoder.get_buf(), encoder.get_offset());
+        //auto pkg_len = decoder.read_int16();
+        //auto imp = g_rpc_manager.rpc_decode(decoder.get_buf() + decoder.get_offset(), pkg_len);
         auto imp = g_rpc_manager.rpc_decode(encoder.get_buf() + 2, encoder.get_offset() - 2);
         imp->set_session(shared_from_this());
         g_rpc_manager.imp_queue_push(imp);

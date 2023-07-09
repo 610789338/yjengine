@@ -142,6 +142,7 @@
     <ClCompile Include="framework\stub_base.cpp" />
     <ClCompile Include="gameplay\components\avatar_prop_test_component.cpp" />
     <ClCompile Include="gameplay\components\create_avatar_component.cpp" />
+    <ClCompile Include="gameplay\components\dungeon_component.cpp" />
     <ClCompile Include="gameplay\components\itembag_component.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />
     <ClCompile Include="gameplay\entities\account_prop_test.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="framework\stub_base.h" />
     <ClInclude Include="gameplay\components\avatar_prop_test_component.h" />
     <ClInclude Include="gameplay\components\create_avatar_component.h" />
+    <ClInclude Include="gameplay\components\dungeon_component.h" />
     <ClInclude Include="gameplay\components\itembag_component.h" />
     <ClInclude Include="gameplay\entities\account.h" />
     <ClInclude Include="gameplay\entities\avatar.h" />

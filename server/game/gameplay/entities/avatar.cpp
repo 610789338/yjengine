@@ -11,8 +11,8 @@ void BaseAvatar::on_ready() {
     INFO_LOG("BaseAvatar on_ready\n");
 
     //test_timer = REGIST_TIMER(5, 60, true, avatar_timer_test, "1 minutes");
-    migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
-    REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
+    //migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
+    //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
 
     //REGIST_EVENT("event_test", entity_event_test);
     //REGIST_TIMER(5, 0, false, avatar_event_timer);
@@ -74,6 +74,8 @@ void CellAvatar::on_ready() {
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, cell_rpc_timer);
 
     //get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, avatar_timer_test, "arg1"));
+
+    REGIST_EVENT("begin_migrate", begin_migrate);
 }
 
 void CellAvatar::msg_from_base(const GString& msg) {

@@ -18,7 +18,7 @@ class Dungeon : public BaseEntity {
     }
     template<class TEntity>
     static void _property_define() {
-        PROPERTY_SIMPLE(PropType::BASE_PRIVATE, dungeon_id, int32_t, 1001);
+        PROPERTY_SIMPLE(PropType::BASE_PRIVATE, dungeon_id, int32_t, 0);
         PROPERTY_MAP(PropType::BASE_PRIVATE, avatars, MailBox);
     }
 
@@ -31,4 +31,7 @@ public:
 
     void apply_init_data(const GDict& init_data);
     void on_ready();
+
+    void avatar_enter(const GString& avatar_uuid, const MailBox& avatar_mailbox);
+    void avatar_leave(const GString& avatar_uuid, const MailBox& avatar_mailbox);
 };

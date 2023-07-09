@@ -158,6 +158,18 @@ void call_base_entity(const GString& base_addr, const GString& entity_uuid, cons
     REMOTE_RPC_CALL(remote, "call_base_entity", from_client, entity_uuid, inner_rpc);
 }
 
+void call_base_entity_b2c(const GString& base_addr, const GString& entity_uuid, const GBin& inner_rpc) {
+    auto remote = g_remote_mgr.get_remote(base_addr);
+    if (nullptr == remote) {
+        return;
+    }
+
+    //INFO_LOG("call_base_entity_b2c %s\n", entity_uuid.c_str());
+
+    bool from_client = g_cur_imp->get_session() != nullptr;
+    REMOTE_RPC_CALL(remote, "call_base_entity_b2c", from_client, entity_uuid, inner_rpc);
+}
+
 void call_cell_entity(const GString& cell_addr, const GString& entity_uuid, const GBin& inner_rpc) {
     auto remote = g_remote_mgr.get_remote(cell_addr);
     if (nullptr == remote) {
@@ -241,6 +253,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_client_entity_onreconnect);
 
     RPC_REGISTER(call_base_entity);
+    RPC_REGISTER(call_base_entity_b2c);
     RPC_REGISTER(call_cell_entity);
     RPC_REGISTER(call_client_entity);
 

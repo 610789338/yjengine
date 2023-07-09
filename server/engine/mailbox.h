@@ -14,12 +14,72 @@ class Entity;
 extern RpcManagerBase* get_entity_rpc_mgr(Entity* entity);
 extern bool g_is_server;
 
-
-class BaseMailBox : public MailBox {
-
+class MailBoxProxy : public MailBox {
 public:
-    BaseMailBox() {}
-    ~BaseMailBox() {}
+    MailBoxProxy() {}
+    ~MailBoxProxy() {}
+
+    //template<class... T>
+    //void local_call(const GString& rpc_name, T... args) {
+    //    const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
+    //    GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
+    //    Decoder inner_decoder(inner_rpc_bin.buf, inner_rpc_bin.size);
+    //    auto const pkg_len = inner_decoder.read_uint16();
+
+    //    RpcManagerBase* rpcmgr = nullptr;
+    //    if (is_base()) {
+    //        rpcmgr = thread_safe_get_base_entity_rpcmgr(get_entity_uuid());
+    //        if (!rpcmgr) {
+    //            ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
+    //            return;
+    //        }
+    //    }
+    //    else {
+    //        rpcmgr = thread_safe_get_cell_entity_rpcmgr(get_entity_uuid());
+    //        if (!rpcmgr) {
+    //            ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
+    //            return;
+    //        }
+    //    }
+    //    else {
+    //        ASSERT_LOG("error special rpc.%s\n", rpc_name.c_str());
+    //    }
+
+    //    auto rpc_imp = rpcmgr->rpc_decode(inner_rpc_bin.buf + inner_decoder.get_offset(), pkg_len);
+
+    //    if (g_is_server) {
+    //        if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
+    //            m_session_cache = g_session_mgr.get_fixed_session(m_addr);
+    //        }
+    //        auto gate = m_session_cache;
+    //        if (nullptr == gate) {
+    //            WARN_LOG("gate empty\n");
+    //            return;
+    //        }
+    //        if (is_base()) {
+    //            LOCAL_RPC_CALL(gate, "call_base_entity", false, m_entity_uuid, rpc_imp);
+    //        }
+    //        else {
+    //            LOCAL_RPC_CALL(gate, "call_cell_entity", false, m_entity_uuid, rpc_imp);
+    //        }
+    //    }
+    //    else {
+    //        if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
+    //            m_remote_cache = g_remote_mgr.get_fixed_remote(m_addr);
+    //        }
+    //        auto gate = m_remote_cache;
+    //        if (nullptr == gate) {
+    //            WARN_LOG("gate empty\n");
+    //            return;
+    //        }
+    //        if (is_base()) {
+    //            LOCAL_RPC_CALL(gate, "call_base_entity", false, m_entity_uuid, rpc_imp);
+    //        }
+    //        else {
+    //            LOCAL_RPC_CALL(gate, "call_cell_entity", false, m_entity_uuid, rpc_imp);
+    //        }
+    //    }
+    //}
 
     template<class... T>
     void call(const GString& rpc_name, T... args) {
@@ -33,6 +93,55 @@ public:
                 WARN_LOG("gate empty\n");
                 return;
             }
+            if (is_base()) {
+                if (is_b2c()) {
+                    REMOTE_RPC_CALL(gate, "call_base_entity_b2c", m_addr, m_entity_uuid, inner_rpc);
+                }
+                else {
+                    REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
+                }
+            }
+            else {
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+        }
+        else {
+            if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
+                m_remote_cache = g_remote_mgr.get_fixed_remote(m_addr);
+            }
+            auto gate = m_remote_cache;
+            if (nullptr == gate) {
+                WARN_LOG("gate empty\n");
+                return;
+            }
+            if (is_base()) {
+                REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+            else {
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+        }
+    }
+};
+
+class BaseMailBox : public MailBox {
+
+public:
+    BaseMailBox() { set_base(); }
+    ~BaseMailBox() {}
+    template<class... T>
+    void call(const GString& rpc_name, T... args) {
+        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
+        if (g_is_server) {
+            if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
+                m_session_cache = g_session_mgr.get_fixed_session(m_addr);
+            }
+            auto gate = m_session_cache;
+            if (nullptr == gate) {
+                WARN_LOG("gate empty\n");
+                return;
+            }
+
             REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
         }
         else {
@@ -44,6 +153,7 @@ public:
                 WARN_LOG("gate empty\n");
                 return;
             }
+
             REMOTE_RPC_CALL(gate, "call_base_entity", m_addr, m_entity_uuid, inner_rpc);
         }
     }
@@ -135,10 +245,6 @@ public:
 public:
     template<class... T>
     void call(const GString& rpc_name, T... args) {
-
-        //const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
-        //GBin inner_rpc(encoder.get_buf(), encoder.get_offset());
-
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
 
         auto gate = g_session_mgr.get_gate(m_gate_addr);

@@ -39,6 +39,27 @@ void DungeonManager::on_dungeon_create(int32_t dungeon_id, const MailBox& dungeo
     dungeon_proxys.insert(dungeon_mailbox.get_entity_uuid(), dungeon_proxy);
 }
 
-void DungeonManager::enter_dungeon(const MailBox& avatar, int32_t dungeon_id) {
+void DungeonManager::enter_random_dungeon(const MailBox& avatar) {
+    auto& all_dungeon_proxys = GET_PROP(all_dungeon_proxys);
 
+    auto keys = all_dungeon_proxys.keys();
+    auto nowms = nowms_timestamp();
+    auto idx = nowms % keys.size();
+    auto dungeon_id = std::stoi(keys[idx]);
+    enter_dungeon(avatar, dungeon_id);
+}
+
+void DungeonManager::enter_dungeon(const MailBox& avatar, int32_t dungeon_id) {
+    auto& all_dungeon_proxys = GET_PROP(all_dungeon_proxys);
+    if (!all_dungeon_proxys.has(std::to_string(dungeon_id))) {
+        ERROR_LOG("%s enter dungeon.%d failed", avatar.get_entity_uuid().c_str(), dungeon_id);
+        return;
+    }
+
+    auto& dungeon_proxys = all_dungeon_proxys.GET(std::to_string(dungeon_id)).MEM(proxys);
+    auto keys = dungeon_proxys.keys();
+    auto nowms = nowms_timestamp();
+    auto idx = nowms % keys.size();
+    auto& dungeon_proxy = dungeon_proxys.GET(keys[idx]);
+    avatar.to_proxy().call("enter_dungeon_ack", dungeon_id, dungeon_proxy.MEM(mailbox).as_mailbox());
 }

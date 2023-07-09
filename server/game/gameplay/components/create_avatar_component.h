@@ -22,7 +22,7 @@ public:
     ~CreateAvatarComponent() {}
 
     virtual void on_ready() {
-        COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
+        //COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
         REGIST_EVENT("event_test", component_event_test);
 
         COMP_SEND_EVENT("event_test", "lalalala");

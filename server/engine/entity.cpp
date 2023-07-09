@@ -270,16 +270,17 @@ void Entity::remove_timer(TimerBase* timer) {
     }
 }
 
-MailBox Entity::get_self_mailbox() {
-    MailBox mailbox;
-    mailbox.set_entity_and_addr(uuid, get_listen_addr());
-    return mailbox;
-}
-
 void BaseEntity::on_create(const GDict& create_data) {
     Entity::on_create(create_data);
 
     ready();
+}
+
+MailBox BaseEntity::get_self_mailbox() {
+    MailBox mailbox;
+    mailbox.set_entity_and_addr(uuid, get_listen_addr());
+    mailbox.set_base();
+    return mailbox;
 }
 
 void BaseEntityWithCell::on_create(const GDict& create_data) {
@@ -789,8 +790,8 @@ void CellEntity::destroy_self() {
     Entity::destroy_self();
 }
 
-void CellEntity::begin_migrate(const GString& ignore) {
-    GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
+void CellEntity::begin_migrate(const GString& new_addr) {
+    //GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
 
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
@@ -883,6 +884,8 @@ void CellEntity::on_migrate_in(const GDict& migrate_data) {
 
     base.call("new_cell_migrate_in", get_listen_addr());
     is_ready = true;
+
+    send_event("on_migrate_in");
 }
 
 void CellEntity::unpacket_migrate_data(const GDict& migrate_data) {
@@ -1020,6 +1023,14 @@ void CellEntity::base_recover_by_disaster_backup_success(const GString& base_add
     base.set_entity_and_addr(uuid, base_addr);
 }
 
+MailBox CellEntity::get_self_mailbox() {
+    MailBox mailbox;
+    mailbox.set_entity_and_addr(base.get_entity_uuid(), base.get_addr());
+    mailbox.set_flag(base.get_flag());
+    mailbox.set_b2c();
+    return mailbox;
+}
+
 void CellEntityWithClient::on_create(const GDict& create_data) {
     Entity::on_create(create_data);
 
@@ -1093,9 +1104,8 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
     }
 }
 
-void CellEntityWithClient::begin_migrate(const GString& ignore) {
-
-    GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
+void CellEntityWithClient::begin_migrate(const GString& new_addr) {
+    //GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
 
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
@@ -1182,6 +1192,8 @@ void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
 
     // move to timer restore
     //create_heart_beat_timer();
+
+    send_event("on_migrate_in");
 }
 
 void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
@@ -1378,6 +1390,12 @@ inline void thread_safe_remove_base_entity(GString entity_uuid) {
     g_base_entities.erase(entity_uuid);
 }
 
+inline Entity* thread_safe_get_base_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_base_entity_mutex);
+    auto iter = g_base_entities.find(entity_uuid);
+    return iter != g_base_entities.end() ? iter->second : nullptr;
+}
+
 inline RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_base_entity_mutex);
     auto iter = g_base_entities.find(entity_uuid);
@@ -1394,6 +1412,12 @@ inline void thread_safe_remove_cell_entity(GString entity_uuid) {
     g_cell_entities.erase(entity_uuid);
 }
 
+inline Entity* thread_safe_get_cell_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
+    auto iter = g_cell_entities.find(entity_uuid);
+    return iter != g_cell_entities.end() ? iter->second : nullptr;
+}
+
 inline RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
     auto iter = g_cell_entities.find(entity_uuid);
@@ -1408,6 +1432,12 @@ inline void thread_safe_add_client_entity(Entity* entity) {
 inline void thread_safe_remove_client_entity(GString entity_uuid) {
     unique_lock<boost::shared_mutex> lock(g_client_entity_mutex);
     g_client_entities.erase(entity_uuid);
+}
+
+inline Entity* thread_safe_get_client_entity(GString entity_uuid) {
+    shared_lock<boost::shared_mutex> lock(g_client_entity_mutex);
+    auto iter = g_client_entities.find(entity_uuid);
+    return iter != g_client_entities.end() ? iter->second : nullptr;
 }
 
 inline RpcManagerBase* thread_safe_get_client_entity_rpcmgr(GString entity_uuid) {
@@ -1446,10 +1476,10 @@ Entity* create_local_base_entity(const GString& entity_name, const GString& enti
     entity->uuid = entity_uuid;
     entity->entity_name = entity_name;
 
-    auto iter = g_base_entities.find(entity->uuid);
-    if (iter != g_base_entities.end()) {
+    auto old_entity = thread_safe_get_base_entity(entity->uuid);
+    if (old_entity != nullptr) {
         WARN_LOG("lose base entity.%s unexcept\n", entity->uuid.c_str());
-        delete iter->second;
+        delete old_entity;
         //g_base_entities.erase(iter);
         thread_safe_remove_base_entity(entity_uuid);
     }
@@ -1473,10 +1503,10 @@ Entity* create_local_cell_entity(const GString& entity_name, const GString& enti
     entity->uuid = entity_uuid;
     entity->entity_name = entity_name;
 
-    auto iter = g_cell_entities.find(entity->uuid);
-    if (iter != g_cell_entities.end()) {
+    auto old_entity = thread_safe_get_cell_entity(entity->uuid);
+    if (old_entity != nullptr) {
         WARN_LOG("lose cell entity.%s unexcept\n", entity->uuid.c_str());
-        delete iter->second;
+        delete old_entity;
         //g_cell_entities.erase(iter);
         thread_safe_remove_cell_entity(entity_uuid);
     }
@@ -1500,10 +1530,10 @@ Entity* create_local_client_entity(const GString& entity_name, const GString& en
     entity->uuid = entity_uuid;
     entity->entity_name = entity_name;
 
-    auto iter = g_client_entities.find(entity->uuid);
-    if (iter != g_client_entities.end()) {
+    auto old_entity = thread_safe_get_client_entity(entity->uuid);
+    if (old_entity != nullptr) {
         WARN_LOG("lose client entity.%s unexcept\n", entity->uuid.c_str());
-        delete iter->second;
+        delete old_entity;
         //g_client_entities.erase(iter);
         thread_safe_remove_client_entity(entity_uuid);
     }
@@ -1517,40 +1547,37 @@ Entity* create_local_client_entity(const GString& entity_name, const GString& en
 }
 
 void destroy_local_base_entity(const GString& entity_uuid) {
-    auto iter = g_base_entities.find(entity_uuid);
-    if (iter == g_base_entities.end()) {
+    auto old_entity = thread_safe_get_base_entity(entity_uuid);
+    if (old_entity == nullptr) {
         return;
     }
 
-    const auto& entity = iter->second;
-    entity->on_destroy();
-    delete entity;
+    old_entity->on_destroy();
+    delete old_entity;
     //g_base_entities.erase(iter);
     thread_safe_remove_base_entity(entity_uuid);
 }
 
 void destroy_local_cell_entity(const GString& entity_uuid) {
-    auto iter = g_cell_entities.find(entity_uuid);
-    if (iter == g_cell_entities.end()) {
+    auto old_entity = thread_safe_get_cell_entity(entity_uuid);
+    if (old_entity == nullptr) {
         return;
     }
 
-    const auto& entity = iter->second;
-    entity->on_destroy();
-    delete entity;
+    old_entity->on_destroy();
+    delete old_entity;
     //g_cell_entities.erase(iter);
     thread_safe_remove_cell_entity(entity_uuid);
 }
 
 void destroy_local_client_entity(const GString& entity_uuid) {
-    auto iter = g_client_entities.find(entity_uuid);
-    if (iter == g_client_entities.end()) {
+    auto old_entity = thread_safe_get_client_entity(entity_uuid);
+    if (old_entity == nullptr) {
         return;
     }
 
-    const auto& entity = iter->second;
-    entity->on_destroy();
-    delete entity;
+    old_entity->on_destroy();
+    delete old_entity;
     //g_client_entities.erase(iter);
     thread_safe_remove_client_entity(entity_uuid);
 }

@@ -105,8 +105,9 @@ void Encoder::write_bin(const GBin& v) {
 }
 
 void Encoder::write_mailbox(const MailBox& v) {
-    write_string(const_cast<MailBox&>(v).get_entity_uuid());
-    write_string(const_cast<MailBox&>(v).get_addr());
+    write_string(v.get_entity_uuid());
+    write_string(v.get_addr());
+    write_int8(v.get_flag());
 }
 
 void Encoder::write_gvalue(const GValue& v) {

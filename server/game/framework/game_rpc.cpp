@@ -118,13 +118,13 @@ void create_entity(const GString& entity_name, const GString& client_addr, const
         create_base_entity_new(entity_name, client_addr, gate_addr, init_data);
     }
     else {
-        auto iter = g_base_entities.find(entity_uuid);
-        if (iter == g_base_entities.end()) {
+        auto entity = thread_safe_get_base_entity(entity_uuid);
+        if (entity == nullptr) {
             create_base_entity_fromdb(entity_name, client_addr, gate_addr, entity_uuid);
         }
         else {
-            if (iter->second->is_ready) {
-                entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+            if (entity->is_ready) {
+                entity_reconnect_fromclient(entity, client_addr, gate_addr);
             }
         }
     }
@@ -135,13 +135,13 @@ void create_entity(const GString& entity_name, const GString& client_addr, const
 //        create_base_entity_new(entity_name, client_addr, gate_addr, init_data);
 //    }
 //    else {
-//        auto iter = g_base_entities.find(entity_uuid);
-//        if (iter == g_base_entities.end()) {
+//        auto entity = thread_safe_get_base_entity(entity_uuid);
+//        if (entity == nullptr) {
 //            create_base_entity_fromdb(entity_name, client_addr, gate_addr, entity_uuid);
 //        }
 //        else {
-//            if (iter->second->is_ready) {
-//                entity_reconnect_fromclient(iter->second, client_addr, gate_addr);
+//            if (entity->is_ready) {
+//                entity_reconnect_fromclient(entity, client_addr, gate_addr);
 //            }
 //        }
 //    }
@@ -165,27 +165,39 @@ void create_cell_entity(const GString& entity_name, const GString& entity_uuid, 
 }
 
 void call_base_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
-
-    auto iter = g_base_entities.find(entity_uuid);
-    if (iter == g_base_entities.end()) {
+    auto entity = thread_safe_get_base_entity(entity_uuid);
+    if (entity == nullptr) {
         ERROR_LOG("call_base_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Entity* entity = iter->second;
     DEBUG_LOG("call_base_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
     entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
 
-void call_cell_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
+// base turn to cell
+void call_base_entity_b2c(bool from_client, const GString& entity_uuid, const GBin& inner_rpc) {
+    auto entity = thread_safe_get_base_entity(entity_uuid);
+    if (entity == nullptr) {
+        ERROR_LOG("call_base_entity_b2c entity.%s not exist\n", entity_uuid.c_str());
+        return;
+    }
 
-    auto iter = g_cell_entities.find(entity_uuid);
-    if (iter == g_cell_entities.end()) {
+    Decoder decoder(inner_rpc.buf, inner_rpc.size);
+    decoder.skip_head_len();
+    GString rpc_name = g_rpc_manager.rpc_name_decode(decoder);
+
+    DEBUG_LOG("call_base_entity_b2c %s - %s\n", entity_uuid.c_str(), rpc_name.c_str());
+    entity->get_cell_mailbox().call(rpc_name, inner_rpc); // TODO
+}
+
+void call_cell_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {
+    auto entity = thread_safe_get_cell_entity(entity_uuid);
+    if (entity == nullptr) {
         ERROR_LOG("call_cell_entity entity.%s not exist\n", entity_uuid.c_str());
         return;
     }
 
-    Entity* entity = iter->second;
     DEBUG_LOG("call_cell_entity %s - %s\n", entity_uuid.c_str(), rpc_imp->get_rpc_name().c_str());
     entity->rpc_call(from_client, rpc_imp->get_rpc_name(), rpc_imp->get_rpc_method());
 }
@@ -258,6 +270,7 @@ void rpc_handle_regist() {
     RPC_REGISTER(create_cell_entity);
 
     RPC_REGISTER(call_base_entity);
+    RPC_REGISTER(call_base_entity_b2c);
     RPC_REGISTER(call_cell_entity);
 
     RPC_REGISTER(heartbeat_from_gate);

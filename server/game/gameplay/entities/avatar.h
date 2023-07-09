@@ -4,6 +4,7 @@
 
 #include "../components/avatar_prop_test_component.h"
 #include "../components/itembag_component.h"
+#include "../components/dungeon_component.h"
 
 
 class BaseAvatar : public BaseEntityWithCellAndClient {
@@ -62,6 +63,7 @@ class CellAvatar : public CellEntityWithClient {
         REGIST_COMPONENT(CellAvatar, AvatarPropTestComponent);
 #endif
         REGIST_COMPONENT(CellAvatar, ItemBagComponent);
+        REGIST_COMPONENT(CellAvatar, DungeonComponent);
     }
     static void rpc_method_define() {
         RPC_METHOD(RpcType::SERVER_ONLY, msg_from_base);

@@ -20,6 +20,7 @@ static void gen_global_rpc_name_turn() {
     //g_rpc_names_l2s.insert(make_pair("create_base_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("create_cell_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("call_base_entity", idx++));
+    g_rpc_names_l2s.insert(make_pair("call_base_entity_b2c", idx++));
     g_rpc_names_l2s.insert(make_pair("call_cell_entity", idx++));
     g_rpc_names_l2s.insert(make_pair("entity_property_migrate_from_oldcell", idx++));
     g_rpc_names_l2s.insert(make_pair("heartbeat_from_game", idx++));
@@ -67,6 +68,9 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     auto iter = find_rpc_method(rpc_name);
     ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
 
+    //if (rpc_name == "enter_dungeon_ack") {
+    //    int a = 10;
+    //}
     auto ret = make_shared<RpcImp>(rpc_name, iter->create_self());
     ret->get_rpc_method()->set_rpc_name(rpc_name);
     ret->get_rpc_method()->decode(decoder);
