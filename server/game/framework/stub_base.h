@@ -22,7 +22,7 @@ template<class... T>
 void call_stub(const GString& stub_name, const GString& rpc_name, T... args) {
     auto iter = g_stub_proxys.find(stub_name);
     if (iter == g_stub_proxys.end()) {
-        ERROR_LOG("call stub(%s) not exist!!!", stub_name.c_str());
+        ERROR_LOG("call stub(%s) not exist!!!\n", stub_name.c_str());
         return;
     }
 

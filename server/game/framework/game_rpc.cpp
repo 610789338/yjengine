@@ -188,7 +188,7 @@ void call_base_entity_b2c(bool from_client, const GString& entity_uuid, const GB
     GString rpc_name = g_rpc_manager.rpc_name_decode(decoder);
 
     DEBUG_LOG("call_base_entity_b2c %s - %s\n", entity_uuid.c_str(), rpc_name.c_str());
-    entity->get_cell_mailbox().call(rpc_name, inner_rpc); // TODO
+    entity->get_cell_mailbox().call(inner_rpc);
 }
 
 void call_cell_entity(bool from_client, const GString& entity_uuid, InnerRpcPtr_Decode rpc_imp) {

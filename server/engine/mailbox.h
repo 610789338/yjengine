@@ -166,19 +166,40 @@ public:
     ~CellMailBox() {}
 
 public:
-    template<class... T>
-    void call(const GString& rpc_name, T... args) {
-        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
 
+    struct _QueueElement {
+        _QueueElement(bool _is_pure_bin, void* _p)
+            : is_pure_bin(_is_pure_bin)
+            , p(_p)
+        {}
+        bool is_pure_bin = false;
+        void* p = nullptr;
+    };
+
+    void call(const GBin& inner_rpc) {
+        _QueueElement ele(true, (void*)(&inner_rpc));
         if (is_rpc_cache) {
-            m_inner_rpc_cache.push(inner_rpc);
+            m_inner_rpc_cache.push(ele);
         }
         else {
-            send_rpc(inner_rpc);
+            send_rpc(ele);
         }
     }
 
-    void send_rpc(InnerRpcPtr_Encode inner_rpc) {
+    template<class... T>
+    void call(const GString& rpc_name, T... args) {
+        auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
+        _QueueElement ele(false, (void*)(&inner_rpc));
+
+        if (is_rpc_cache) {
+            m_inner_rpc_cache.push(ele);
+        }
+        else {
+            send_rpc(ele);
+        }
+    }
+
+    void send_rpc(_QueueElement& queue_ele) {
         if (g_is_server) {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
                 m_session_cache = g_session_mgr.get_fixed_session(m_addr);
@@ -190,7 +211,14 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            if (queue_ele.is_pure_bin) {
+                GBin inner_rpc = std::move(*(GBin*)(queue_ele.p));
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+            else {
+                InnerRpcPtr_Encode inner_rpc = *(InnerRpcPtr_Encode*)(queue_ele.p);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
         }
         else {
             if (m_remote_cache == nullptr || !g_remote_mgr.is_valid_remote(m_remote_cache)) {
@@ -203,7 +231,15 @@ public:
                 return;
             }
 
-            REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            if (queue_ele.is_pure_bin) {
+                GBin inner_rpc = std::move(*(GBin*)(queue_ele.p));
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+            else {
+                InnerRpcPtr_Encode inner_rpc = *(InnerRpcPtr_Encode*)(queue_ele.p);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+            }
+
         }
     }
 
@@ -233,7 +269,7 @@ public:
 
 private:
     bool is_rpc_cache = false;
-    queue<InnerRpcPtr_Encode> m_inner_rpc_cache;
+    queue<_QueueElement> m_inner_rpc_cache;
 };
 
 class ClientMailBox : public MailBox {

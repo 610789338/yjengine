@@ -179,12 +179,9 @@ public:
     EntityClassType* tclass;
 };
 
-#define REGIST_EVENT(event_name, rpc) \
-event_manager.regist_event(event_name, &RMP(decltype(event_manager.tclass))::rpc); \
-if (get_owner()) { \
-    get_owner()->comp_regist_event(event_name, this); \
-}
-
-
+#define REGIST_EVENT(event_name, rpc) event_manager.regist_event(event_name, &RMP(decltype(event_manager.tclass))::rpc);
 #define SEND_EVENT(event_name, ...) send_event(event_name, ##__VA_ARGS__)
+
+#define COMP_REGIST_EVENT(event_name, rpc) event_manager.regist_event(event_name, &RMP(decltype(event_manager.tclass))::rpc); \
+if (get_owner()) { get_owner()->comp_regist_event(event_name, this); }
 #define COMP_SEND_EVENT(event_name, ...) get_owner()->send_event(event_name, ##__VA_ARGS__)

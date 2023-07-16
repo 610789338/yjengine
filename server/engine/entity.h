@@ -107,6 +107,7 @@ public:
     void remove_timer(TimerBase* timer);
 
     // migrate
+    virtual void begin_migrate(const GString& new_addr) { ASSERT(false); }
     virtual void on_migrate_out(GDict& migrate_data) { ASSERT(false); }
     virtual void on_migrate_in(const GDict& migrate_data) { ASSERT(false); }
     virtual void packet_migrate_data(const GDict& migrate_data) { ASSERT(false); }

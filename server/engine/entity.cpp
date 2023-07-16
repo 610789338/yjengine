@@ -806,10 +806,12 @@ void CellEntity::begin_migrate(const GString& new_addr) {
     //}
 
     if (!is_ready) {
+        WARN_LOG("migrate error: entity.%s is not ready\n", uuid.c_str());
         return;
     }
 
     if (migrate_state > MigrateState::Migrate_None) {
+        WARN_LOG("entity.%s migrate state.%d invalid\n", uuid.c_str(), migrate_state);
         return;
     }
 
@@ -1119,11 +1121,15 @@ void CellEntityWithClient::begin_migrate(const GString& new_addr) {
     //    return;
     //}
 
+    //INFO_LOG("entity.%s migrate %s to %s\n", uuid.c_str(), get_listen_addr().c_str(), new_addr.c_str());
+
     if (!is_ready) {
+        WARN_LOG("migrate error: entity.%s is not ready\n", uuid.c_str());
         return;
     }
 
     if (migrate_state > MigrateState::Migrate_None) {
+        WARN_LOG("entity.%s migrate state.%d invalid\n", uuid.c_str(), migrate_state);
         return;
     }
 
@@ -1192,6 +1198,11 @@ void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
 
     // move to timer restore
     //create_heart_beat_timer();
+
+    // TODO - delete
+    for (auto iter = components.begin(); iter != components.end(); ++iter) {
+        iter->second->before_migrate_in();
+    }
 
     send_event("on_migrate_in");
 }

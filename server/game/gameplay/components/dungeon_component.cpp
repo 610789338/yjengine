@@ -3,8 +3,8 @@
 #include "dungeon_component.h"
 
 void DungeonComponent::timer_enter_dungeon() {
-    INFO_LOG("[DungeonManager] timer_enter_dungeon %d entity.%s\n", 
-        get_owner()->get_self_mailbox().get_flag(), get_owner()->get_self_mailbox().get_entity_uuid().c_str());
+    //INFO_LOG("[DungeonManager] timer_enter_dungeon %d entity.%s\n", 
+    //    get_owner()->get_self_mailbox().get_flag(), get_owner()->get_self_mailbox().get_entity_uuid().c_str());
     call_stub("DungeonManager", "enter_random_dungeon", get_owner()->get_self_mailbox());
 }
 
@@ -31,7 +31,9 @@ void DungeonComponent::enter_dungeon_ack(int32_t new_dungeon_id, const MailBox& 
     GET_PROP(next_dungeon_id).update(new_dungeon_id);
     GET_PROP(next_dungeon_mailbox).update(new_dungeon_mailbox);
     if (new_dungeon_mailbox.get_addr() != get_listen_addr()) {
-        COMP_SEND_EVENT("begin_migrate", new_dungeon_mailbox.get_addr());
+        // TODO - migrate support
+        //COMP_SEND_EVENT("begin_migrate", new_dungeon_mailbox.get_addr());
+        get_owner()->begin_migrate(new_dungeon_mailbox.get_addr());
     }
     else {
         enter_next_dungeon();

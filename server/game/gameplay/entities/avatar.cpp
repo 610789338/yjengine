@@ -75,7 +75,8 @@ void CellAvatar::on_ready() {
 
     //get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, avatar_timer_test, "arg1"));
 
-    REGIST_EVENT("begin_migrate", begin_migrate);
+    // TODO - migrate support
+    //REGIST_EVENT("begin_migrate", begin_migrate);
 }
 
 void CellAvatar::msg_from_base(const GString& msg) {

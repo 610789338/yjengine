@@ -14,6 +14,7 @@ public:
     EntityComponentBase() {}
     virtual ~EntityComponentBase();
     virtual EntityComponentBase* create_self(Entity* owner) = 0;
+    virtual void before_migrate_in() {}
     virtual void on_ready() {}
 
     void set_name(GString _name) { name = _name; }

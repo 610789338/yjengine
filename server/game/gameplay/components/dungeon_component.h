@@ -32,9 +32,14 @@ public:
     DungeonComponent() {}
     ~DungeonComponent() {}
 
+    // TODO - delete after migrate support
+    void before_migrate_in() {
+        COMP_REGIST_EVENT("on_migrate_in", on_migrate_in);
+    }
+
     void on_ready() {
         COMP_REGIST_TIMER(1, 10, true, timer_enter_dungeon);
-        REGIST_EVENT("on_migrate_in", on_migrate_in);
+        COMP_REGIST_EVENT("on_migrate_in", on_migrate_in);
     }
 
     void timer_enter_dungeon();

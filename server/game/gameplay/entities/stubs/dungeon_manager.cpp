@@ -43,6 +43,9 @@ void DungeonManager::enter_random_dungeon(const MailBox& avatar) {
     auto& all_dungeon_proxys = GET_PROP(all_dungeon_proxys);
 
     auto keys = all_dungeon_proxys.keys();
+    if (keys.empty()) {
+        return;
+    }
     auto nowms = nowms_timestamp();
     auto idx = nowms % keys.size();
     auto dungeon_id = std::stoi(keys[idx]);
@@ -55,6 +58,8 @@ void DungeonManager::enter_dungeon(const MailBox& avatar, int32_t dungeon_id) {
         ERROR_LOG("%s enter dungeon.%d failed", avatar.get_entity_uuid().c_str(), dungeon_id);
         return;
     }
+
+    INFO_LOG("avatar.%s enter dungeon.%d\n", avatar.get_entity_uuid().c_str(), dungeon_id);
 
     auto& dungeon_proxys = all_dungeon_proxys.GET(std::to_string(dungeon_id)).MEM(proxys);
     auto keys = dungeon_proxys.keys();
