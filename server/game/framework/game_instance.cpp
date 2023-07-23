@@ -16,7 +16,7 @@ extern void create_stub(const GString& stub_name);
 
 void GameInstance::on_ready() {
     // 延时1s等待集群互连后广播通知
-    // TODO - 等做了服务器发现再做动态通知
+    // TODO - 等做了服务发现再做动态通知
     REGIST_TIMER(1, 0, false, create_stubs);
 }
 

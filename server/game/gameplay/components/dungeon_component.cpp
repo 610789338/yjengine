@@ -31,9 +31,7 @@ void DungeonComponent::enter_dungeon_ack(int32_t new_dungeon_id, const MailBox& 
     GET_PROP(next_dungeon_id).update(new_dungeon_id);
     GET_PROP(next_dungeon_mailbox).update(new_dungeon_mailbox);
     if (new_dungeon_mailbox.get_addr() != get_listen_addr()) {
-        // TODO - migrate support
-        //COMP_SEND_EVENT("begin_migrate", new_dungeon_mailbox.get_addr());
-        get_owner()->begin_migrate(new_dungeon_mailbox.get_addr());
+        send_event("begin_migrate", new_dungeon_mailbox.get_addr());
     }
     else {
         enter_next_dungeon();

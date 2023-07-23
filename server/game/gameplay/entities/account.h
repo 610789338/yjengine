@@ -23,6 +23,7 @@ class BaseAccount : public BaseEntityWithClient {
         account_property_define<BaseAccount>();
     }
     static void migrate_timer_define() {}
+    static void migrate_event_define() {}
 
 public:
     BaseAccount() {}
@@ -36,7 +37,7 @@ public:
     void msg_from_client(const GString& msg);
 
     // event 
-    void entity_event_test(const GString& msg);
+    void event_test(const GString& msg);
     void account_event_timer();
 
     void base_rpc_timer();

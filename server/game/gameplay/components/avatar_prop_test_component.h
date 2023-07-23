@@ -18,6 +18,7 @@ class AvatarPropTestComponent : public EntityComponentBase {
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(avatar_timer_prop_sync);
     }
+    COMP_MIGRATE_EVENT_DEFINE() {}
 
 public:
     AvatarPropTestComponent() {}

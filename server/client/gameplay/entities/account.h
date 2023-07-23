@@ -17,6 +17,7 @@ class ClientAccount : public ClientEntity {
         account_property_define<ClientAccount>();
     }
     static void migrate_timer_define() {}
+    static void migrate_event_define() {}
 
 public:
     ClientAccount() {}

@@ -15,8 +15,8 @@ void Dungeon::on_ready() {
     INFO_LOG("Dungeon(%d) ready\n", GET_PROP(dungeon_id).as_int32());
     call_stub("DungeonManager", "on_dungeon_create", GET_PROP(dungeon_id).as_int32(), get_self_mailbox());
 
-    REGIST_EVENT("avatar_enter", avatar_enter);
-    REGIST_EVENT("avatar_leave", avatar_leave);
+    REGIST_EVENT(avatar_enter);
+    REGIST_EVENT(avatar_leave);
 }
 
 void Dungeon::avatar_enter(const GString& avatar_uuid, const MailBox& avatar_mailbox) {

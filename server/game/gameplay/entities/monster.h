@@ -26,6 +26,7 @@ class BaseMonster : public BaseEntityWithCell {
         MIGRATE_TIMER_DEF(monster_migrate_timer);
         MIGRATE_TIMER_DEF(base_rpc_timer);
     }
+    static void migrate_event_define() {}
 
 public:
     BaseMonster() {}
@@ -56,6 +57,7 @@ class CellMonster : public CellEntity {
     static void migrate_timer_define() {
         MIGRATE_TIMER_DEF(cell_rpc_timer);
     }
+    static void migrate_event_define() {}
 
 public:
     CellMonster() {}

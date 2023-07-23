@@ -3,7 +3,7 @@
 #include "gvalue.h"
 #include "timer.h"
 #include "entity_rpc_manager.h"
-#include "entity_event_manager.h"
+#include "event.h"
 #include "mailbox.h"
 
 struct EntityPropertyBase;
@@ -14,7 +14,6 @@ public:
     EntityComponentBase() {}
     virtual ~EntityComponentBase();
     virtual EntityComponentBase* create_self(Entity* owner) = 0;
-    virtual void before_migrate_in() {}
     virtual void on_ready() {}
 
     void set_name(GString _name) { name = _name; }
@@ -30,7 +29,11 @@ public:
     // event
     virtual EventManagerBase* get_event_manager() { return nullptr; }
     bool is_comp() { return true; }
-    void comp_regist_event(const GString& event_name, EntityComponentBase* component) {}
+
+    template<class... Args>
+    void send_event(const GString& event_name, Args... args) {
+        get_owner()->get_event_manager()->send_event(get_owner(), event_name, args...);
+    }
 
     // mailbox
     BaseMailBox& Base();
@@ -164,6 +167,54 @@ public:
         return timer;
     }
 
+    template<class TEntityComp>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)()) {
+        auto event = new Event0<TEntityComp>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
+    template<class TEntityComp, class T1>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1)) {
+        auto event = new Event1<TEntityComp, T1>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
+    template<class TEntityComp, class T1, class T2>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2)) {
+        auto event = new Event2<TEntityComp, T1, T2>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3)) {
+        auto event = new Event3<TEntityComp, T1, T2, T3>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
+        auto event = new Event4<TEntityComp, T1, T2, T3, T4>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
+    template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
+    void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
+        auto event = new Event5<TEntityComp, T1, T2, T3, T4, T5>(entity_comp, cb);
+        event->m_event_name = event_name;
+        event->m_component_name = TEntityComp::get_name();
+        entity_comp->get_owner()->add_event(event);
+    }
+
     unordered_map<GString, EntityComponentBase*> components;
 };
 
@@ -206,11 +257,16 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 
 #define COMP_RPC_METHOD(rpc_type, rpc_name) \
     TEntity::component_manager.entity_comp_rpc_regist(rpc_type, #rpc_name, &RMP(decltype(youjun))::rpc_name)
+#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) \
+    get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
 #define COMP_MIGRATE_TIMER_DEF(cb) \
     TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb); \
     TEntity::timer_manager.set_timer_component_name_for_restore(#cb, TEntityComp::get_name())
-#define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) \
-    get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
+
+#define COMP_REGIST_EVENT(event) \
+    get_owner()->get_comp_mgr()->regist_event(this, #event, &RMP(decltype(youjun))::event);
+#define COMP_MIGRATE_EVENT_DEF(event) \
+    TEntity::event_manager.store_event_cb_for_migrate((GString(#event) + TEntityComp::get_name()).c_str(), &RMP(decltype(youjun))::event)
 
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
@@ -220,7 +276,8 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     component_manager.component_regist(component_##TEntityComp ); \
     TEntityComp::rpc_method_define<TEntity>(); \
     TEntityComp::property_define<TEntity>(); \
-    TEntityComp::migrate_timer_define<TEntity, TEntityComp>();
+    TEntityComp::migrate_timer_define<TEntity, TEntityComp>(); \
+    TEntityComp::migrate_event_define<TEntity, TEntityComp>();
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \
@@ -232,10 +289,9 @@ public: \
         return component; \
     } \
     COMP_RPC_CALL_DEFINE(TEntityComp) \
-    TEntityComp* youjun; \
-    EventManager<TEntityComp> event_manager; \
-    EventManagerBase* get_event_manager() { return &event_manager; }
+    TEntityComp* youjun;
 
 #define COMP_RPC_DEFINE template<class TEntity> static void rpc_method_define
 #define COMP_PROPERTY_DEFINE template<class TEntity> static void property_define
 #define COMP_MIGRATE_TIMER_DEFINE template<class TEntity, class TEntityComp> static void migrate_timer_define
+#define COMP_MIGRATE_EVENT_DEFINE template<class TEntity, class TEntityComp> static void migrate_event_define

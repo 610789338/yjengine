@@ -8,11 +8,12 @@
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
+#include "event.h"
 #include "entity_rpc_manager.h"
 #include "entity_property_tree.h"
 #include "entity_property_manager.h"
 #include "entity_component_manager.h"
-#include "entity_event_manager.h"
+#include "event.h"
 
 using namespace std;
 
@@ -75,6 +76,7 @@ public:
     void release_component();
     void release_property();
     void release_timer();
+    void release_event();
 
     // proppertys
     virtual void propertys_sync2client(bool force_all = false);
@@ -104,6 +106,7 @@ public:
     void timer_tick();
     void cancel_timer(TimerID time_id);
     void add_timer(TimerBase* timer);
+    void add_event(EventBase* event);
     void remove_timer(TimerBase* timer);
 
     // migrate
@@ -114,33 +117,17 @@ public:
     virtual void unpacket_migrate_data(const GDict& migrate_data) { ASSERT(false); }
 
     // event
-    virtual EventManagerBase* get_event_manager() { return nullptr; }
+    virtual EventManagerBase* get_event_manager() { ASSERT(false); return nullptr; }
     Entity* get_owner() { return nullptr; }
-    void comp_regist_event(const GString& event_name, void* component) {
-        auto iter = event_components.find(event_name);
-        if (iter == event_components.end()) {
-            event_components[event_name] = unordered_set<EntityComponentBase*>();
-            iter = event_components.find(event_name);
-        }
-
-        if (iter->second.find((EntityComponentBase*)component) == iter->second.end()) {
-            iter->second.insert((EntityComponentBase*)component);
-        }
-    }
 
     template<class... Args>
     void send_event(const GString& event_name, Args... args) {
         get_event_manager()->send_event(this, event_name, args...);
-        auto iter = event_components.find(event_name);
-        if (iter != event_components.end()) {
-            for (auto iter_inner = iter->second.begin(); iter_inner != iter->second.end(); ++iter_inner) {
-                (*iter_inner)->get_event_manager()->send_event(*iter_inner, event_name, args...);
-            }
-        }
     }
 
     // migrate
     GDict migrate_timers;
+    GArray migrate_events;
 
     // disaster backup
     virtual void on_game_disappear(const GString& game_addr) {}
@@ -155,9 +142,10 @@ public:
     unordered_map<EntityPropertyBase*, GString> propertys_turn;
     unordered_map<GString, EntityPropertyBase*> dirty_propertys;
     unordered_map<GString, EntityComponentBase*> components;
-    unordered_map<GString, unordered_set<EntityComponentBase*>> event_components;
+    //unordered_map<GString, unordered_set<EntityComponentBase*>> event_components;
 
     multiset<TimerBase*, TimerCompare> timers;  // 不能用set，否则过期时间一样会被认为是重复key
+    unordered_map<GString, vector<EventBase*>> events;
     TimerID next_timer_id = 1;
     unordered_map<TimerID, TimerBase*> timer_ids;
     TimerID ready_check_timerid = 0;

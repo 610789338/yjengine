@@ -27,6 +27,7 @@ class BaseAvatar : public BaseEntityWithCellAndClient {
         MIGRATE_TIMER_DEF(avatar_migrate_timer);
         MIGRATE_TIMER_DEF(base_rpc_timer);
     }
+    static void migrate_event_define() {}
 
 public:
     BaseAvatar() {}
@@ -42,10 +43,6 @@ public:
     // migrate
     void avatar_migrate_timer();
     void add_migrate_int_from_client();
-
-    // event 
-    void entity_event_test(const GString& msg);
-    void avatar_event_timer();
 
     void base_rpc_timer();
 
@@ -78,6 +75,9 @@ class CellAvatar : public CellEntityWithClient {
         MIGRATE_TIMER_DEF(avatar_timer_test);
         MIGRATE_TIMER_DEF(cell_rpc_timer);
     }
+    static void migrate_event_define() {
+        MIGRATE_EVENT_DEF(begin_migrate);
+    }
 
 public:
     CellAvatar() {}
@@ -91,6 +91,8 @@ public:
 
     void add_migrate_int_from_base();
     void add_migrate_int_from_client();
+
+    void begin_migrate(const GString& new_addr);
 
     void cell_rpc_timer();
 };

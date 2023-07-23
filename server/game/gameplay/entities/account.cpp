@@ -10,14 +10,17 @@ void BaseAccount::on_ready() {
     INFO_LOG("BaseAccount on_ready\n");
 
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
+
+    //REGIST_TIMER(0, 2, true, account_event_timer);
+    REGIST_EVENT(event_test);
 }
 
-void BaseAccount::entity_event_test(const GString& msg) {
-    INFO_LOG("[base] entity_event_test.%s \n", msg.c_str());
+void BaseAccount::event_test(const GString& msg) {
+    INFO_LOG("[base] event_test.%s \n", msg.c_str());
 }
 
 void BaseAccount::account_event_timer() {
-    SEND_EVENT("event_test", "hahahaha");
+    send_event("event_test", "hahahaha");
 }
 
 void BaseAccount::base_rpc_timer() {

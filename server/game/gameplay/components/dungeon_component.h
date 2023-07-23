@@ -27,19 +27,17 @@ class DungeonComponent : public EntityComponentBase {
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(timer_enter_dungeon);
     }
+    COMP_MIGRATE_EVENT_DEFINE() {
+        COMP_MIGRATE_EVENT_DEF(on_migrate_in);
+    }
 
 public:
     DungeonComponent() {}
     ~DungeonComponent() {}
 
-    // TODO - delete after migrate support
-    void before_migrate_in() {
-        COMP_REGIST_EVENT("on_migrate_in", on_migrate_in);
-    }
-
     void on_ready() {
         COMP_REGIST_TIMER(1, 10, true, timer_enter_dungeon);
-        COMP_REGIST_EVENT("on_migrate_in", on_migrate_in);
+        COMP_REGIST_EVENT(on_migrate_in);
     }
 
     void timer_enter_dungeon();

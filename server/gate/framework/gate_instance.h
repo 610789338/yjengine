@@ -13,6 +13,7 @@ class GateInstance : public BaseEntity {
     static void rpc_method_define() {}
     static void property_define() {}
     static void migrate_timer_define() {}
+    static void migrate_event_define() {}
 
 public:
     GateInstance() {}

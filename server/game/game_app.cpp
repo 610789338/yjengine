@@ -21,6 +21,9 @@ void init(int argc, char* args[]) {
         ++idx;
     }
 
+    auto process_name = ini_get_string("Common", "name");
+    strcpy(args[0], process_name.c_str());
+
     auto ip = ini_get_string("Listen", "ip");
     auto port = ini_get_int("Listen", "port");
     set_engine_listen_ipport(ip, port);

@@ -8,6 +8,10 @@ GENERATE_ENTITY_OUT(DungeonManager)
 
 
 void DungeonManager::on_ready() {
+    REGIST_TIMER(1, 0, false, create_dungeons);
+}
+
+void DungeonManager::create_dungeons() {
     auto dungeon_ids_ini = ini_get_string("Dungeon", "dungeon_ids", "");
     if (dungeon_ids_ini != "") {
         vector<string> dungeon_ids;

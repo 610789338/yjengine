@@ -62,10 +62,10 @@
     <ClInclude Include="entity_property_tree.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="entity_event_manager.h">
+    <ClInclude Include="byte_swap.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="byte_swap.h">
+    <ClInclude Include="event.h">
       <Filter>engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,7 +116,7 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="entity_property_tree.cpp" />
-    <ClCompile Include="entity_event_manager.cpp" />
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="event.cpp" />
   </ItemGroup>
 </Project>

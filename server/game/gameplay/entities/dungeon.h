@@ -22,8 +22,8 @@ class Dungeon : public BaseEntity {
         PROPERTY_MAP(PropType::BASE_PRIVATE, avatars, MailBox);
     }
 
-    static void migrate_timer_define() {
-    }
+    static void migrate_timer_define() {}
+    static void migrate_event_define() {}
 
 public:
     Dungeon() {}

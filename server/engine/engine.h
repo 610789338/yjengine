@@ -40,7 +40,7 @@ public: \
         REGIST_TIMER(get_db_save_interval(), get_db_save_interval(), true,  time_to_disaster_backup); \
     } \
     void time_to_disaster_backup() { real_time_to_disaster_backup(); } \
-    EventManager<TCLASS> event_manager; \
+    static EventManager<TCLASS> event_manager; \
     EventManagerBase* get_event_manager() { return &event_manager; } \
     GString get_entity_name() { return #TCLASS; }
 
@@ -53,6 +53,7 @@ EntityRpcManager<TCLASS> TCLASS::rpc_manager(#TCLASS, (EntityType)TCLASS::ENTITY
     entity->rpc_mgr = &TCLASS::rpc_manager; \
     return entity; }); \
 TimerManager<TCLASS> TCLASS::timer_manager; \
+EventManager<TCLASS> TCLASS::event_manager; \
 EntityComponentManager<TCLASS> TCLASS::component_manager; \
 PropertyTree TCLASS::property_tree(property_manager.propertys);
 

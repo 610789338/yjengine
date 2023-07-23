@@ -14,6 +14,7 @@ class CreateAvatarComponent : public EntityComponentBase {
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(component_timer_test);
     }
+    COMP_MIGRATE_EVENT_DEFINE() {}
 
     COMP_PROPERTY_DEFINE() {}
 
@@ -23,12 +24,12 @@ public:
 
     virtual void on_ready() {
         //COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
-        REGIST_EVENT("event_test", component_event_test);
+        COMP_REGIST_EVENT(event_test);
 
-        COMP_SEND_EVENT("event_test", "lalalala");
+        send_event("event_test", "lalalala");
     }
 
     void component_rpc_test(const GString& msg);
     void component_timer_test(const GString& msg);
-    void component_event_test(const GString& msg);
+    void event_test(const GString& msg);
 };

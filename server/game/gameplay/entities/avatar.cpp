@@ -13,17 +13,6 @@ void BaseAvatar::on_ready() {
     //test_timer = REGIST_TIMER(5, 60, true, avatar_timer_test, "1 minutes");
     //migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
-
-    //REGIST_EVENT("event_test", entity_event_test);
-    //REGIST_TIMER(5, 0, false, avatar_event_timer);
-}
-
-void BaseAvatar::entity_event_test(const GString& msg) {
-    INFO_LOG("[base] entity_event_test.%s \n", msg.c_str());
-}
-
-void BaseAvatar::avatar_event_timer() {
-    SEND_EVENT("event_test", "hahahaha");
 }
 
 void BaseAvatar::base_rpc_timer() {
@@ -75,8 +64,7 @@ void CellAvatar::on_ready() {
 
     //get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, avatar_timer_test, "arg1"));
 
-    // TODO - migrate support
-    //REGIST_EVENT("begin_migrate", begin_migrate);
+    REGIST_EVENT(begin_migrate);
 }
 
 void CellAvatar::msg_from_base(const GString& msg) {
@@ -99,6 +87,10 @@ void CellAvatar::add_migrate_int_from_client() {
     get_prop("migrate_int")->update(old_migrate_int + 1);
 
     INFO_LOG("add_migrate_int_from_client %d\n", get_prop("migrate_int")->as_int32());
+}
+
+void CellAvatar::begin_migrate(const GString& new_addr) {
+    CellEntityWithClient::begin_migrate(new_addr);
 }
 
 void CellAvatar::avatar_timer_test(const GString& arg1) {

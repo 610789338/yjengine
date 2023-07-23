@@ -72,6 +72,17 @@ void Entity::release_timer() {
     }
 }
 
+void Entity::release_event() {
+    for (auto iter = events.begin(); iter != events.end(); ++iter) {
+        auto event_bases = iter->second;
+        for (auto iter_inner = event_bases.begin(); iter_inner != event_bases.end(); ++iter_inner) {
+            delete *iter_inner;
+        }
+    }
+
+    events.clear();
+}
+
 void Entity::propertys_sync2client(bool force_all) {
     // do nothing
 }
@@ -270,6 +281,16 @@ void Entity::remove_timer(TimerBase* timer) {
     }
 }
 
+void Entity::add_event(EventBase* event) {
+    auto iter = events.find(event->m_event_name);
+    if (iter == events.end()) {
+        events.insert(make_pair(event->m_event_name, vector<EventBase*>()));
+        iter = events.find(event->m_event_name);
+    }
+
+    iter->second.push_back(event);
+}
+
 void BaseEntity::on_create(const GDict& create_data) {
     Entity::on_create(create_data);
 
@@ -395,6 +416,19 @@ void BaseEntityWithCell::packet_migrate_data(GDict& migrate_data) {
         migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
+
+    migrate_events.clear();
+    for (auto iter = events.begin(); iter != events.end(); ++iter) {
+        auto event_bases = iter->second;
+        for (auto iter_inner = event_bases.begin(); iter_inner != event_bases.end(); ++iter_inner) {
+            Encoder encoder;
+            encoder.write_string((*iter_inner)->m_event_name);
+            encoder.write_string((*iter_inner)->m_component_name);
+            encoder.write_end();
+            migrate_events.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
+        }
+    }
+    migrate_data.insert(make_pair("events", migrate_events));
     migrate_data.insert(make_pair("next_timer_id", next_timer_id));
 }
 
@@ -405,6 +439,12 @@ void BaseEntityWithCell::unpacket_migrate_data(const GDict& migrate_data) {
         RESTORE_TIMER(iter->first, iter->second.as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
+
+    release_event();
+    auto _events = migrate_data.at("events").as_array();
+    for (auto iter = _events.begin(); iter != _events.end(); ++iter) {
+        RESTORE_EVENT((*iter).as_bin());
+    }
 }
 
 void BaseEntityWithCell::base_disaster_backup(const GBin& cell_all_db, const GDict& cell_migrate_data) {
@@ -860,6 +900,7 @@ void CellEntity::on_migrate_out(GDict& migrate_data) {
     //INFO_LOG("entity.%s on_migrate_out\n", uuid.c_str());
     packet_migrate_data(migrate_data);
     release_timer();
+    release_event();
 }
 
 void CellEntity::packet_migrate_data(GDict& migrate_data) {
@@ -877,6 +918,19 @@ void CellEntity::packet_migrate_data(GDict& migrate_data) {
         migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
+
+    migrate_events.clear();
+    for (auto iter = events.begin(); iter != events.end(); ++iter) {
+        auto event_bases = iter->second;
+        for (auto iter_inner = event_bases.begin(); iter_inner != event_bases.end(); ++iter_inner) {
+            Encoder encoder;
+            encoder.write_string((*iter_inner)->m_event_name);
+            encoder.write_string((*iter_inner)->m_component_name);
+            encoder.write_end();
+            migrate_events.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
+        }
+    }
+    migrate_data.insert(make_pair("events", migrate_events));
     migrate_data.insert(make_pair("next_timer_id", next_timer_id));
     migrate_data.insert(make_pair("last_respect_from_base", last_respect_from_base));
 }
@@ -899,6 +953,12 @@ void CellEntity::unpacket_migrate_data(const GDict& migrate_data) {
         RESTORE_TIMER(iter->first, iter->second.as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
+
+    release_event();
+    auto _events = migrate_data.at("events").as_array();
+    for (auto iter = _events.begin(); iter != _events.end(); ++iter) {
+        RESTORE_EVENT((*iter).as_bin());
+    }
 
     last_respect_from_base = migrate_data.at("last_respect_from_base").as_int64();
 }
@@ -1185,6 +1245,19 @@ void CellEntityWithClient::packet_migrate_data(GDict& migrate_data) {
         migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
+
+    migrate_events.clear();
+    for (auto iter = events.begin(); iter != events.end(); ++iter) {
+        auto event_bases = iter->second;
+        for (auto iter_inner = event_bases.begin(); iter_inner != event_bases.end(); ++iter_inner) {
+            Encoder encoder;
+            encoder.write_string((*iter_inner)->m_event_name);
+            encoder.write_string((*iter_inner)->m_component_name);
+            encoder.write_end();
+            migrate_events.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
+        }
+    }
+    migrate_data.insert(make_pair("events", migrate_events));
     migrate_data.insert(make_pair("next_timer_id", next_timer_id));
     migrate_data.insert(make_pair("last_respect_from_base", last_respect_from_base));
 }
@@ -1198,11 +1271,6 @@ void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
 
     // move to timer restore
     //create_heart_beat_timer();
-
-    // TODO - delete
-    for (auto iter = components.begin(); iter != components.end(); ++iter) {
-        iter->second->before_migrate_in();
-    }
 
     send_event("on_migrate_in");
 }
@@ -1218,6 +1286,12 @@ void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
         RESTORE_TIMER(iter->first, iter->second.as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
+
+    release_event();
+    auto _events = migrate_data.at("events").as_array();
+    for (auto iter = _events.begin(); iter != _events.end(); ++iter) {
+        RESTORE_EVENT((*iter).as_bin());
+    }
 
     last_respect_from_base = migrate_data.at("last_respect_from_base").as_int64();
 }

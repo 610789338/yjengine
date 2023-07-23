@@ -14,6 +14,7 @@ class AvatarPropTestComponentClient : public EntityComponentBase {
     }
 
     COMP_MIGRATE_TIMER_DEFINE() {}
+    COMP_MIGRATE_EVENT_DEFINE() {}
 
     COMP_PROPERTY_DEFINE() {
         AVATAR_PROPERTY_TEST_DEFINE();

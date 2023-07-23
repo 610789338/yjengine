@@ -24,8 +24,8 @@ class DungeonManager : public StubBase {
     static void _property_define() {
         PROPERTY_MAP(PropType::BASE_PRIVATE, all_dungeon_proxys, DungeonProxyContainer);
     }
-    static void migrate_timer_define() {
-    }
+    static void migrate_timer_define() {}
+    static void migrate_event_define() {}
 
 public:
     DungeonManager() {}
@@ -33,6 +33,7 @@ public:
 
     void on_ready();
 
+    void create_dungeons();
     void create_dungeon(int32_t dungeon_id);
     void on_dungeon_create(int32_t dungeon_id, const MailBox& dungeon_mailbox);
     void enter_random_dungeon(const MailBox& avatar);
