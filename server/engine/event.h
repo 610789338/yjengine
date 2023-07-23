@@ -380,8 +380,6 @@ public:
         event_cbs_store.insert(make_pair(event_name, event_cb_store));
     }
 
-    void set_event_component_name_for_restore(const GString& event_name, const GString& component_name);
-
     void restore_event(Entity* entity, const GBin& event_bin);
 
     unordered_map<GString, EventBase*> event_cbs_store;

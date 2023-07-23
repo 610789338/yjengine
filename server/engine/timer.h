@@ -389,6 +389,7 @@ public:
 
     template<class TEntity>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)()) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer0<TEntity>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
@@ -396,6 +397,7 @@ public:
 
     template<class TEntity, class T1>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T1)) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer1<TEntity, T1>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
@@ -403,6 +405,7 @@ public:
 
     template<class TEntity, class T1, class T2>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T1, T2)) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer2<TEntity, T1, T2>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
@@ -410,6 +413,7 @@ public:
 
     template<class TEntity, class T1, class T2, class T3>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T1, T2, T3)) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer3<TEntity, T1, T2, T3>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
@@ -417,6 +421,7 @@ public:
 
     template<class TEntity, class T1, class T2, class T3, class T4>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T1, T2, T3, T4)) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer4<TEntity, T1, T2, T3, T4>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
@@ -424,14 +429,13 @@ public:
 
     template<class TEntity, class T1, class T2, class T3, class T4, class T5>
     void store_timer_cb_for_migrate(const char* cb_name, void(TEntity::*cb)(T1, T2, T3, T4, T5)) {
+        ASSERT_LOG(timer_cbs_store.find(cb_name) == timer_cbs_store.end(), "repeated timer.%s\n", cb_name);
         auto timer_cb_store = new Timer5<TEntity, T1, T2, T3, T4, T5>();
         timer_cb_store->m_cb = cb;
         timer_cbs_store.insert(make_pair(cb_name, timer_cb_store));
     }
 
-    void set_timer_component_name_for_restore(const GString& cb_name, const GString& component_name);
-
-    void restore_timer(void* entity, const GString& cb_name, const GBin& timer_bin);
+    void restore_timer(Entity* entity, const GBin& timer_bin);
 
     unordered_map<GString, TimerBase*> timer_cbs_store;
 };
@@ -451,7 +455,7 @@ public:
 #define REGIST_TIMER(start, interval, repeat, cb, ...) timer_manager.regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(timer_manager.tclass))::cb)->set_args(__VA_ARGS__)
 #define CANCEL_TIMER(timer_id) cancel_timer(timer_id)
 #define MIGRATE_TIMER_DEF(cb) timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(timer_manager.tclass))::cb)
-#define RESTORE_TIMER(cb_name, timer_bin) get_timer_manager()->restore_timer(this, cb_name, timer_bin)
+#define RESTORE_TIMER(timer_bin) get_timer_manager()->restore_timer(this, timer_bin)
 
 #define MIGRATE_TIMER_DEF_INSIDE(TCLASS) \
     static void migrate_timer_def_inside() { \

@@ -126,7 +126,7 @@ public:
     }
 
     // migrate
-    GDict migrate_timers;
+    GArray migrate_timers;
     GArray migrate_events;
 
     // disaster backup
@@ -145,11 +145,12 @@ public:
     //unordered_map<GString, unordered_set<EntityComponentBase*>> event_components;
 
     multiset<TimerBase*, TimerCompare> timers;  // 不能用set，否则过期时间一样会被认为是重复key
-    unordered_map<GString, vector<EventBase*>> events;
     TimerID next_timer_id = 1;
     unordered_map<TimerID, TimerBase*> timer_ids;
     TimerID ready_check_timerid = 0;
     TimerID heart_beat_timerid = 0;
+
+    unordered_map<GString, vector<EventBase*>> events;
 
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;

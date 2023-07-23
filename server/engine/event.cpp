@@ -17,10 +17,6 @@ vector<EventBase*>* EventManagerBase::get_event_cb_set(Entity* owner, const GStr
     return &(iter->second);
 }
 
-void EventManagerBase::set_event_component_name_for_restore(const GString& cb_name, const GString& component_name) {
-    event_cbs_store[cb_name]->m_component_name = component_name;
-}
-
 void EventManagerBase::restore_event(Entity* entity, const GBin& event_bin) {
     Decoder decoder(event_bin.buf, event_bin.size);
     decoder.skip_head_len();

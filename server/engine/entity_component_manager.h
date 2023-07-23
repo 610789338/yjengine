@@ -117,7 +117,8 @@ public:
         timer->m_repeat = repeat; \
         timer->m_start_time = start_time; \
         timer->m_expiration = start_time; \
-        timer->m_cb_name = cb_name;
+        timer->m_cb_name = cb_name; \
+        timer->m_component_name = TEntityComp::get_name();
 
     template<class TEntityComp>
     Timer0<TEntityComp>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)()) {
@@ -260,8 +261,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 #define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) \
     get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
 #define COMP_MIGRATE_TIMER_DEF(cb) \
-    TEntity::timer_manager.store_timer_cb_for_migrate(#cb, &RMP(decltype(youjun))::cb); \
-    TEntity::timer_manager.set_timer_component_name_for_restore(#cb, TEntityComp::get_name())
+    TEntity::timer_manager.store_timer_cb_for_migrate((GString(#cb) + TEntityComp::get_name()).c_str(), &RMP(decltype(youjun))::cb);
 
 #define COMP_REGIST_EVENT(event) \
     get_owner()->get_comp_mgr()->regist_event(this, #event, &RMP(decltype(youjun))::event);

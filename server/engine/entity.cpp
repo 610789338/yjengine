@@ -413,7 +413,7 @@ void BaseEntityWithCell::packet_migrate_data(GDict& migrate_data) {
         Encoder encoder;
         timer->serialize(encoder);
         encoder.write_end();
-        migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
+        migrate_timers.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
 
@@ -434,9 +434,9 @@ void BaseEntityWithCell::packet_migrate_data(GDict& migrate_data) {
 
 void BaseEntityWithCell::unpacket_migrate_data(const GDict& migrate_data) {
     release_timer();
-    auto _timers = migrate_data.at("timers").as_dict();
+    auto _timers = migrate_data.at("timers").as_array();
     for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
-        RESTORE_TIMER(iter->first, iter->second.as_bin());
+        RESTORE_TIMER((*iter).as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
 
@@ -915,7 +915,7 @@ void CellEntity::packet_migrate_data(GDict& migrate_data) {
         Encoder encoder;
         timer->serialize(encoder);
         encoder.write_end();
-        migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
+        migrate_timers.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
 
@@ -948,9 +948,9 @@ void CellEntity::unpacket_migrate_data(const GDict& migrate_data) {
     base.set_entity_and_addr(uuid, migrate_data.at("base_addr").as_string());
 
     release_timer();
-    auto _timers = migrate_data.at("timers").as_dict();
+    auto _timers = migrate_data.at("timers").as_array();
     for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
-        RESTORE_TIMER(iter->first, iter->second.as_bin());
+        RESTORE_TIMER((*iter).as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
 
@@ -983,7 +983,7 @@ void CellEntity::migrate_failed_rollback(const GString& reason) {
         migrate_state = MigrateState::Migrate_None;
 
         for (auto iter = migrate_timers.begin(); iter != migrate_timers.end(); ++iter) {
-            RESTORE_TIMER(iter->first, iter->second.as_bin());
+            RESTORE_TIMER((*iter).as_bin());
         }
 
         base.call("new_cell_migrate_in", get_listen_addr());
@@ -1242,7 +1242,7 @@ void CellEntityWithClient::packet_migrate_data(GDict& migrate_data) {
         Encoder encoder;
         timer->serialize(encoder);
         encoder.write_end();
-        migrate_timers.insert(make_pair(timer->m_cb_name, GBin(encoder.get_buf(), encoder.get_offset())));
+        migrate_timers.push_back(GBin(encoder.get_buf(), encoder.get_offset()));
     }
     migrate_data.insert(make_pair("timers", migrate_timers));
 
@@ -1281,9 +1281,9 @@ void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
     client.set_gate_addr(migrate_data.at("gate_addr").as_string());
 
     release_timer();
-    auto _timers = migrate_data.at("timers").as_dict();
+    auto _timers = migrate_data.at("timers").as_array();
     for (auto iter = _timers.begin(); iter != _timers.end(); ++iter) {
-        RESTORE_TIMER(iter->first, iter->second.as_bin());
+        RESTORE_TIMER((*iter).as_bin());
     }
     next_timer_id = migrate_data.at("next_timer_id").as_int32();
 
@@ -1317,7 +1317,7 @@ void CellEntityWithClient::migrate_failed_rollback(const GString& reason) {
         migrate_state = MigrateState::Migrate_None;
 
         for (auto iter = migrate_timers.begin(); iter != migrate_timers.end(); ++iter) {
-            RESTORE_TIMER(iter->first, iter->second.as_bin());
+            RESTORE_TIMER((*iter).as_bin());
         }
 
         base.call("new_cell_migrate_in", get_listen_addr());
