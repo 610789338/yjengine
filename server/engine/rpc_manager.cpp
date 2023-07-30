@@ -68,9 +68,6 @@ shared_ptr<RpcImp> RpcManagerBase::rpc_decode(const char* buf, uint16_t pkg_len)
     auto iter = find_rpc_method(rpc_name);
     ASSERT_LOG(iter != nullptr, "rpc %s unregist\n", rpc_name.c_str());
 
-    //if (rpc_name == "enter_dungeon_ack") {
-    //    int a = 10;
-    //}
     auto ret = make_shared<RpcImp>(rpc_name, iter->create_self());
     ret->get_rpc_method()->set_rpc_name(rpc_name);
     ret->get_rpc_method()->decode(decoder);

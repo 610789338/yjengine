@@ -339,6 +339,11 @@ public:
 void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method) { \
 \
     auto method = get_rpc_mgr()->find_rpc_method(rpc_name); \
+    if (!method) { \
+        ERROR_LOG("entity rpc.%s not exist\n", rpc_name.c_str()); \
+        return; \
+    } \
+\
     if (!method->component_name.empty()) { \
         get_comp_mgr()->rpc_call(this, from_client, rpc_name, rpc_method); \
         return; \
@@ -349,6 +354,10 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
         return; \
     } \
 \
+    if (g_is_server && method->type == RpcType::CLIENT) { \
+        ERROR_LOG("entity rpc.%s can only call to client\n", rpc_name.c_str()); \
+        return; \
+    }\
     rpc_method->exec((void*)this); \
 }
 

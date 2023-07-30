@@ -20,7 +20,7 @@ public:
     ~MailBoxProxy() {}
 
     //template<class... T>
-    //void local_call(const GString& rpc_name, T... args) {
+    //void local_call(const GString& rpc_name, const T&... args) {
     //    const Encoder& encoder = g_rpc_manager.rpc_encode(rpc_name, args...);
     //    GBin inner_rpc_bin(encoder.get_buf(), encoder.get_offset());
     //    Decoder inner_decoder(inner_rpc_bin.buf, inner_rpc_bin.size);
@@ -82,7 +82,7 @@ public:
     //}
 
     template<class... T>
-    void call(const GString& rpc_name, T... args) {
+    void call(const GString& rpc_name, const T&... args) {
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
         if (g_is_server) {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
@@ -130,7 +130,7 @@ public:
     BaseMailBox() { set_base(); }
     ~BaseMailBox() {}
     template<class... T>
-    void call(const GString& rpc_name, T... args) {
+    void call(const GString& rpc_name, const T&... args) {
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
         if (g_is_server) {
             if (m_session_cache == nullptr || !g_session_mgr.is_valid_session(m_session_cache)) {
@@ -187,7 +187,7 @@ public:
     }
 
     template<class... T>
-    void call(const GString& rpc_name, T... args) {
+    void call(const GString& rpc_name, const T&... args) {
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
         _QueueElement ele(false, (void*)(&inner_rpc));
 
@@ -280,7 +280,7 @@ public:
 
 public:
     template<class... T>
-    void call(const GString& rpc_name, T... args) {
+    void call(const GString& rpc_name, const T&... args) {
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
 
         auto gate = g_session_mgr.get_gate(m_gate_addr);

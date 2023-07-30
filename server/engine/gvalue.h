@@ -25,8 +25,6 @@ class Entity;
 class Session;
 class Remote;
 class MailBoxProxy;
-//class BaseMailBox;
-//class CellMailBox;
 
 class MailBox {
 

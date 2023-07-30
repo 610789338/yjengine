@@ -250,9 +250,14 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
     } \
 \
     if (from_client && method->type != RpcType::EXPOSED) { \
-        ERROR_LOG("comp entity rpc.%s can not call from client\n", rpc_name.c_str()); \
+        ERROR_LOG("entity comp rpc.%s can not call from client\n", rpc_name.c_str()); \
         return; \
     } \
+\
+    if (g_is_server && method->type == RpcType::CLIENT) { \
+        ERROR_LOG("entity comp rpc.%s can only call to client\n", rpc_name.c_str()); \
+        return; \
+    }\
     rpc_method->exec((void*)this); \
 }
 
