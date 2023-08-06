@@ -133,6 +133,7 @@
     <ClCompile Include="client_app.cpp" />
     <ClCompile Include="framework\client_instance.cpp" />
     <ClCompile Include="framework\client_rpc.cpp" />
+    <ClCompile Include="gameplay\components\aoi_component_client.cpp" />
     <ClCompile Include="gameplay\components\avatar_prop_test_component_client.cpp" />
     <ClCompile Include="gameplay\components\itembag_component_client.cpp" />
     <ClCompile Include="gameplay\entities\account.cpp" />
@@ -143,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework\client_instance.h" />
+    <ClInclude Include="gameplay\components\aoi_component_client.h" />
     <ClInclude Include="gameplay\components\avatar_prop_test_component_client.h" />
     <ClInclude Include="gameplay\components\itembag_component_client.h" />
     <ClInclude Include="gameplay\entities\account.h" />

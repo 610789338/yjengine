@@ -10,7 +10,7 @@ void AvatarPropTestComponent::avatar_timer_prop_sync() {
 
 void AvatarPropTestComponent::property_sync_test() {
     Encoder encoder;
-    get_owner()->serialize_all_client(encoder);
+    get_owner()->serialize_client_all(encoder);
     encoder.write_end();
 
     if (encoder.anything()) {

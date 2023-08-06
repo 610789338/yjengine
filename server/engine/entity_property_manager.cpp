@@ -20,7 +20,8 @@ bool prop_regist_check(int8_t t, enum PropType type) {
     case EntityType::EntityType_BaseWithCellAndClient: {
         if (type == PropType::ALL ||
             type == PropType::BASE_PRIVATE ||
-            type == PropType::BASE_AND_CLIENT) {
+            type == PropType::BASE_AND_CLIENT ||
+            type == PropType::ALL_CLIENT) {
             return true;
         }
 
@@ -32,7 +33,8 @@ bool prop_regist_check(int8_t t, enum PropType type) {
         if (type == PropType::ALL ||
             type == PropType::CELL_PRIVATE ||
             type == PropType::CELL_PUBLIC ||
-            type == PropType::CELL_AND_CLIENT) {
+            type == PropType::CELL_AND_CLIENT ||
+            type == PropType::ALL_CLIENT) {
             return true;
         }
 
@@ -128,6 +130,19 @@ bool EntityPropertyBase::need_sync2client() {
     if (prop_type == PropType::BASE_AND_CLIENT ||
         prop_type == PropType::CELL_AND_CLIENT ||
         prop_type == PropType::ALL_CLIENT ||
+        prop_type == PropType::OTHER_CLIENT ||
+        prop_type == PropType::ALL) {
+        return true;
+    }
+
+    return false;
+}
+
+bool EntityPropertyBase::need_sync2otherclient() {
+
+    const auto& prop_type = get_prop_type();
+
+    if (prop_type == PropType::ALL_CLIENT ||
         prop_type == PropType::OTHER_CLIENT ||
         prop_type == PropType::ALL) {
         return true;

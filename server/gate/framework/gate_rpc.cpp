@@ -95,7 +95,7 @@ void create_entity(const GString& entity_name, const GString& entity_uuid) {
         return;
     }
 
-    INFO_LOG("create_entity%s uuid %s\n", entity_name.c_str(), entity_uuid.c_str());
+    INFO_LOG("create_entity %s uuid %s\n", entity_name.c_str(), entity_uuid.c_str());
 
     auto session = g_cur_imp->get_session();
     REMOTE_RPC_CALL(remote, "create_entity", entity_name, /*client_addr*/session->get_remote_addr(), /*gate_addr*/get_listen_addr(), /*entity_uuid*/ entity_uuid);

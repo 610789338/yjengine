@@ -29,7 +29,8 @@ struct ItemBag : public EntityPropertyComplex {
 template<class TEntity>
 void itembag_property_define() {
     //PROPERTY_MAP(PropType::BASE_AND_CLIENT, itembags, ItemBag);
-    PROPERTY_MAP(PropType::CELL_AND_CLIENT, itembags, ItemBag);
+    //PROPERTY_MAP(PropType::CELL_AND_CLIENT, itembags, ItemBag);
+    PROPERTY_MAP(PropType::ALL_CLIENT, itembags, ItemBag);
 }
 
 #define ITEMBAG_PROPERTY_DEFINE \

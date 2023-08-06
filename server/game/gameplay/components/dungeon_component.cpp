@@ -46,7 +46,7 @@ void DungeonComponent::leave_cur_dungeon() {
     auto& old_dungeon_mailbox = GET_PROP(dungeon_mailbox).as_mailbox();
     auto dungeon_entity = old_dungeon_mailbox.get_owner();
     if (dungeon_entity) {
-        dungeon_entity->send_event("avatar_leave", get_owner()->uuid, get_owner()->get_self_mailbox());
+        dungeon_entity->send_event("avatar_leave", get_owner()->uuid, (int64_t)get_owner());
     }
 
     GET_PROP(dungeon_id).update(0);
@@ -65,7 +65,7 @@ void DungeonComponent::enter_next_dungeon() {
 
     auto dungeon_entity = new_dungeon_mailbox.get_owner();
     if (dungeon_entity) {
-        dungeon_entity->send_event("avatar_enter", get_owner()->uuid, get_owner()->get_self_mailbox());
+        dungeon_entity->send_event("avatar_enter", get_owner()->uuid, (int64_t)get_owner());
     }
 
     GET_PROP(dungeon_id).update(GET_PROP(next_dungeon_id).as_int32());

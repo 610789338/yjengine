@@ -35,6 +35,9 @@
     <ClCompile Include="gameplay\components\avatar_prop_test_component_client.cpp">
       <Filter>gameplay\components</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\components\aoi_component_client.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="client.ini" />
@@ -53,6 +56,9 @@
       <Filter>gameplay\components</Filter>
     </ClInclude>
     <ClInclude Include="gameplay\components\avatar_prop_test_component_client.h">
+      <Filter>gameplay\components</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\aoi_component_client.h">
       <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>

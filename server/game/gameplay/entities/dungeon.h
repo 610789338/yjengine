@@ -18,8 +18,6 @@ class Dungeon : public BaseEntity {
     }
     template<class TEntity>
     static void _property_define() {
-        PROPERTY_SIMPLE(PropType::BASE_PRIVATE, dungeon_id, int32_t, 0);
-        PROPERTY_MAP(PropType::BASE_PRIVATE, avatars, MailBox);
     }
 
     static void migrate_timer_define() {}
@@ -32,6 +30,9 @@ public:
     void apply_init_data(const GDict& init_data);
     void on_ready();
 
-    void avatar_enter(const GString& avatar_uuid, const MailBox& avatar_mailbox);
-    void avatar_leave(const GString& avatar_uuid, const MailBox& avatar_mailbox);
+    void avatar_enter(const GString& avatar_uuid, int64_t p);
+    void avatar_leave(const GString& avatar_uuid, int64_t p);
+
+    int32_t dungeon_id = 0;
+    unordered_map<GString, Entity*> avatars;
 };

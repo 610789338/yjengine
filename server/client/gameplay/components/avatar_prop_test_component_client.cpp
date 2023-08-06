@@ -4,7 +4,7 @@
 void AvatarPropTestComponentClient::prop_sync_compare(const GBin& v) {
 
     Encoder encoder;
-    get_owner()->serialize_all_client(encoder);
+    get_owner()->serialize_client_all(encoder);
     encoder.write_end();
 
     auto server_len = v.size;

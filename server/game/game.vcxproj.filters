@@ -67,6 +67,9 @@
     <ClCompile Include="gameplay\components\dungeon_component.cpp">
       <Filter>gameplay\components</Filter>
     </ClCompile>
+    <ClCompile Include="gameplay\components\aoi_component.cpp">
+      <Filter>gameplay\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameplay\game_utils.h">
@@ -106,6 +109,9 @@
       <Filter>gameplay\entities</Filter>
     </ClInclude>
     <ClInclude Include="gameplay\components\dungeon_component.h">
+      <Filter>gameplay\components</Filter>
+    </ClInclude>
+    <ClInclude Include="gameplay\components\aoi_component.h">
       <Filter>gameplay\components</Filter>
     </ClInclude>
   </ItemGroup>

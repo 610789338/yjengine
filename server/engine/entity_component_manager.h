@@ -16,6 +16,8 @@ public:
     virtual EntityComponentBase* create_self(Entity* owner) = 0;
     virtual void on_ready() {}
 
+    virtual void tick() {}
+
     void set_name(GString _name) { name = _name; }
     GString& get_name() { return name; }
 

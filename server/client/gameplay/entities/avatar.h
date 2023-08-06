@@ -4,6 +4,7 @@
 
 #include "../components/avatar_prop_test_component_client.h"
 #include "../components/itembag_component_client.h"
+#include "../components/aoi_component_client.h"
 
 
 class ClientAvatar : public ClientEntity {
@@ -15,6 +16,7 @@ class ClientAvatar : public ClientEntity {
         REGIST_COMPONENT(ClientAvatar, AvatarPropTestComponentClient);
 #endif
         REGIST_COMPONENT(ClientAvatar, ItemBagComponentClient);
+        REGIST_COMPONENT(ClientAvatar, AoiComponentClient);
     }
     static void rpc_method_define() {
         RPC_METHOD(RpcType::CLIENT, msg_from_base);

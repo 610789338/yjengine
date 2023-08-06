@@ -1651,6 +1651,7 @@ Entity* create_local_client_entity(const GString& entity_name, const GString& en
     if (old_entity != nullptr) {
         WARN_LOG("lose client entity.%s unexcept\n", entity->uuid.c_str());
         delete old_entity;
+        ASSERT(false);
         //g_client_entities.erase(iter);
         thread_safe_remove_client_entity(entity_uuid);
     }

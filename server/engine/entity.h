@@ -83,7 +83,9 @@ public:
     void serialize_all(Encoder& encoder, bool need_clean_dirty = false);
     void serialize_db(Encoder& encoder, bool need_clean_dirty = false);
     void serialize_client(Encoder& encoder, bool need_clean_dirty = false);
-    void serialize_all_client(Encoder& encoder, bool need_clean_dirty = false);
+    void serialize_client_all(Encoder& encoder, bool need_clean_dirty = false);
+    void serialize_otherclient(Encoder& encoder);
+    void serialize_otherclient_all(Encoder& encoder);
     virtual int16_t prop_str2int(const GString& prop_name) { return 0; }
     virtual GString prop_int2str(int16_t idx) { return ""; }
     bool is_base_entity();
@@ -457,6 +459,7 @@ extern void regist_entity_creator(const GString& entity, const function<Entity*(
 extern Entity* create_local_base_entity(const GString& entity_type, const GString& entity_uuid);
 extern Entity* create_local_cell_entity(const GString& entity_type, const GString& entity_uuid);
 extern Entity* create_local_client_entity(const GString& entity_type, const GString& entity_uuid);
+extern Entity* create_other_entity(const GString& entity_type, const GString& entity_uuid);
 extern void destroy_local_base_entity(const GString& entity_uuid);
 extern void destroy_local_cell_entity(const GString& entity_uuid);
 extern void destroy_local_client_entity(const GString& entity_uuid);
