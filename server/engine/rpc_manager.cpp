@@ -99,8 +99,13 @@ GString RpcManagerBase::rpc_name_decode(Decoder& decoder) {
     return iter2->second;
 }
 
+extern void try_gen_all_rpc_names();
 void RpcManagerBase::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l) {
     {
+        if (all_rpc_names_l2s.empty()) {
+            try_gen_all_rpc_names();
+        }
+        
         shared_lock<boost::shared_mutex> lock(g_rpc_name_turn_mutex);
         auto iter = all_rpc_names_l2s.find(rpc_name_l);
         if (iter != all_rpc_names_l2s.end()) {

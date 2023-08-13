@@ -20,7 +20,7 @@ void BaseAccount::event_test(const GString& msg) {
 }
 
 void BaseAccount::account_event_timer() {
-    send_event("event_test", "hahahaha");
+    SEND_EVENT("event_test", "hahahaha");
 }
 
 void BaseAccount::base_rpc_timer() {

@@ -8,7 +8,7 @@ GENERATE_ENTITY_OUT(DungeonManager)
 
 
 void DungeonManager::on_ready() {
-    REGIST_TIMER(1, 0, false, create_dungeons);
+    REGIST_TIMER(5, 0, false, create_dungeons);
 }
 
 void DungeonManager::create_dungeons() {

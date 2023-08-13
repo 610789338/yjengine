@@ -396,7 +396,8 @@ public:
 };
 
 #define REGIST_EVENT(event) get_event_manager()->regist_event(this, #event, &RMP(decltype(event_manager.tclass))::event);
-//#define SEND_EVENT(event_name, ...) get_event_manager()->send_event(this, event_name, ##__VA_ARGS__)
+#define SEND_EVENT(event_name, ...) get_event_manager()->send_event(this, event_name, ##__VA_ARGS__)
+#define COMP_SEND_EVENT(event_name, ...) get_owner()->get_event_manager()->send_event(get_owner(), event_name, ##__VA_ARGS__)
 #define MIGRATE_EVENT_DEF(event) event_manager.store_event_cb_for_migrate(#event, &RMP(decltype(event_manager.tclass))::event)
 
 #define RESTORE_EVENT(event_bin) get_event_manager()->restore_event(this, event_bin)

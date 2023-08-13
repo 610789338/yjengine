@@ -101,6 +101,9 @@ void create_entity(const GString& entity_name, const GString& entity_uuid) {
     REMOTE_RPC_CALL(remote, "create_entity", entity_name, /*client_addr*/session->get_remote_addr(), /*gate_addr*/get_listen_addr(), /*entity_uuid*/ entity_uuid);
 }
 
+void try_gen_all_rpc_names() {
+}
+
 //void create_base_entity(const GString& entity_name, const GString& entity_uuid) {
 //    auto remote = g_remote_mgr.get_rand_remote();
 //    if ( nullptr == remote ) {

@@ -240,6 +240,7 @@ Server::Server(boost::asio::io_context& io_context, const char* _ip, const uint1
 
     try {
         m_acceptor.open(tcp::v4());
+        m_acceptor.set_option(tcp::acceptor::reuse_address(true));
         boost::asio::ip::tcp::endpoint endpoint(address::from_string(_ip), port);
         m_acceptor.bind(endpoint);
         m_acceptor.listen();

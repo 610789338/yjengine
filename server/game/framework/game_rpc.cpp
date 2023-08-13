@@ -38,6 +38,27 @@ void regist_from_gate(const GString& gate_listen_addr) {
     REMOTE_RPC_CALL(session, "get_client_entity_rpc_names_from_game", session->get_local_addr());
 }
 
+void try_gen_all_rpc_names() {
+    {
+        unique_lock<boost::shared_mutex> lock(g_rpc_name_turn_mutex);
+
+        if (!all_rpc_names_l2s.empty()) {
+            return;
+        }
+
+        all_rpc_names_l2s.clear();
+        all_rpc_names_s2l.clear();
+
+        for (size_t i = 0; i < get_local_entity_rpc_names()->size(); ++i) {
+            all_rpc_names_l2s.insert(make_pair((*get_local_entity_rpc_names())[i].as_string(), (uint16_t)(g_rpc_names_l2s.size() + all_rpc_names_l2s.size())));
+        }
+
+        for (auto iter = all_rpc_names_l2s.begin(); iter != all_rpc_names_l2s.end(); ++iter) {
+            all_rpc_names_s2l.insert(make_pair(iter->second, iter->first));
+        }
+    }
+}
+
 void get_client_entity_rpc_names_ack(const GArray& client_entity_rpc_names) {
 
     if (client_entity_rpc_names.empty()) {

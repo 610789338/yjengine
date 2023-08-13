@@ -33,6 +33,9 @@ void regist_ack_from_gate(const GString& gate_addr, bool result) {
     REMOTE_RPC_CALL(remote, "get_game_entity_rpc_names_from_client", remote->get_local_addr());
 }
 
+void try_gen_all_rpc_names() {
+}
+
 void get_game_entity_rpc_names_ack(const GArray& game_entity_rpc_names) {
 
     auto remote = g_remote_mgr.get_rand_remote();

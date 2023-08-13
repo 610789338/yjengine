@@ -26,7 +26,7 @@ public:
         //COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
         COMP_REGIST_EVENT(event_test);
 
-        send_event("event_test", "lalalala");
+        COMP_SEND_EVENT("event_test", "lalalala");
     }
 
     void component_rpc_test(const GString& msg);

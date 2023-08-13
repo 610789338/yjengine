@@ -29,6 +29,7 @@ struct LogElement {
 };
 
 extern void push2log_queue(LogElement& log_ele);
+extern void logele_out(LogElement& log_ele);
 extern void log_queue_tick();
 
 // windows debug模式下打印一条日志的平均耗时是800 micro second = 0.8ms
@@ -52,10 +53,25 @@ void LOG(const char* level, T... args) {
     snprintf(body, sizeof(body), args...);
 
     LogElement log_ele(level, body);
-    push2log_queue(log_ele);
+    // push2log_queue(log_ele);
+    logele_out(log_ele);
 }
 
-void LOG(const char* level, char* body);
+template<class T>
+void LOG(const char* level, T body) {
+    static string ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    if (ini_log_level == "unknown") {
+        ini_log_level = ini_get_string("Common", "log_level", "unknown");
+    }
+
+    if (ini_log_level != "unknown" && log_levels.at(level) > log_levels.at(ini_log_level)) {
+        return;
+    }
+
+    LogElement log_ele(level, (char*)body);
+    // push2log_queue(log_ele);
+    logele_out(log_ele);
+}
 
 #define ERROR_LOG(...) {LOG(Error, __VA_ARGS__);}
 #define WARN_LOG(...)  {LOG(Warn,  __VA_ARGS__);}

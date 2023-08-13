@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
+#include <memory>  // shared_ptr need include memory, omg~~~
 
 #include "utils.h"
 #include "log.h"

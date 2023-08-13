@@ -973,7 +973,7 @@ void CellEntity::on_migrate_in(const GDict& migrate_data) {
     base.call("new_cell_migrate_in", get_listen_addr());
     is_ready = true;
 
-    send_event("on_migrate_in");
+    SEND_EVENT("on_migrate_in");
 }
 
 void CellEntity::unpacket_migrate_data(const GDict& migrate_data) {
@@ -1304,7 +1304,7 @@ void CellEntityWithClient::on_migrate_in(const GDict& migrate_data) {
     // move to timer restore
     //create_heart_beat_timer();
 
-    send_event("on_migrate_in");
+    SEND_EVENT("on_migrate_in");
 }
 
 void CellEntityWithClient::unpacket_migrate_data(const GDict& migrate_data) {
@@ -1513,7 +1513,7 @@ inline Entity* thread_safe_get_base_entity(GString entity_uuid) {
     return iter != g_base_entities.end() ? iter->second : nullptr;
 }
 
-inline RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid) {
+RpcManagerBase* thread_safe_get_base_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_base_entity_mutex);
     auto iter = g_base_entities.find(entity_uuid);
     return iter != g_base_entities.end() ? iter->second->rpc_mgr : nullptr;
@@ -1535,7 +1535,7 @@ inline Entity* thread_safe_get_cell_entity(GString entity_uuid) {
     return iter != g_cell_entities.end() ? iter->second : nullptr;
 }
 
-inline RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid) {
+RpcManagerBase* thread_safe_get_cell_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_cell_entity_mutex);
     auto iter = g_cell_entities.find(entity_uuid);
     return iter != g_cell_entities.end() ? iter->second->rpc_mgr : nullptr;
@@ -1557,7 +1557,7 @@ inline Entity* thread_safe_get_client_entity(GString entity_uuid) {
     return iter != g_client_entities.end() ? iter->second : nullptr;
 }
 
-inline RpcManagerBase* thread_safe_get_client_entity_rpcmgr(GString entity_uuid) {
+RpcManagerBase* thread_safe_get_client_entity_rpcmgr(GString entity_uuid) {
     shared_lock<boost::shared_mutex> lock(g_client_entity_mutex);
     auto iter = g_client_entities.find(entity_uuid);
     return iter != g_client_entities.end() ? iter->second->rpc_mgr : nullptr;

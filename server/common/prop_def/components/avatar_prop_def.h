@@ -70,3 +70,4 @@ void avatar_property_define() {
 
 #define AVATAR_PROPERTY_TEST_DEFINE \
     avatar_property_sync_test<TEntity>
+    

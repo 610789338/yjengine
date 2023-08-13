@@ -32,10 +32,10 @@ public:
     virtual EventManagerBase* get_event_manager() { return nullptr; }
     bool is_comp() { return true; }
 
-    template<class... Args>
-    void send_event(const GString& event_name, Args... args) {
-        get_owner()->get_event_manager()->send_event(get_owner(), event_name, args...);
-    }
+    // template<class... Args>
+    // void send_event(const GString& event_name, Args... args) {
+    //     get_owner()->get_event_manager()->send_event(get_owner(), event_name, args...);
+    // }
 
     // mailbox
     BaseMailBox& Base();
