@@ -1,12 +1,8 @@
 # 前言
-在网易从事游戏服务器开发近四年，前后用过bigworld server/mobile server/messiah server三款网易内部的服务器引擎。
-
-bigworld server是真正的无缝大世界服务端引擎，由澳大利亚公司研发，网易后来买入，是我在网易使用时间最长的一款服务器引擎，也是我觉得最牛逼的服务器引擎，只是上手难度较大。
-
-mobile server和messiah server是网易内部自研的，很多设计均参考bigworld server，但上手难度较bigworld更低，经过多年发展，已经渐渐取代bigworld，现在网易互娱内部新项目的游戏服务器引擎大多以这两款为主。
+从事游戏服务器开发多年，期间用过多款游戏服务器引擎，根据自己对游戏服务器的理解，从0开始写了一个分布式游戏服务器引擎：yjengine
 
 # yjengine
-yjengine是我自研的游戏服务器引擎，架构上取bigworld server/mobile server/messiah server三者之长，下面介绍一下yjengine的使用方法以及设计思想。
+yjengine依赖boost库(1.78版本)，支持在windows和linux双平台下运行
 
 <span id="catalogue">整个介绍分为以下几个部分</span>
 * [分布式架构](#distributed)
@@ -18,16 +14,15 @@ yjengine是我自研的游戏服务器引擎，架构上取bigworld server/mobil
 * [属性系统](#property)
 * [component系统](#component)
 * [entity的创建/迁移/灾备/重连](#flowchart)
-* AOI - TODO
-* 无缝大世界 - TODO
+* [其他](#other)
 
 ## <span id="distributed">分布式架构[（目录）](#catalogue)</span>
 yjengine是一款分布式服务器引擎，进程分为game和gate两类，若干个game和若干个gate组成分布式集群，game/client分别和gate直连，gate负责game和client以及game之间的通信转发，game承载所有游戏实例（包括玩家，怪物，场景等等）。
 
-分布式的优势是将单点压力分散到多点上，yjengine首先将网络连接的压力从game上剥离到gate上，gate支持横向拓展，单服同时的客户端网络连接理论上是没有上限的。
+分布式的优势是将单点压力分散到多点上，yjengine首先将网络连接的压力从game上剥离到gate上，gate支持横向拓展，所以集群同时的客户端网络连接理论上是没有上限的。
 game也支持横向拓展，服务端的游戏实例分布在不同game上，且部分游戏实例可以在game之间进行迁移，以mmo游戏为例，游戏中的场景实例分布在不同game上，玩家实例离开上一个场景进入新场景就可能切换到新的进程上。
 
-后续分布式架构还会支持服务发现，即支持线上game和gate进程的动态扩缩容
+后续分布式架构还会支持服务发现，即支持game和gate进程的动态扩缩容
 
 ## <span id="net">网络框架[（目录）](#catalogue)</span>
 分布式集群中，client作为客户端向gate发起TCP连接请求，gate作为客户端向game发起TCP连接请求。
@@ -51,17 +46,17 @@ yjengine的线程分三类：
 用来跑游戏逻辑
 
 ### 网络线程
-boost::asio的异步任务是支持多线程的，yjengine中为了降低主线程压力，网络包的接收和发送，序列化和反序列化都是在子线程进行的，以发包为例，假设有packet_1和packet_2两个网络包，多线程处理步骤如下：
+boost::asio的异步任务是支持多线程的，yjengine中为了降低主线程压力，网络包的接收和发送，序列化和反序列化都是在子线程进行的，以发包为例，假设要往同一个客户端连续发送两条rpc，多线程处理步骤如下：
 
-1. 主线程调用一次发包接口发送packet_1，先将packet_1缓存起来，并往异步队列中插入一个发包通知，并标记session为发包状态
+1. 主线程调用接口发送rpc_1，先将rpc_1缓存起来，并往异步队列中插入一个发包通知，并标记session为发包状态
 
-2. 主线程再次调用发包接口发送packet_2，同理packet_2被缓存，此时session已经处于发包状态，不做任何处理
+2. 主线程再次调用接口发送rpc_2，同理rpc_2被缓存，此时session已经处于发包状态，不做任何处理
   
-3. 子线程A从异步队列中拿到发包通知，从缓存中取出packet_1进行发送，发送结束后会向异步队列中插入回调通知
+3. 子线程A从异步队列中拿到发包通知，从缓存中取出rpc_1进行序列化并发送，发送结束后会向异步队列中插入回调通知
   
-4. 子线程B从异步队列中拿到回调通知，发现缓存中还有packet_2待发送，线程B再将packet_2发送出去，发送结束后向队列中插入回调通知
+4. 子线程B从异步队列中拿到回调通知，发现缓存中还有rpc_2待发送，线程B再将rpc_2进行序列化并发送出去，发送结束后向队列中插入回调通知
   
-5. 子线程C从异步队列中拿到回调通知，发现没有待发送的网络包了，将session标记为待发送状态，等待下次主线程的发送请求
+5. 子线程C从异步队列中拿到回调通知，发现没有待发送的rpc了，将session标记为待发送状态，等待下次主线程的发送请求
 
 ### 辅助线程
 辅助线程用于写日志和进程间的心跳检测
@@ -97,7 +92,9 @@ rpc框架会对rpc的参数个数和类型进行校验，如果调用方传递�
 游戏中的所有实例都称之为entity
 
 ### base && cell
-前面说过游戏实例会在game之间迁移，但并不是所有数据都需要迁移，比如mmo中玩家身上需要迁移的一般都是和战斗或场景直接相关的（战斗属性（生命/防御），场景进入的次数等），其他无关的则不需要迁移（比如背包，养成之类）。所以将entity分为base和cell两部分，base承载无需迁移的数据固定于某个game上，而cell则承载需要迁移的数据，base和cell之间通过gate转发rpc进行异步通信。
+前面说过游戏实例会在game之间迁移，但并不是所有数据都需要迁移，比如mmo中玩家身上需要迁移的一般都是和战斗相关的数据（生命值/魔法值），其他无关的数据则不需要迁移（背包/养成/任务）。
+
+所以将entity分为base和cell两部分，base承载无需迁移的数据固定于某个game上，而cell则承载需要迁移的数据，base和cell之间通过gate转发rpc进行异步通信。
 
 对于entity来说，base是必要的，但cell是可选的。如果entity没有迁移需求，就可以不要cell。
 
@@ -137,6 +134,7 @@ class BaseAvatar : public BaseEntityWithCellAndClient {
     static void rpc_method_define() { ... }
     static void property_define() { ... }
     static void migrate_timer_define() { ... }
+    static void migrate_event_define() { ... }
 ...
     void on_ready() { ... }
 };
@@ -150,6 +148,7 @@ class CellAvatar : public CellEntityWithClient {
     static void rpc_method_define() { ... }
     static void property_define() { ... }
     static void migrate_timer_define() { ... }
+    static void migrate_event_define() { ... }
 ...
     void on_ready() { ... }
 };
@@ -163,6 +162,7 @@ class ClientAvatar : public ClientEntity {
     static void rpc_method_define() { ... }
     static void property_define() { ... }
     static void migrate_timer_define() { ... }
+    static void migrate_event_define() { ... }
 ...
     void on_ready() { ... }
 };
@@ -171,11 +171,12 @@ GENERATE_ENTITY_OUT(ClientAvatar)
 
 GENERATE_ENTITY_INNER/GENERATE_ENTITY_OUT两个宏是必不可少的，用于entity的通用定义
 
-四个static方法也是必不可少的，分别用于：
+五个static方法也是必不可少的，分别用于：
 1. regist_components - 注册component
 2. rpc_method_define - 注册rpc
 3. property_define - 定义属性
 4. migrate_timer_define - 使定时器支持迁移
+5. migrate_event_define - 使事件支持迁移
 
 on_ready方法一般用于注册定时器和事件
 
@@ -249,15 +250,19 @@ enum PropType : int8_t {
     BASE_PRIVATE = 0x01,
     BASE_AND_CLIENT = 0x02,
     CELL_PRIVATE = 0x03,
+    CELL_PUBLIC = 0x04,  // TODO
     CELL_AND_CLIENT = 0x05,
-    ALL = 0x08,
+    ALL_CLIENT = 0x06,
+    OTHER_CLIENT = 0x07,
 };
 ```
 1. BASE_PRIVATE是base的属性
 2. BASE_AND_CLIENT是base和client的共有属性，且会从base同步到client
-3. CELL_PRIVATE是cell的属性
-4. CELL_AND_CLIENT是cell和client的共有属性，且会从cell同步到client
-5. ALL是base/cell/client共有的属性
+3. CELL_PRIVATE是cell的私有属性
+4. CELL_PUBLIC是cell的公有属性（用于在无缝大世界中进行同步，目前暂未实现）
+5. CELL_AND_CLIENT是cell和client的共有属性，且会从cell同步到client
+6. ALL_CLIENT是同步给AOI中所有客户端的属性
+7. OTHER_CLIENT是同步给AOI中除了自己之外所有客户端的属性
 
 ### 属性定义
 属性定义在property_define方法中，一般建议将base/cell/client的属性定义在一个文件中，这样可以方便的阅览entity身上的所有属性，比如：
@@ -265,7 +270,6 @@ enum PropType : int8_t {
 template<class TEntity>
 void avatar_property_test() {
     // avatar属性列表
-    PROPERTY_SIMPLE(PropType::ALL, avatar_id, int32_t, 1001);
     PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, avatar_id_base, int32_t, 1002);
     PROPERTY_SIMPLE(PropType::CELL_AND_CLIENT, avatar_id_cell, int32_t, 1003);
     PROPERTY_SIMPLE(PropType::BASE_PRIVATE, avatar_id_base_private, int32_t, 1004);
@@ -298,7 +302,7 @@ static void property_define() {
     TEntity::property_manager.template regist_map_property<prop_class>(prop_type, #property_name)
 ```
 
-1. PROPERTY_SIMPLE - C++内置类型
+1. PROPERTY_SIMPLE - C++内置类型(int/float/double等)
 2. PROPERTY_COMPLEX - 复合类型，将不同类型的属性组合在一起，类似于struct
 3. PROPERTY_ARRAY - 数组，数组元素可以是任意类型
 4. PROPERTY_MAP - 字典，字典的key是字符串，value可以是任意类型
@@ -321,7 +325,7 @@ PROPERTY_COMPLEX(PropType::BASE_AND_CLIENT, avatar_data, AvatarData);
 
 // AvatarData属性的定义
 struct AvatarData : public EntityPropertyComplex {
-    MEM_PROP_BEGIN_Eight_MEM(AvatarData,
+    MEM_PROP_BEGIN_8_MEM(AvatarData,
         avatar_id,
         avatar_name,
         avatar_level,
@@ -343,10 +347,15 @@ struct AvatarData : public EntityPropertyComplex {
 ```
 AvatarData共有8个成员，成员用MEM_PROPERTY_XXX宏来定义，成员可以是任意类型。
 
+MEM_PROPERTY_XXX和PROPERTY_XXX的用法类似，因为MEM_PROPERTY_XXX从属于PROPERTY_COMPLEX，所以MEM_PROPERTY_XXX不需要指定属性类型
+
+由于PROPERTY_COMPLEX中可以包含MEM_PROPERTY_XXX，而MEM_PROPERTY_COMPLEX中又可以包含MEM_PROPERTY_XXX，所以形成了属性嵌套的效果
+
+
 ### 属性树
 每个entity实例都会有自己的属性树实例，属性树本质是一个多叉树，根节点即entity自身，PROPERTY_XXX定义的属性是树的第一层子节点，ARRAY和MAP的元素以及COMPLEX的成员为树的第N层子节点（N > 1）
 
-complex开头的MEM_PROP_BEGIN_Eight_MEM宏是用于生成属性树中complex节点的子节点，目前一共有九个宏（从MEM_PROP_BEGIN_One_MEM到MEM_PROP_BEGIN_Nine_MEM，可拓展），complex有几个成员就用哪个宏，否则会导致属性树生成错误。
+complex开头的MEM_PROP_BEGIN_8_MEM宏是用于生成属性树中complex节点的子节点，目前有MEM_PROP_BEGIN_1_MEM到MEM_PROP_BEGIN_9_MEM共9个宏（可拓展），complex有几个成员就用哪个宏，否则会导致属性树生成错误。
 
 利用属性树可以遍历entity身上的所有属性，基于属性树可以实现属性的差量同步和全量同步。
 
@@ -378,7 +387,7 @@ GET_PROP宏用于访问属性树的第一层子节点，MEM宏用于访问COMPLE
 
 ARRAY通过GET(int32_t idx)宏访问指定下标的元素
 
-MAP通过GET(const GString& key)宏访问key对应的value
+MAP通过GET(const GString& key)宏访问指定key对应的value
 
 ARRAY的遍历要先用size方法拿到大小，然后for循环配合GET(int32_t idx)访问每个元素
 
@@ -398,7 +407,9 @@ yjengine实现了一个简单的道具背包系统，用以展示属性的增删
 
 当属性发生增删改时，会给对应的属性节点打上脏标记，且向上递归遍历其父属性节点打上脏标记
 
-差量同步时从根节点开始遍历属性树，将所有打了脏标记的属性同步到客户端，差量同步每帧执行
+差量同步时从根节点开始遍历属性树，将所有打了脏标记的属性同步到客户端
+
+差量同步目前是每帧执行的，未来会支持自定义同步频率
 
 ## <span id="component">component系统[（目录）](#catalogue)</span>
 yjengine支持以组合的方式来扩充entity的功能，在regist_components方法中为entity注册组件
@@ -407,7 +418,7 @@ static void regist_components() {
     REGIST_COMPONENT(BaseAccount, CreateAvatarComponent);
 }
 ```
-component支持定义自己的rpc，定时器，以及属性，使component和entity解耦，做到component可插拔
+component支持定义自己的rpc，属性，定时器，以及事件，使component和entity解耦，做到component可插拔
 
 ### component的定义
 ```
@@ -423,6 +434,7 @@ class CreateAvatarComponent : public EntityComponentBase {
     COMP_MIGRATE_TIMER_DEFINE() {
         COMP_MIGRATE_TIMER_DEF(component_timer_test);
     }
+    COMP_MIGRATE_EVENT_DEFINE() { ... }
 ...
     virtual void on_ready() { ... }
 };
@@ -431,20 +443,65 @@ component继承自EntityComponentBase类，和entity类似，component的定义�
 * GENERATE_COMPONENT_INNER - component的一些通用定义
 * COMP_RPC_DEFINE - component的rpc定义
 * COMP_PROPERTY_DEFINE - component的属性定义
-* COMP_MIGRATE_TIMER_DEFINE - 使component定时器支持迁移
+* COMP_MIGRATE_TIMER_DEFINE - 使component注册的定时器支持迁移
+* COMP_MIGRATE_EVENT_DEFINE - 使component注册的事件支持迁移
 * on_ready - 一般用于注册component定时器和事件
 
-### 事件系统
-component和entity以及component之间通过事件系统来通信，目的也是为了解耦，
+### 定时器系统
+component和entity支持定义自己的定时器
 ```
-// 注册事件
-REGIST_EVENT("event_test", component_event_test);
+// entity中注册定时器
+REGIST_TIMER(5, 60, true, avatar_timer_test, "1 minutes");
+
+// component中注册定时器
+COMP_REGIST_TIMER(0, 5, true, component_timer_test, "args1");
+```
+传入的参数分别为：开始时间，间隔时间，是否循环，回调函数，回调函数参数
+
+定时器支持迁移，但由于游戏运行中可能会动态创建定时器，所以需要在class static方法中提前定义，否则entity迁移后定时器会丢失
+```
+// entity提前定义定时器
+static void migrate_timer_define() {
+    MIGRATE_TIMER_DEF(avatar_migrate_timer);
+    MIGRATE_TIMER_DEF(base_rpc_timer);
+}
+
+// component提前定义定时器
+COMP_MIGRATE_TIMER_DEFINE() {
+    COMP_MIGRATE_TIMER_DEF(component_timer_test);
+}
+```
+
+### 事件系统
+component和entity之间以及component之间通过事件系统来通信，目的也是为了解耦，
+```
+// entity中注册事件
+REGIST_EVENT(event_test);
+
+// component中注册事件
+COMP_REGIST_EVENT("event_test", component_event_test);
 
 // 发送事件
-COMP_SEND_EVENT("event_test", "lalalala");
+send_event("event_test", "lalalala");
 ```
 
 事件系统是典型的订阅发布模式，entity和component可以即是订阅者也是发布者
+
+事件也是支持迁移的，但也需要提前定义
+```
+// entity提前定义事件
+static void migrate_event_define() {
+    MIGRATE_EVENT_DEF(begin_migrate);
+}
+
+// component提前定义事件
+COMP_MIGRATE_EVENT_DEFINE() {
+    COMP_MIGRATE_EVENT_DEF(on_other_enter_aoi);
+    COMP_MIGRATE_EVENT_DEF(on_other_leave_aoi);
+    COMP_MIGRATE_EVENT_DEF(clear_aoi);
+}
+```
+
 
 ## <span id="flowchart">entity的创建/迁移/灾备/重连[（目录）](#catalogue)</span>
 接下来，以EntityType_BaseWithCellAndClient为例，介绍一下entity的创建/迁移/灾备/断线重连流程：
@@ -494,3 +551,14 @@ yjengine支持base和cell将自身的数据定时备份到对方身上，若base
 断线重连的重点在于：新客户端连上来后，要给旧客户端发送下线通知，通知base和cell更新自身的client mailbox
 
 ![](https://github.com/610789338/yjengine/blob/main/doc/%E6%B5%81%E7%A8%8B%E5%9B%BE/entity%E6%96%AD%E7%BA%BF%E9%87%8D%E8%BF%9E%E6%B5%81%E7%A8%8B.drawio.png)
+
+## <span id="other">其他[（目录）](#catalogue)</span>
+
+### AOI
+目前实现了一个简单的AOI，即在同一个场景(Dungeon)中的玩家可以互相看见对方，主要是为了实现ALL_CLIENTS和OTHER_CLIENTS两种类型属性的同步，即属性同步给视野里的其他玩家，具体可以参考aoi_component.h/cpp
+
+后续会添加正式的AOI算法，比如九宫格或者十字链表
+
+### 无缝大世界 - TODO
+以上所有功能属于yjengine一期工程，二期工程会开始实现无缝大世界，即跨进程的AOI
+

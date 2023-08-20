@@ -30,9 +30,8 @@ enum PropType : int8_t {
     CELL_PRIVATE = 0x03,
     CELL_PUBLIC = 0x04,  // TODO
     CELL_AND_CLIENT = 0x05,
-    ALL_CLIENT = 0x06,  // TODO
-    OTHER_CLIENT = 0x07,  // TODO
-    ALL = 0x08,
+    ALL_CLIENT = 0x06,
+    OTHER_CLIENT = 0x07,
 };
 
 struct EntityPropertyBase {

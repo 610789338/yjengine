@@ -19,7 +19,7 @@ class BaseMonster : public BaseEntityWithCell {
     }
     template<class TEntity>
     static void _property_define() {
-        PROPERTY_SIMPLE(PropType::ALL, monster_id, int32_t, 1001);
+        PROPERTY_SIMPLE(PropType::BASE_AND_CLIENT, monster_id, int32_t, 1001);
     }
 
     static void migrate_timer_define() {
