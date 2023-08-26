@@ -863,8 +863,6 @@ void CellEntity::destroy_self() {
 }
 
 void CellEntity::begin_migrate(const GString& new_addr) {
-    //GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
-
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
         WARN_LOG("ignore migrate, new addr(%s) equal to local addr(%s)\n", new_addr.c_str(), get_listen_addr().c_str());
@@ -1199,8 +1197,6 @@ void CellEntityWithClient::propertys_sync2client(bool force_all) {
 }
 
 void CellEntityWithClient::begin_migrate(const GString& new_addr) {
-    //GString new_addr(IPPORT_STRING(ini_get_string("MigrateAddr", "ip"), ini_get_int("MigrateAddr", "port")));
-
     if (new_addr == get_listen_addr()) {
         // new cell addr == old cell addr
         WARN_LOG("ignore migrate, new addr(%s) equal to local addr(%s)\n", new_addr.c_str(), get_listen_addr().c_str());
