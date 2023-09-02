@@ -8,12 +8,23 @@ set(CMAKE_CXX_STANDARD 17)
 
 # set build flags
 set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fPIC -g")
+IF (UNIX)
+	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fPIC -g")
+ELSEIF (WIN32)
+	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS}")
+ENDIF ()
 
 # set bin output path
 file(MAKE_DIRECTORY bin)
-file(MAKE_DIRECTORY bin/db)
-set(EXECUTABLE_OUTPUT_PATH bin)
+IF (UNIX)
+	file(MAKE_DIRECTORY bin/linux)
+	file(MAKE_DIRECTORY bin/linux/db)
+	set(EXECUTABLE_OUTPUT_PATH bin/linux)
+ELSEIF (WIN32)
+	file(MAKE_DIRECTORY bin/windows)
+	file(MAKE_DIRECTORY bin/windows/db)
+	set(EXECUTABLE_OUTPUT_PATH bin/windows)
+ENDIF ()
 
 # set lib ouput path
 file(MAKE_DIRECTORY lib)
@@ -27,35 +38,71 @@ link_directories(${BOOST_DIR}/stage/lib)
 
 
 # build lib engine
-aux_source_directory(engine ENGINE_SRC_LIST)
-add_library(engine STATIC ${ENGINE_SRC_LIST})
-target_link_libraries(engine boost_thread pthread)
-
+file(GLOB ENGINE "engine/*.h" "engine/*.cpp")
+source_group(engine FILES ${ENGINE})
+add_library(engine STATIC ${ENGINE})
+IF (UNIX)
+	target_link_libraries(engine boost_thread pthread)
+ELSEIF (WIN32)
+	target_link_libraries(engine)
+ENDIF ()
 
 # add engine include
 include_directories(.)
 
 # build game exe
-aux_source_directory(game GAME_SRC_LIST)
-aux_source_directory(game/framework GAME_SRC_LIST)
-aux_source_directory(game/gameplay/components GAME_SRC_LIST)
-aux_source_directory(game/gameplay/entities GAME_SRC_LIST)
-aux_source_directory(game/gameplay/entities/stubs GAME_SRC_LIST)
-add_executable(game ${GAME_SRC_LIST})
-target_link_libraries(game engine boost_thread pthread)
+file(GLOB GAME "game/*.h" "game/*.cpp")
+source_group(game FILES ${GAME})
+
+file(GLOB FRAMEWORK "game/framework/*.h" "game/framework/*.cpp")
+source_group(game\\framework FILES ${FRAMEWORK})
+
+file(GLOB GAMEPLAY "game/gameplay/*.h" "game/gameplay/*.cpp")
+source_group(game\\gameplay FILES ${GAMEPLAY})
+
+file(GLOB COMPONENTS "game/gameplay/components/*.h" "game/gameplay/components/*.cpp")
+source_group(game\\gameplay\\components FILES ${COMPONENTS})
+
+file(GLOB ENTITIES "game/gameplay/entities/*.h" "game/gameplay/entities/*.cpp")
+source_group(game\\gameplay\\entities FILES ${ENTITIES})
+
+file(GLOB STUBS "game/gameplay/entities/stubs/*.h" "game/gameplay/entities/stubs/*.cpp")
+source_group(game\\gameplay\\entities\\stubs FILES ${STUBS})
+
+add_executable(game ${GAME} ${FRAMEWORK} ${GAMEPLAY} ${COMPONENTS} ${ENTITIES} ${STUBS})
+target_link_libraries(game engine)
+set_target_properties(game PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY bin/windows)
 
 # build gate exe
-aux_source_directory(gate GATE_SRC_LIST)
-aux_source_directory(gate/framework GATE_SRC_LIST)
-add_executable(gate ${GATE_SRC_LIST})
-target_link_libraries(gate engine boost_thread pthread)
+file(GLOB GATE "gate/*.h" "gate/*.cpp")
+source_group(gate FILES ${GATE})
+
+file(GLOB FRAMEWORK "gate/framework/*.h" "gate/framework/*.cpp")
+source_group(gate\\framework FILES ${FRAMEWORK})
+
+add_executable(gate ${GATE} ${FRAMEWORK})
+target_link_libraries(gate engine)
+set_target_properties(gate PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY bin/windows)
 
 # build client exe
-aux_source_directory(client CLIENT_SRC_LIST)
-aux_source_directory(client/framework CLIENT_SRC_LIST)
-aux_source_directory(client/gameplay/components CLIENT_SRC_LIST)
-aux_source_directory(client/gameplay/entities CLIENT_SRC_LIST)
-add_executable(client ${CLIENT_SRC_LIST})
-target_link_libraries(client engine boost_thread pthread)
+file(GLOB CLIENT "client/*.h" "client/*.cpp")
+source_group(client FILES ${CLIENT})
 
+file(GLOB FRAMEWORK "client/framework/*.h" "client/framework/*.cpp")
+source_group(client\\framework FILES ${FRAMEWORK})
 
+file(GLOB GAMEPLAY "client/gameplay/*.h" "client/gameplay/*.cpp")
+source_group(client\\gameplay FILES ${GAMEPLAY})
+
+file(GLOB COMPONENTS "client/gameplay/components/*.h" "client/gameplay/components/*.cpp")
+source_group(client\\gameplay\\components FILES ${COMPONENTS})
+
+file(GLOB ENTITIES "client/gameplay/entities/*.h" "client/gameplay/entities/*.cpp")
+source_group(client\\gameplay\\entities FILES ${ENTITIES})
+
+add_executable(client ${CLIENT} ${FRAMEWORK} ${GAMEPLAY} ${COMPONENTS} ${ENTITIES})
+target_link_libraries(client engine)
+set_target_properties(client PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY bin/windows)
+
+set(CMAKE_SUPPRESS_REGENERATION TRUE)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT game)

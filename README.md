@@ -2,8 +2,6 @@
 从事游戏服务器开发多年，期间用过多款游戏服务器引擎，根据自己对游戏服务器的理解，从0开始写了一个分布式游戏服务器引擎：yjengine
 
 # yjengine
-yjengine依赖boost库(1.78版本)，支持在windows和linux双平台下运行
-
 <span id="catalogue">整个介绍分为以下几个部分</span>
 * [分布式架构](#distributed)
 * [网络架构](#net)
@@ -15,6 +13,7 @@ yjengine依赖boost库(1.78版本)，支持在windows和linux双平台下运行
 * [component系统](#component)
 * [entity的创建/迁移/灾备/重连](#flowchart)
 * [其他](#other)
+* [编译和运行](#compile&&run)
 
 ## <span id="distributed">分布式架构[（目录）](#catalogue)</span>
 yjengine是一款分布式服务器引擎，进程分为game和gate两类，若干个game和若干个gate组成分布式集群，game/client分别和gate直连，gate负责game和client以及game之间的通信转发，game承载所有游戏实例（包括玩家，怪物，场景等等）。
@@ -562,3 +561,48 @@ yjengine支持base和cell将自身的数据定时备份到对方身上，若base
 ### 无缝大世界 - TODO
 以上所有功能属于yjengine一期工程，二期工程会开始实现无缝大世界，即跨进程的AOI
 
+
+## <span id="compile&&run">编译和运行[（目录）](#catalogue)</span>
+yjengine的编译和运行分别依赖cmake和boost库，兼容linux和windows平台
+
+### linux平台
+##### 编译
+1.下载并编译boost库(1.78版本)
+  
+2.下载cmake(>=3.16)
+
+3.下载yjengine
+
+4.进入yjengine/server目录，执行命令：cmake -DBOOST_DIR=${boost库安装目录} ./
+  
+  比如：cmake -DBOOST_DIR=/home/youjun/boost_1_78_0 ./
+  
+5.生成Makefiles之后，执行make all
+
+##### 运行
+1.进入yjengine/bin/linux目录，将所有配置文件中的ip修改为本机地址
+
+2.执行start_all.sh（启动后的集群展示了entity在不同场景间迁移的功能）
+
+### windows平台
+##### 编译
+1.下载并编译boost库(1.78版本)
+
+2.下载并安装vs2017
+
+3.下载yjengine
+
+4.下载并打开cmake-gui工具，将yjengine/server目录下的CMakeLists.txt拖入cmake-gui中
+
+5.在cmake-gui界面勾选Grouped和Advanced，并AddEntry: BOOST_DIR=${boost库安装目录}
+![](https://github.com/610789338/yjengine/blob/main/doc/tmp/img1.png)
+
+6.继续在cmake-gui中Configure，选择vs2017和x64，然后Generate生成vs解决方案
+![](https://github.com/610789338/yjengine/blob/main/doc/tmp/img2.png)
+
+7.打开vs解决方案，编译
+
+##### 运行
+1.进入yjengine/bin/windows，将所有配置文件中的ip修改为本机地址
+
+2.执行start_all.bat
