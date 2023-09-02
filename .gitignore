@@ -14,6 +14,16 @@
 *.sdf
 *.ilk
 *.ipch
+*.vcxproj
+*.filters
+*.vs
+*.sln
+
+# CMake files
+CMakeFiles
+*.cmake
+CMakeCache.txt
+Makefile
 
 # Compiled Object files
 *.slo
@@ -44,11 +54,9 @@
 *.exe
 *.out
 *.app
-server/linux/bin/game
-server/linux/bin/gate
-server/linux/bin/client
+server/bin/linux/game
+server/bin/linux/gate
+server/bin/linux/client
 
 # Other
-server/.vs/server/v15/Solution.VC.db-shm
-server/.vs/server/v15/Solution.VC.db-wal
 *.bin
