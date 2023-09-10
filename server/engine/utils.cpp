@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <signal.h>
+
+#ifdef GPERFTOOLS
+#include <gperftools/heap-profiler.h>
+#endif
 
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/uuid_generators.hpp"
@@ -13,6 +18,26 @@
 #include "boost_asio.h"
 
 using namespace std;
+
+void sig_term(int signo) {
+#ifdef GPERFTOOLS
+    INFO_LOG("sig_kill\n");
+    HeapProfilerDump("youjun");
+    HeapProfilerStop();
+#endif
+
+    exit(0);
+}
+
+void sig_int(int signo) {
+#ifdef GPERFTOOLS
+    INFO_LOG("sig_int\n");
+    HeapProfilerDump("youjun");
+    HeapProfilerStop();
+#endif
+
+    exit(0);
+}
 
 void byte_print(const char* buf, uint16_t length) {
     for (int i = 0; i < length; ++i) {
@@ -124,6 +149,9 @@ void split(string str, const string& pattern, vector<string>& result) {
 extern void engine_tick();
 void main_tick(const int64_t ms_pertick = 100) {
 
+    signal(SIGTERM, sig_term);
+    signal(SIGINT, sig_int);
+
     auto _id = boost::this_thread::get_id();
     GString thread_id = boost::lexical_cast<GString>(_id);
 
@@ -134,6 +162,11 @@ void main_tick(const int64_t ms_pertick = 100) {
     un.i = 1;
 
     INFO_LOG("main tick start - main thread.0x%s, %s endian\n", thread_id.c_str(), un.c == 1 ? "little" : "big");
+
+#ifdef GPERFTOOLS
+    static string proc_name = ini_get_string("Common", "name", "unknown");
+    HeapProfilerStart(proc_name.c_str());
+#endif
 
     auto const tick_origin = nowms_timestamp(false);
     int32_t loop_num = 0;

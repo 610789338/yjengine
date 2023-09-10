@@ -9,9 +9,15 @@ set(CMAKE_CXX_STANDARD 17)
 # set build flags
 set(CMAKE_BUILD_TYPE "Debug")
 IF (UNIX)
-	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fPIC -g")
+	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fPIC -g -Wl,--eh-frame-hdr")
 ELSEIF (WIN32)
 	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS}")
+ENDIF ()
+
+option(GPERFTOOLS "build project on gperftools" OFF)
+
+IF (GPERFTOOLS)
+	add_compile_definitions(GPERFTOOLS)
 ENDIF ()
 
 # set bin output path
@@ -34,7 +40,7 @@ set(LIBRARY_OUTPUT_PATH lib)
 include_directories(${BOOST_DIR})
 
 # add boost link
-link_directories(${BOOST_DIR}/stage/lib)
+link_directories(${BOOST_DIR}/stage/lib lib)
 
 
 # build lib engine
@@ -42,7 +48,7 @@ file(GLOB ENGINE "engine/*.h" "engine/*.cpp")
 source_group(engine FILES ${ENGINE})
 add_library(engine STATIC ${ENGINE})
 IF (UNIX)
-	target_link_libraries(engine boost_thread pthread)
+	target_link_libraries(engine boost_thread pthread tcmalloc)
 ELSEIF (WIN32)
 	target_link_libraries(engine)
 ENDIF ()
