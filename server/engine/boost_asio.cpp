@@ -1,6 +1,6 @@
 ﻿#include <stdlib.h>
+#include <vector>
 
-#include "boost/thread.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "boost_asio.h"
@@ -302,12 +302,14 @@ void boost_asio_tick() {
 
     g_io_context.run();
 
-    //INFO_LOG("tick\n");
+    // INFO_LOG("tick\n");
 }
 
+static vector<boost::thread*> g_boost_thread_array;
+static bool g_boost_thread_exit = false;
 // 子线程boost_asio_tick
 void boost_asio_thread() {
-    while (true) {
+    while (!g_boost_thread_exit) {
         boost_asio_tick();
         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
     }
@@ -315,6 +317,18 @@ void boost_asio_thread() {
 
 void boost_asio_start() {
     for (size_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
-        boost::thread t(boost_asio_thread);
+        auto p = new boost::thread(boost_asio_thread);
+        g_boost_thread_array.push_back(p);
+        // boost::thread t(boost_asio_thread);
     }
+}
+
+void boost_asio_exit() {
+    g_io_context.stop();
+    g_boost_thread_exit = true;
+    for (size_t idx = 0; idx < g_boost_thread_array.size(); ++idx) {
+        g_boost_thread_array[idx]->join();
+        delete g_boost_thread_array[idx];
+    }
+    g_boost_thread_array.clear();
 }

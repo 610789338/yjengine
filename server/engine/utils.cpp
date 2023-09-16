@@ -19,26 +19,6 @@
 
 using namespace std;
 
-void sig_term(int signo) {
-#ifdef GPERFTOOLS
-    INFO_LOG("sig_kill\n");
-    HeapProfilerDump("youjun");
-    HeapProfilerStop();
-#endif
-
-    exit(0);
-}
-
-void sig_int(int signo) {
-#ifdef GPERFTOOLS
-    INFO_LOG("sig_int\n");
-    HeapProfilerDump("youjun");
-    HeapProfilerStop();
-#endif
-
-    exit(0);
-}
-
 void byte_print(const char* buf, uint16_t length) {
     for (int i = 0; i < length; ++i) {
         printf("%02x ", buf[i]);
@@ -146,7 +126,58 @@ void split(string str, const string& pattern, vector<string>& result) {
     }
 }
 
+static boost::thread* p_thread = nullptr;
+static bool g_assist_thread_exit = false;
+void assist_thread() {
+    while (true) {
+        // TODO - open heart beat check
+        // heart_beat_tick();
+        log_queue_tick();
+
+        if (g_assist_thread_exit && log_queue_empty()) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+}
+
+void assist_thread_start() {
+    p_thread = new boost::thread(assist_thread);
+    // boost::thread t(assist_thread);
+}
+
+void assist_thread_exit() {
+    if (p_thread != nullptr) {
+        g_assist_thread_exit = true;
+        p_thread->join();
+        delete p_thread;
+        p_thread = nullptr;
+    }
+}
+
+static bool g_stop_main_tick = false;
+void sig_term(int signo) {
+#ifdef GPERFTOOLS
+    INFO_LOG("sig_kill\n");
+    HeapProfilerDump("youjun");
+    HeapProfilerStop();
+#endif
+
+    g_stop_main_tick = true;
+}
+
+void sig_int(int signo) {
+#ifdef GPERFTOOLS
+    INFO_LOG("sig_int\n");
+    HeapProfilerDump("youjun");
+    HeapProfilerStop();
+#endif
+
+    g_stop_main_tick = true;
+}
+
 extern void engine_tick();
+extern void engine_exit();
 void main_tick(const int64_t ms_pertick = 100) {
 
     signal(SIGTERM, sig_term);
@@ -172,7 +203,7 @@ void main_tick(const int64_t ms_pertick = 100) {
     int32_t loop_num = 0;
 
     // main tick
-    while (true) {
+    while (!g_stop_main_tick) {
         auto const tick_begin = nowms_timestamp(false);
         //if (loop_num % 100 == 0) {
         //    DEBUG_LOG("loop.%d - cost %dms - should be %dms\n", loop_num, tick_begin - tick_origin, loop_num * 100);
@@ -191,8 +222,10 @@ void main_tick(const int64_t ms_pertick = 100) {
 
         ++loop_num;
     }
-
+    
     INFO_LOG("main tick end\n");
+
+    engine_exit();
 }
 
 string get_listen_addr() {

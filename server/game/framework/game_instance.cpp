@@ -74,15 +74,15 @@ void heart_beat_tick() {
     }
 }
 
-void assist_thread() {
-    while (true) {
-        // TODO - open heart beat check
-        // heart_beat_tick();
-        log_queue_tick();
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-    }
-}
+// void assist_thread() {
+//     while (true) {
+//         // TODO - open heart beat check
+//         // heart_beat_tick();
+//         log_queue_tick();
+//         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+//     }
+// }
 
-void assist_thread_start() {
-    boost::thread t(assist_thread);
-}
+// void assist_thread_start() {
+//     boost::thread t(assist_thread);
+// }

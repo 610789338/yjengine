@@ -31,6 +31,7 @@ struct LogElement {
 extern void push2log_queue(LogElement& log_ele);
 extern void logele_out(LogElement& log_ele);
 extern void log_queue_tick();
+extern bool log_queue_empty();
 
 // windows debug模式下打印一条日志的平均耗时是800 micro second = 0.8ms
 // 两次ini_get_string耗时0.4ms，改成static

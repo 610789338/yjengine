@@ -27,13 +27,13 @@ void create_client_instance() {
     g_client_instance->ready();
 }
 
-void assist_thread() {
-    while (true) {
-        log_queue_tick();
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
-    }
-}
+// void assist_thread() {
+//     while (true) {
+//         log_queue_tick();
+//         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+//     }
+// }
 
-void assist_thread_start() {
-    boost::thread t(assist_thread);
-}
+// void assist_thread_start() {
+//     boost::thread t(assist_thread);
+// }

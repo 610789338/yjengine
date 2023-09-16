@@ -197,6 +197,7 @@ extern boost::asio::io_context g_io_context;
 extern void boost_asio_init();
 extern void boost_asio_start();
 extern void boost_asio_tick();
+extern void boost_asio_exit();
 
 extern std::shared_ptr<Server> server;
 extern SessionManager g_session_mgr;

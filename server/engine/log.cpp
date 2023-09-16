@@ -1,7 +1,9 @@
 #include <queue>
 #include <mutex>
+#include <shared_mutex>
 
 #include "boost/thread.hpp"
+
 
 #include "log.h"
 
@@ -46,4 +48,9 @@ void log_queue_tick() {
         logele_out(log_ele);
         g_log_queue.pop();
     }
+}
+
+bool log_queue_empty() {
+    shared_lock<boost::shared_mutex> lock(g_log_mutex);
+    return g_log_queue.empty();
 }
