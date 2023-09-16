@@ -36,10 +36,12 @@ ENDIF ()
 file(MAKE_DIRECTORY lib)
 set(LIBRARY_OUTPUT_PATH lib)
 
-# add boost include
+# add include
 include_directories(${BOOST_DIR})
+include_directories(.)
+include_directories(include)
 
-# add boost link
+# add link
 link_directories(${BOOST_DIR}/stage/lib lib)
 
 
@@ -52,9 +54,6 @@ IF (UNIX)
 ELSEIF (WIN32)
 	target_link_libraries(engine)
 ENDIF ()
-
-# add engine include
-include_directories(.)
 
 # build game exe
 file(GLOB GAME "game/*.h" "game/*.cpp")
