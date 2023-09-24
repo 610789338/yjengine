@@ -63,10 +63,10 @@ void Entity::release_property() {
     propertys.clear();
 }
 
-void Entity::release_timer() {
+void Entity::release_timer(bool exclude_migrate_check) {
     vector<TimerID> _timer_ids;
     for (auto iter = timer_ids.begin(); iter != timer_ids.end(); ++iter) {
-        if (iter->second->m_cb_name == "migrate_check_timer") {
+        if (exclude_migrate_check && iter->second->m_cb_name == "migrate_check_timer") {
             continue;
         }
         _timer_ids.push_back(iter->first);
@@ -176,7 +176,7 @@ void Entity::serialize_otherclient_all(Encoder& encoder) {
 }
 
 void Entity::give_propertys(unordered_map<GString, EntityPropertyBase*>& other_propertys) {
-    propertys.clear();
+    release_property();
     for (auto iter = other_propertys.begin(); iter != other_propertys.end(); ++iter) {
         auto prop = iter->second->create_self();
         prop->set_prop_type(iter->second->get_prop_type());
@@ -276,11 +276,12 @@ void Entity::timer_tick() {
     for (auto iter = timer_fired.begin(); iter != timer_fired.end(); ++iter) {
         const auto& timer = *iter;
 
-        remove_timer(timer);
-
         if (timer->m_repeat) {
+            remove_timer(timer);
             timer->m_expiration = timer->m_start_time + int64_t(timer->m_fire_num * timer->m_interval * 1000);
             add_timer(timer);
+        } else {
+            cancel_timer(timer->m_id);
         }
     }
 }
@@ -303,10 +304,6 @@ void Entity::add_timer(TimerBase* timer) {
 void Entity::remove_timer(TimerBase* timer) {
     size_t erase_num = timers.erase(timer);
     timer_ids.erase(timer->m_id);
-
-    if (timer->m_cb_name == "base_rpc_timer") {
-        int a = 10;
-    }
 
     if (erase_num > 1) {
         WARN_LOG("@@@@@@@@@@@@@@@@ erase_num.%d\n", erase_num);
@@ -1745,6 +1742,35 @@ void entity_tick() {
         if (iter->second->need_destroy) {
             client_entitys_to_destroy.push_back(iter->second->uuid);
         }
+    }
+
+    for (auto iter = base_entitys_to_destroy.begin(); iter != base_entitys_to_destroy.end(); ++iter) {
+        destroy_local_base_entity(iter->as_string());
+    }
+
+    for (auto iter = cell_entitys_to_destroy.begin(); iter != cell_entitys_to_destroy.end(); ++iter) {
+        destroy_local_cell_entity(iter->as_string());
+    }
+
+    for (auto iter = client_entitys_to_destroy.begin(); iter != client_entitys_to_destroy.end(); ++iter) {
+        destroy_local_client_entity(iter->as_string());
+    }
+}
+
+void entity_exit() {
+    GArray base_entitys_to_destroy;
+    GArray cell_entitys_to_destroy;
+    GArray client_entitys_to_destroy;
+    for (auto iter = g_base_entities.begin(); iter != g_base_entities.end(); ++iter) {
+        base_entitys_to_destroy.push_back(iter->second->uuid);
+    }
+
+    for (auto iter = g_cell_entities.begin(); iter != g_cell_entities.end(); ++iter) {
+        cell_entitys_to_destroy.push_back(iter->second->uuid);
+    }
+
+    for (auto iter = g_client_entities.begin(); iter != g_client_entities.end(); ++iter) {
+        client_entitys_to_destroy.push_back(iter->second->uuid);
     }
 
     for (auto iter = base_entitys_to_destroy.begin(); iter != base_entitys_to_destroy.end(); ++iter) {

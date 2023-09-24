@@ -25,6 +25,13 @@ ClientMailBox& EntityComponentBase::Client() {
     return owner->get_client_mailbox();
 }
 
+ComponentManagerBase::~ComponentManagerBase() {
+    for (auto iter = components.begin(); iter != components.end(); ++iter) {
+        delete iter->second;
+    }
+    components.clear();
+}
+
 void ComponentManagerBase::component_regist(EntityComponentBase* component) {
 
     if (components.find(component->get_name()) != components.end()) {

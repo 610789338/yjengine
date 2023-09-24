@@ -84,6 +84,7 @@ GValue& GValue::operator=(const GValue& rs) {
 }
 
 GValue::GValue(GValue&& rs) {
+    release();
 
     switch (rs.m_t)
     {
@@ -113,9 +114,11 @@ GValue::GValue(GValue&& rs) {
     }
 
     m_t = rs.m_t;
+    rs.m_t = NONE_T;
 }
 
 GValue& GValue::operator=(GValue&& rs) {
+    release();
 
     switch (rs.m_t)
     {
@@ -145,6 +148,7 @@ GValue& GValue::operator=(GValue&& rs) {
     }
 
     m_t = rs.m_t;
+    rs.m_t = NONE_T;
 
     return *this;
 }

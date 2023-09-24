@@ -8,6 +8,7 @@ extern void update_time_now_cache();
 extern void rpc_handle_regist();
 extern void rpc_imp_input_tick();
 extern void entity_tick();
+extern void entity_exit();
 
 void engine_init() {
 
@@ -24,10 +25,8 @@ void engine_tick() {
 }
 
 void engine_exit() {
-    INFO_LOG("engine exit\n");
-	boost_asio_exit();
-    INFO_LOG("engine exit 1\n");
-	assist_thread_exit();
-    INFO_LOG("engine exit 2\n");
+    boost_asio_exit();
+    assist_thread_exit();
+    entity_exit();
 }
 

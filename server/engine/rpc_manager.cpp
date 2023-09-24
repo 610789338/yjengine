@@ -120,6 +120,7 @@ void RpcManagerBase::rpc_name_encode(Encoder& encoder, const GString& rpc_name_l
 }
 
 void RpcManagerBase::add_rpc_method(const GString& rpc_name, RpcMethodBase* method) {
+    ASSERT_LOG(m_rpc_methods.find(rpc_name) == m_rpc_methods.end(), "rpc method(%s) already exist\n", rpc_name.c_str());
     m_rpc_methods.emplace(rpc_name, method);
 }
 
@@ -129,6 +130,13 @@ RpcMethodBase* RpcManagerBase::find_rpc_method(const GString& rpc_name) {
         return nullptr;
     }
     return iter->second;
+}
+
+void RpcManagerBase::release_rpc_method() {
+    for (auto iter = m_rpc_methods.begin(); iter != m_rpc_methods.end(); ++iter) {
+        delete iter->second;
+    }
+    m_rpc_methods.clear();
 }
 
 RpcManager::RpcManager() {

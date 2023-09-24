@@ -1,13 +1,13 @@
 #!/bin/bash
 
-./game -c game.ini &
-./game -c game1.ini &
-./game -c game2.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./game -c game.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./game -c game1.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./game -c game2.ini &
 sleep 0.5
 
-./gate -c gate.ini &
-./gate -c gate1.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./gate -c gate.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./gate -c gate1.ini &
 sleep 0.5
 
-./client -c client.ini &
-./client -c client.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./client -c client.ini &
+env PPROF_PATH=./pprof HEAPCHECK=normal ./client -c client.ini &

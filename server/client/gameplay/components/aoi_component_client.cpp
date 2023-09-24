@@ -1,6 +1,20 @@
 #include "aoi_component_client.h"
 
+AoiComponentClient::~AoiComponentClient() {
+    for (auto iter = others.begin(); iter != others.end(); ++iter) {
+        delete iter->second;
+    }
+    others.clear();
+}
+
 void AoiComponentClient::on_other_enter_aoi(const GString& entity_uuid, const GString& entity_name, const GBin& v) {
+    auto iter = others.find(entity_uuid);
+    if (iter != others.end()) {
+        // TODO - this is incorrect
+        delete iter->second;
+        others.erase(entity_uuid);
+    }
+
     Entity* entity = create_other_entity(entity_name, entity_uuid);
 
     Decoder decoder(v.buf, v.size);

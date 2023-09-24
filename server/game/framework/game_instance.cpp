@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <gperftools/heap-profiler.h>
 
 #include "boost/regex.hpp"
 
@@ -18,6 +19,7 @@ void GameInstance::on_ready() {
     // 延时1s等待集群互连后广播通知
     // TODO - 等做了服务发现再做动态通知
     REGIST_TIMER(1, 0, false, create_stubs);
+    REGIST_TIMER(1, 5, true, dump_profile);
 }
 
 void GameInstance::create_stubs() {
@@ -31,6 +33,10 @@ void GameInstance::create_stubs() {
     for (auto iter1 = stub_names.begin(); iter1 != stub_names.end(); ++iter1) {
         create_stub(*iter1);
     }
+}
+
+void GameInstance::dump_profile() {
+    HeapProfilerDump("youjun");
 }
 
 void GameInstance::on_gate_disappear(const GString& gate_addr) {

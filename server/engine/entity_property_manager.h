@@ -961,6 +961,12 @@ public:
     EntityPropertyManager() {
         TEntity::property_define();
     }
+    ~EntityPropertyManager() {
+        for (auto iter = propertys.begin(); iter != propertys.end(); ++iter) {
+            delete iter->second;
+        }
+        propertys.clear();
+    }
 
     template<class TProp>
     void regist_simple_property(enum PropType type, const GString& property_name, TProp _default) {

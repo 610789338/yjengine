@@ -21,7 +21,7 @@ class AoiComponentClient : public EntityComponentBase {
 
 public:
     AoiComponentClient() {}
-    ~AoiComponentClient() {}
+    ~AoiComponentClient();
 
     virtual void on_ready() {
     }

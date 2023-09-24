@@ -44,9 +44,10 @@ public:
 public:
     Entity() {}
     virtual ~Entity() { 
-        release_component(); 
-        release_property(); 
-        release_timer(); 
+        release_component();
+        release_property();
+        release_timer(false);
+        release_event();
     }
 
     void tick();
@@ -75,7 +76,7 @@ public:
 
     void release_component();
     void release_property();
-    void release_timer();
+    void release_timer(bool exclude_migrate_check = true);
     void release_event();
 
     // proppertys

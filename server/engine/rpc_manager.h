@@ -258,7 +258,7 @@ class RpcManagerBase {
     friend void entity_rpc_mgr_init();
 public:
     RpcManagerBase() {}
-    virtual ~RpcManagerBase() {}
+    virtual ~RpcManagerBase() { release_rpc_method(); }
 
     shared_ptr<RpcImp> rpc_decode(const char* buf, uint16_t pkg_len);
     GString rpc_name_decode(Decoder& decoder);
@@ -288,6 +288,7 @@ public:
 
     void add_rpc_method(const GString& rpc_name, RpcMethodBase* method);
     RpcMethodBase* find_rpc_method(const GString& rpc_name);
+    void release_rpc_method();
 
 private:
     unordered_map<GString, RpcMethodBase*> m_rpc_methods;

@@ -371,7 +371,6 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "destroy_self", &BaseEntityWithCell::destroy_self); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "base_disaster_backup", &BaseEntityWithCell::base_disaster_backup); \
             rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "cell_recover_by_disaster_backup_success", &BaseEntityWithCell::cell_recover_by_disaster_backup_success); \
-            rpc_manager.entity_rpc_regist(RpcType::SERVER_ONLY, "respect_from_cell", &BaseEntityWithCell::respect_from_cell); \
         } \
         else if (entity_type == EntityType::EntityType_BaseWithClient) { \
             rpc_manager.entity_rpc_regist(RpcType::EXPOSED, "ready", &BaseEntityWithClient::ready); \

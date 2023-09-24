@@ -51,7 +51,7 @@ protected:
 class ComponentManagerBase {
 public:
     ComponentManagerBase() {}
-    virtual ~ComponentManagerBase() {}
+    virtual ~ComponentManagerBase();
 
     template<class TEntityComp>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)()) {
