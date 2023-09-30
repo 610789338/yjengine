@@ -168,16 +168,16 @@ public:
 public:
 
     struct _QueueElement {
-        _QueueElement(bool _is_pure_bin, void* _p)
-            : is_pure_bin(_is_pure_bin)
-            , p(_p)
-        {}
+        _QueueElement(bool _is_pure_bin) : is_pure_bin(_is_pure_bin) {}
         bool is_pure_bin = false;
-        void* p = nullptr;
+        // void* p = nullptr;
+        GBin inner_rpc1;
+        InnerRpcPtr_Encode inner_rpc2;
     };
 
     void call(const GBin& inner_rpc) {
-        _QueueElement ele(true, (void*)(&inner_rpc));
+        _QueueElement ele(true);
+        ele.inner_rpc1 = std::move(inner_rpc);
         if (is_rpc_cache) {
             m_inner_rpc_cache.push(ele);
         }
@@ -189,7 +189,8 @@ public:
     template<class... T>
     void call(const GString& rpc_name, const T&... args) {
         auto inner_rpc = GEN_INNER_RPC(rpc_name, args...);
-        _QueueElement ele(false, (void*)(&inner_rpc));
+        _QueueElement ele(false);
+        ele.inner_rpc2 = inner_rpc;
 
         if (is_rpc_cache) {
             m_inner_rpc_cache.push(ele);
@@ -212,12 +213,10 @@ public:
             }
 
             if (queue_ele.is_pure_bin) {
-                GBin inner_rpc = std::move(*(GBin*)(queue_ele.p));
-                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, queue_ele.inner_rpc1);
             }
             else {
-                InnerRpcPtr_Encode inner_rpc = *(InnerRpcPtr_Encode*)(queue_ele.p);
-                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, queue_ele.inner_rpc2);
             }
         }
         else {
@@ -232,12 +231,10 @@ public:
             }
 
             if (queue_ele.is_pure_bin) {
-                GBin inner_rpc = std::move(*(GBin*)(queue_ele.p));
-                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, queue_ele.inner_rpc1);
             }
             else {
-                InnerRpcPtr_Encode inner_rpc = *(InnerRpcPtr_Encode*)(queue_ele.p);
-                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, inner_rpc);
+                REMOTE_RPC_CALL(gate, "call_cell_entity", m_addr, m_entity_uuid, queue_ele.inner_rpc2);
             }
 
         }
