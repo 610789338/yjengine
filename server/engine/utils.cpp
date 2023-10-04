@@ -5,6 +5,7 @@
 
 #ifdef GPERFTOOLS
 #include <gperftools/heap-profiler.h>
+#include <gperftools/profiler.h>
 #endif
 
 #include "boost/uuid/uuid.hpp"
@@ -161,6 +162,7 @@ void sig_term(int signo) {
     INFO_LOG("sig_kill\n");
     HeapProfilerDump("youjun");
     HeapProfilerStop();
+    ProfilerStop();
 #endif
 
     g_stop_main_tick = true;
@@ -171,9 +173,14 @@ void sig_int(int signo) {
     INFO_LOG("sig_int\n");
     HeapProfilerDump("youjun");
     HeapProfilerStop();
+
+    static string proc_name = ini_get_string("Common", "name", "unknown");
+    static string cpu_prof_filename = proc_name + "_cpu.prof";
+    ProfilerStop();
+    ProfilerStart(cpu_prof_filename.c_str());
 #endif
 
-    g_stop_main_tick = true;
+    // g_stop_main_tick = true;
 }
 
 extern void engine_tick();
@@ -189,7 +196,7 @@ void main_tick(const int64_t ms_pertick = 100) {
     union {
         int i;
         char c;
-    }un;
+    } un;
     un.i = 1;
 
     INFO_LOG("main tick start - main thread.0x%s, %s endian\n", thread_id.c_str(), un.c == 1 ? "little" : "big");
@@ -197,6 +204,7 @@ void main_tick(const int64_t ms_pertick = 100) {
 #ifdef GPERFTOOLS
     static string proc_name = ini_get_string("Common", "name", "unknown");
     HeapProfilerStart(proc_name.c_str());
+    ProfilerStart((proc_name + "_cpu.prof").c_str());
 #endif
 
     auto const tick_origin = nowms_timestamp(false);

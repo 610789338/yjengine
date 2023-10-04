@@ -2,6 +2,7 @@
 
 cd lib
 ln -s libtcmalloc.so.4 libtcmalloc.so
+ln -s libprofiler.so.0 libprofiler.so
 cd ..
 
 cmake -DBOOST_DIR=/home/youjun/boost_1_78_0 -DGPERFTOOLS=on ./
