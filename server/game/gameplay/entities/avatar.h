@@ -19,6 +19,7 @@ class BaseAvatar : public BaseEntityWithCellAndClient {
     static void rpc_method_define() {
         RPC_METHOD(RpcType::SERVER_ONLY, msg_from_cell);
         RPC_METHOD(RpcType::EXPOSED, msg_from_client);
+        RPC_METHOD(RpcType::EXPOSED, luado);
         RPC_METHOD(RpcType::EXPOSED, byte_swap_test);
         RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
     }
@@ -38,6 +39,7 @@ public:
 
     void msg_from_cell(const GString& msg);
     void msg_from_client(const GString& msg);
+    void luado(const GString& luastr);
     void byte_swap_test(const GString& msg, int16_t arg1, int32_t arg2, int64_t arg3, float arg4, uint16_t arg5, uint32_t arg6, uint64_t arg7, double arg8);
     void avatar_timer_test(const GString& arg1);
 

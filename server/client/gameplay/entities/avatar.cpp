@@ -42,4 +42,5 @@ void ClientAvatar::client_rpc_timer() {
     base.call("msg_from_client", "hello, i am client");
     cell.call("msg_from_client", "hello, i am client");
     //base.call("byte_swap_test", "hello, i am client", int16_t(-1), int32_t(-1), int64_t(-1), float(888.888), uint16_t(1), uint32_t(1), uint64_t(1), double(987654321.987654321987654321));
+    base.call("luado", "print(\"hello world\")");
 }

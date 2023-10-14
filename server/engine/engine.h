@@ -11,6 +11,7 @@
 #include "entity_rpc_manager.h"
 #include "entity_property_manager.h"
 #include "entity_component_manager.h"
+#include "lua_state_manager.h"
 
 // ------------------------------- definition ------------------------------- //
 
@@ -60,3 +61,5 @@ PropertyTree TCLASS::property_tree(property_manager.propertys);
 extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();
+
+extern std::shared_ptr<LuaStateManager> g_luas_mgr;
