@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="global_State">
+    <Expand>
+      <Item Name="frealloc">frealloc</Item>
+      <Item Name="ud">ud</Item>
+
+      <!--strtable-->
+      <Synthetic Name="strt">
+        <DisplayString>stringtable</DisplayString>
+        <Expand>
+          <CustomListItems>
+            <Variable Name="it" InitialValue="(TString *)0"/>
+            <Variable Name="i" InitialValue="0"/>
+            <Loop>
+              <Break Condition="i &gt;= strt.size"/>
+              <Exec>it = strt.hash[i]</Exec>
+              <If Condition="it != (TString *)0">
+                <Item Name="{i}">it</Item>
+              </If>
+              <Exec>i = i + 1</Exec>
+            </Loop>
+          </CustomListItems>
+        </Expand>
+      </Synthetic>
+      
+      <!--gc-->
+      <Synthetic Name="gc">
+        <Expand>
+          <Item Name="totalbytes">totalbytes</Item>
+          <Item Name="GCdebt">GCdebt</Item>
+          <Item Name="GCestimate">GCestimate</Item>
+          <Item Name="lastatomic">lastatomic</Item>
+          <Item Name="currentwhite">(unsigned int)currentwhite</Item>
+          <Item Name="gcstate">(unsigned int)gcstate</Item>
+          <Item Name="gckind">(unsigned int)gckind</Item>
+          <Item Name="gcstopem">(unsigned int)gcstopem</Item>
+          <Item Name="genminormul">(unsigned int)genminormul</Item>
+          <Item Name="genmajormul">(unsigned int)genmajormul</Item>
+          <Item Name="gcstp">(unsigned int)gcstp</Item>
+          <Item Name="gcemergency">(unsigned int)gcemergency</Item>
+          <Item Name="gcpause">(unsigned int)gcpause</Item>
+          <Item Name="gcstepmul">(unsigned int)gcstepmul</Item>
+          <Item Name="gcstepsize">(unsigned int)gcstepsize</Item>
+
+          <!--allgc-->
+          <Synthetic Name="allgc">
+            <DisplayString>allgc</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)allgc"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>
+        
+          <!--sweepgc-->
+          <Synthetic Name="sweepgc">
+            <DisplayString>sweepgc</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)(*sweepgc)"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>
+        
+          <!--finobj-->
+          <Synthetic Name="finobj">
+            <DisplayString>finobj</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)finobj"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>
+        
+          <!--gray-->
+          <Synthetic Name="gray">
+            <DisplayString>gray</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)gray"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+
+                  <Item Name="{i}">it</Item>
+                  <If Condition="it->tt == 5">
+                    <Exec>it = ((Table *)it)->gclist</Exec>
+                  </If>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->l.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->c.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 8">
+                    <Exec>it = ((lua_State *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 10">
+                    <Exec>it = ((Proto *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 7">
+                    <Exec>it = ((Udata *)it)->gclist</Exec>
+                  </Elseif>
+
+                  <Exec>i = i + 1</Exec>
+                
+              </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>
+      
+          <!--grayagain-->
+          <Synthetic Name="grayagain">
+            <DisplayString>grayagain</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)grayagain"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <If Condition="it->tt == 5">
+                    <Exec>it = ((Table *)it)->gclist</Exec>
+                  </If>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->l.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->c.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 8">
+                    <Exec>it = ((lua_State *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 10">
+                    <Exec>it = ((Proto *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 7">
+                    <Exec>it = ((Udata *)it)->gclist</Exec>
+                  </Elseif>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>
+        
+          <!--weak-->
+          <Synthetic Name="weak">
+            <DisplayString>weak</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)weak"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <If Condition="it->tt == 5">
+                    <Exec>it = ((Table *)it)->gclist</Exec>
+                  </If>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->l.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->c.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 8">
+                    <Exec>it = ((lua_State *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 10">
+                    <Exec>it = ((Proto *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 7">
+                    <Exec>it = ((Udata *)it)->gclist</Exec>
+                  </Elseif>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>  
+      
+          <!--ephemeron-->
+          <Synthetic Name="ephemeron">
+            <DisplayString>ephemeron</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)ephemeron"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <If Condition="it->tt == 5">
+                    <Exec>it = ((Table *)it)->gclist</Exec>
+                  </If>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->l.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->c.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 8">
+                    <Exec>it = ((lua_State *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 10">
+                    <Exec>it = ((Proto *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 7">
+                    <Exec>it = ((Udata *)it)->gclist</Exec>
+                  </Elseif>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>  
+      
+          <!--allweak-->
+          <Synthetic Name="allweak">
+            <DisplayString>allweak</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)allweak"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <If Condition="it->tt == 5">
+                    <Exec>it = ((Table *)it)->gclist</Exec>
+                  </If>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->l.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 6">
+                    <Exec>it = ((Closure *)it)->c.gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 8">
+                    <Exec>it = ((lua_State *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 10">
+                    <Exec>it = ((Proto *)it)->gclist</Exec>
+                  </Elseif>
+                  <Elseif Condition="it->tt == 7">
+                    <Exec>it = ((Udata *)it)->gclist</Exec>
+                  </Elseif>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+          <!--tobefnz-->
+          <Synthetic Name="tobefnz">
+            <DisplayString>tobefnz</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)tobefnz"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+          <!--fixedgc-->
+          <Synthetic Name="fixedgc">
+            <DisplayString>fixedgc</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)fixedgc"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>   
+      
+          <!--survival-->
+          <Synthetic Name="survival">
+            <DisplayString>survival</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)survival"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>   
+      
+          <!--old1-->
+          <Synthetic Name="old1">
+            <DisplayString>old1</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)old1"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>   
+      
+          <!--reallyold-->
+          <Synthetic Name="reallyold">
+            <DisplayString>reallyold</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)reallyold"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+          <!--firstold1-->
+          <Synthetic Name="firstold1">
+            <DisplayString>firstold1</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)firstold1"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+          <!--finobjsur-->
+          <Synthetic Name="finobjsur">
+            <DisplayString>finobjsur</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)finobjsur"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+          <!--finobjold1-->
+          <Synthetic Name="finobjold1">
+            <DisplayString>finobjold1</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)finobjold1"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>   
+      
+          <!--finobjrold-->
+          <Synthetic Name="finobjrold">
+            <DisplayString>finobjrold</DisplayString>
+            <Expand>
+              <CustomListItems>
+                <Variable Name="it" InitialValue="(GCObject *)finobjrold"/>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                  <Break Condition="it == (GCObject *)0"/>
+                  <Item Name="{i}">it</Item>
+                  <Exec>it = it->next</Exec>
+                  <Exec>i = i + 1</Exec>
+                </Loop>
+              </CustomListItems>
+            </Expand>
+          </Synthetic>    
+      
+        </Expand>
+      </Synthetic>
+
+      <Item Name="l_registry">l_registry</Item>
+      <Item Name="nilvalue">nilvalue</Item>
+      <Item Name="seed">seed</Item>
+      <Item Name="twups">twups</Item>
+      <Item Name="panic">panic</Item>
+      <Item Name="mainthread">mainthread</Item>
+      <Item Name="memerrmsg">memerrmsg</Item>
+      <Item Name="tmname">tmname</Item>
+      <Item Name="mt">mt</Item>
+      <Item Name="strcache">strcache</Item>
+      <Item Name="warnf">warnf</Item>
+      <Item Name="ud_warn">ud_warn</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

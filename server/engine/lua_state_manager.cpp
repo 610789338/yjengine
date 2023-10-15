@@ -10,3 +10,8 @@ void LuaStateManager::do_str(const GString& str) {
     luaL_dostring(l, str.c_str());
     //lua_pcall(l, 0, 0, 0);
 }
+
+void LuaStateManager::do_file(const GString& filename) {
+    luaL_dofile(l, filename.c_str());
+    lua_pcall(l, 0, 0, 0);
+}

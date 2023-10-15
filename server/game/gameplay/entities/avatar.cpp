@@ -29,7 +29,8 @@ void BaseAvatar::msg_from_client(const GString& msg) {
 }
 
 void BaseAvatar::luado(const GString& luastr) {
-    g_luas_mgr->do_str(luastr);
+    //g_luas_mgr->do_str(luastr);
+    g_luas_mgr->do_file("E:/gitrepo/yjengine_new/server/engine/thirdparty/lua/test.lua");
 }
 
 void BaseAvatar::byte_swap_test(const GString& msg, int16_t arg1, int32_t arg2, int64_t arg3, float arg4, uint16_t arg5, uint32_t arg6, uint64_t arg7, double arg8) {

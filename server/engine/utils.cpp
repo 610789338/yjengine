@@ -102,7 +102,7 @@ int64_t nowmicro_timestamp(bool use_cache) {
 }
 
 uint32_t bkdr_hash(const char* str) {
-    register unsigned int hash = 0;
+    /*register */unsigned int hash = 0;
     while (unsigned int ch = (unsigned int)*str++) {
         hash = hash * 131 + ch;
     }

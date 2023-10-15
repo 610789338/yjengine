@@ -16,8 +16,9 @@ IF (UNIX)
 		set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -fPIC -g -Wl,--eh-frame-hdr")
 	ENDIF ()
 ELSEIF (WIN32)
-	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS}")
+	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} /ZI /DEBUG /Od")
 ENDIF ()
+
 
 option(GPERFTOOLS "build project on gperftools" OFF)
 
@@ -54,7 +55,7 @@ link_directories(${BOOST_DIR}/stage/lib lib)
 file(GLOB ENGINE "engine/*")
 source_group(engine FILES ${ENGINE})
 
-file(GLOB LUA "engine/thirdparty/lua/*")
+file(GLOB LUA "engine/thirdparty/lua/src/*")
 source_group(engine\\thirdparty\\lua FILES ${LUA})
 
 add_library(engine STATIC ${ENGINE} ${LUA})

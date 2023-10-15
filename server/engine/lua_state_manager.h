@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thirdparty/lua/lua.hpp"
+#include "thirdparty/lua/src/lua.hpp"
 #include "gvalue.h"
 
 class LuaStateManager {
@@ -16,6 +16,7 @@ public:
     };
 
     void do_str(const GString& str);
+    void do_file(const GString& filename);
 
 private:
     lua_State* l = nullptr;

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+<Type Name="Table">
+	<DisplayString>size=2 ^ {(int)lsizenode} + {alimit}</DisplayString>
+	<Expand>
+    <Item Name="metatable">metatable</Item>
+		<CustomListItems>
+			<Variable Name="asize" InitialValue="0" />
+			<Variable Name="lsize" InitialValue="0" />
+			<Variable Name="i" InitialValue="0" />
+			<Variable Name="item" InitialValue="(TValue *)0" />
+			<Variable Name="item_node" InitialValue="(Node *)0" />
+			<Variable Name="item_node_string" InitialValue="(TString *)0" />
+      <Variable Name="uint_key" InitialValue="0" />
+			<Variable Name="key_type" InitialValue="0" />
+			<Exec>asize = alimit</Exec>
+			<Exec>lsize = (1 &lt;&lt; lsizenode)</Exec>
+			<Loop>
+				<Break Condition="i &gt;= asize"/>
+				<Exec>item = array + i</Exec>
+				<Item Name = "{i+1}" Condition="(item->tt_ &amp; 0x0f) != 0">item</Item>
+				<Exec>i = i + 1</Exec>
+			</Loop>
+			<Exec>i = 0</Exec>
+			<Loop>
+				<Break Condition="i &gt;= lsize"/>
+				<Exec>item_node = node + i</Exec>
+				<Exec>key_type = (item_node->u.key_tt &amp; 0x0f)</Exec>
+				<Exec>item_node_string = (TString *)item_node->u.key_val.gc</Exec>
+        <Exec>uint_key = (unsigned long long)item_node->u.key_val.gc</Exec>
+				<Item Name = "{item_node_string}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 4)">item_node</Item>
+				<Item Name = "{item_node->u.key_val.i}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 3)">item_node</Item>
+				<Item Name = "uint_key" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 3) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 4)">item_node</Item>
+				<Exec>i = i + 1</Exec>
+			</Loop>
+		</CustomListItems>
+	</Expand>
+  </Type>
+</AutoVisualizer>

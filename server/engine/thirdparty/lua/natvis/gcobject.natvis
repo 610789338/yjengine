@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="GCObject">
+    <!--thread-->
+    <DisplayString Condition="tt==8">thread</DisplayString>
+    <DisplayString Condition="tt==72">thread</DisplayString>
+    <!--string-->
+    <DisplayString Condition="tt==4">{((TString *)(&amp;next))->contents}</DisplayString>
+    <DisplayString Condition="tt==20">{((TString *)(&amp;next))->contents}</DisplayString>
+    <DisplayString Condition="tt==68">{((TString *)(&amp;next))->contents}</DisplayString>
+    <DisplayString Condition="tt==84">{((TString *)(&amp;next))->contents}</DisplayString>
+    <!--userdata-->
+    <DisplayString Condition="tt==2">lightuserdata</DisplayString>
+    <DisplayString Condition="tt==7">userdata</DisplayString>
+    <DisplayString Condition="tt==71">userdata</DisplayString>
+    <!--proto-->
+    <DisplayString Condition="tt==10">proto</DisplayString>
+    <!--function-->
+    <DisplayString Condition="tt==9">upval</DisplayString>
+    <DisplayString Condition="tt==6">luafunction</DisplayString>
+    <DisplayString Condition="tt==22">cfunction</DisplayString>
+    <DisplayString Condition="tt==38">C closure</DisplayString>
+    <DisplayString Condition="tt==70">luafunction</DisplayString>
+    <DisplayString Condition="tt==102">C closure</DisplayString>
+    <!--table-->
+    <DisplayString Condition="tt==5">table</DisplayString>
+    <DisplayString Condition="tt==69">table</DisplayString>
+    <StringView>((TString *)(&amp;next))->contents</StringView>
+
+    <Expand>
+
+      <Item Name="value" Condition="tt==4">((TString *)(&amp;next))->contents</Item>
+      <Item Name="value" Condition="tt==20">((TString *)(&amp;next))->contents</Item>
+      <Item Name="value" Condition="tt==68">((TString *)(&amp;next))->contents</Item>
+      <Item Name="value" Condition="tt==84">((TString *)(&amp;next))->contents</Item>
+
+      <Item Name="value" Condition="tt==7">(Udata *)(&amp;next)</Item>
+      <Item Name="value" Condition="tt==71">(Udata *)(&amp;next)</Item>
+
+      <Item Name="value" Condition="tt==10">tt</Item>
+
+      <CustomListItems Condition="tt==8 || tt== 72">
+        <Variable Name="it" InitialValue="(StackValue * )0" />
+        <Variable Name="_thread" InitialValue="(lua_State *)0"/>
+
+        <Exec>_thread = (lua_State *)(&amp;next)</Exec>
+        <Exec>it = _thread->stack</Exec>
+        <Loop>
+          <Break Condition="it == _thread->top"/>
+          <Item>it->val</Item>
+          <Exec>it = it + 1</Exec>
+        </Loop>
+      </CustomListItems>
+
+      <Item Name="value" Condition="tt==9">tt</Item>
+      <Item Name="value" Condition="tt==6">((LClosure *)(&amp;next))->p</Item>
+      <Item Name="value" Condition="tt==70">((LClosure *)(&amp;next))->p</Item>
+      <CustomListItems Condition="tt==38 || tt==102">
+        <Variable Name="_CClosure" InitialValue="(CClosure *)(&amp;next)"/>
+        <Variable Name="i" InitialValue="0"/>
+        <Item Name="fun">_CClosure->f</Item>
+        <Loop>
+          <Break Condition="i &gt;= _CClosure->nupvalues"/>
+          <Item Name="{i}">_CClosure->upvalue[i]</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+      </CustomListItems>
+
+      <CustomListItems Condition="tt==5 || tt==69">
+        <Variable Name="asize" InitialValue="0" />
+        <Variable Name="lsize" InitialValue="0" />
+        <Variable Name="i" InitialValue="0" />
+        <Variable Name="item" InitialValue="(TValue *)0" />
+        <Variable Name="item_node" InitialValue="(Node *)0" />
+        <Variable Name="item_node_string" InitialValue="(TString *)0" />
+        <Variable Name="key_type" InitialValue="0" />
+        <Variable Name="uint_key" InitialValue="0" />
+        <Variable Name="_table" InitialValue="(Table *)0"/>
+
+        <Exec>_table = (Table *)&amp;next</Exec>
+        <Item Name="metatable">_table->metatable</Item>
+        <Exec>asize = _table->alimit</Exec>
+        <Exec>lsize = (1 &lt;&lt; _table->lsizenode)</Exec>
+        <Loop>
+          <Break Condition="i &gt;= asize"/>
+          <Exec>item = _table->array + i</Exec>
+          <Item Name = "{i+1}" Condition="(item->tt_ &amp; 0x0f) != 0">i+1,item</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+        <Exec>i = 0</Exec>
+        <Loop>
+          <Break Condition="i &gt;= lsize"/>
+          <Exec>item_node = _table->node + i</Exec>
+          <Exec>key_type = (item_node->u.key_tt &amp; 0x0f)</Exec>
+          <Exec>item_node_string = (TString *)item_node->u.key_val.gc</Exec>
+          <Exec>uint_key = (unsigned long long)item_node->u.key_val.gc</Exec>
+          <Item Name = "{item_node_string}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 4)">item_node</Item>
+          <Item Name = "{item_node->u.key_val.i}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 3)">item_node</Item>
+          <Item Name = "uint_key" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 3) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 4)">item_node</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+      </CustomListItems>
+     </Expand>
+  </Type>
+</AutoVisualizer>

@@ -9,7 +9,7 @@ void ClientAvatar::on_ready() {
     //migrate_timer = REGIST_TIMER(0, 0.1, true, avatar_migrate_timer);
     //migrate_print_timer = REGIST_TIMER(0, 1, true, avatar_migrate_print_timer);
 
-    //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, client_rpc_timer);
+    REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, client_rpc_timer);
 }
 
 void ClientAvatar::msg_from_base(const GString& msg) {

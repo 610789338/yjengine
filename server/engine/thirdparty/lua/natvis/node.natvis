@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Node">
+		<DisplayString Condition="i_val.tt_==0">nil</DisplayString>
+		<DisplayString Condition="i_val.tt_==16">empty</DisplayString>
+		<DisplayString Condition="i_val.tt_==32">LUA_VABSTKEY</DisplayString>
+    
+		<DisplayString Condition="i_val.tt_==1">false</DisplayString>
+		<DisplayString Condition="i_val.tt_==17">true</DisplayString>
+    
+    <DisplayString Condition="i_val.tt_==8">{((lua_State *)(i_val.value_.gc))}</DisplayString>
+    <!--ctb-->
+    <DisplayString Condition="i_val.tt_==72">{((lua_State *)(i_val.value_.gc))}</DisplayString>
+    
+		<DisplayString Condition="i_val.tt_==3">{i_val.value_.i}</DisplayString>
+		<DisplayString Condition="i_val.tt_==19">{i_val.value_.n}</DisplayString>
+    
+    <DisplayString Condition="i_val.tt_==4">{((TString *)(i_val.value_.gc))->contents}</DisplayString>
+		<DisplayString Condition="i_val.tt_==20">{((TString *)(i_val.value_.gc))->contents}</DisplayString>
+    <!--ctb-->
+    <DisplayString Condition="i_val.tt_==68">{((TString *)(i_val.value_.gc))->contents}</DisplayString>
+    <DisplayString Condition="i_val.tt_==84">{((TString *)(i_val.value_.gc))->contents}</DisplayString>
+    
+		<DisplayString Condition="i_val.tt_==2">{i_val}</DisplayString>
+		<DisplayString Condition="i_val.tt_==7">{i_val}</DisplayString>
+    <!--ctb-->
+    <DisplayString Condition="i_val.tt_==71">{i_val}</DisplayString>
+
+    <DisplayString Condition="i_val.tt_==10">{i_val}</DisplayString>
+
+    <DisplayString Condition="i_val.tt_==9">upval</DisplayString>
+		<DisplayString Condition="i_val.tt_==6">luafunction</DisplayString>
+		<DisplayString Condition="i_val.tt_==22">cfunction</DisplayString>
+		<DisplayString Condition="i_val.tt_==38">C closure</DisplayString>
+    <!--ctb-->
+    <DisplayString Condition="i_val.tt_==70">luafunction</DisplayString>
+    <DisplayString Condition="i_val.tt_==102">C closure</DisplayString>
+
+    <DisplayString Condition="i_val.tt_==5">table</DisplayString>
+    <DisplayString Condition="i_val.tt_==69">table</DisplayString>
+		<StringView>(TString *)(u.key_val.gc)</StringView>
+    <Expand>
+      
+      <Item Name="value" Condition="i_val.tt_==6">((LClosure *)(i_val.value_.gc))->p</Item>
+		  <Item Name="value" Condition="i_val.tt_==22">i_val.value_.f</Item>
+      <Item Name="value" Condition="i_val.tt_==70">((LClosure *)(i_val.value_.gc))->p</Item>
+      <Item Name="CClosure fun" Condition="i_val.tt_==38 || i_val.tt_==102">((CClosure *)(i_val.value_.gc))->f</Item>
+      <Item Name="CClosure upval" Condition="i_val.tt_==38 || i_val.tt_==102">((CClosure *)(i_val.value_.gc))->upvalue</Item>
+
+      <CustomListItems Condition="i_val.tt_==38 || i_val.tt_==102">
+        <Variable Name="_CClosure" InitialValue="(CClosure *)(i_val.value_.gc)"/>
+        <Variable Name="i" InitialValue="0"/>
+        <Item Name="fun">_CClosure->f</Item>
+        <Loop>
+          <Break Condition="i &gt; _CClosure->nupvalues"/>
+          <Item Name="{i}">_CClosure->upvalue[i]</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+      </CustomListItems>
+      
+      <CustomListItems Condition="i_val.tt_==5 || i_val.tt_==69">
+        <Variable Name="asize" InitialValue="0" />
+        <Variable Name="lsize" InitialValue="0" />
+        <Variable Name="i" InitialValue="0" />
+        <Variable Name="item" InitialValue="(TValue *)0" />
+        <Variable Name="item_node" InitialValue="(Node *)0" />
+        <Variable Name="item_node_string" InitialValue="(TString *)0" />
+        <Variable Name="key_type" InitialValue="0" />
+        <Variable Name="uint_key" InitialValue="0" />
+        <Variable Name="_table" InitialValue="(Table *)0"/>
+
+        <Exec>_table = (Table *)i_val.value_.gc</Exec>
+        <Exec>asize = _table->alimit</Exec>
+        <Exec>lsize = (1 &lt;&lt; _table->lsizenode)</Exec>
+        <Loop>
+          <Break Condition="i &gt;= asize"/>
+          <Exec>item = _table->array + i</Exec>
+          <Item Name = "{i+1}" Condition="(item->tt_ &amp; 0x0f) != 0">item</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+        <Exec>i = 0</Exec>
+        <Loop>
+          <Break Condition="i &gt;= lsize"/>
+          <Exec>item_node = _table->node + i</Exec>
+          <Exec>key_type = (item_node->u.key_tt &amp; 0x0f)</Exec>
+          <Exec>item_node_string = (TString *)item_node->u.key_val.gc</Exec>
+          <Exec>uint_key = (unsigned long long)item_node->u.key_val.gc</Exec>
+          <Item Name = "{item_node_string}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 4)">item_node</Item>
+          <Item Name = "{item_node->u.key_val.i}" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) == 3)">item_node</Item>
+          <Item Name = "uint_key" Condition="((item_node->u.key_tt &amp; 0x0f) != 0) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 3) &amp;&amp; ((item_node->u.key_tt &amp; 0x0f) != 4)">item_node</Item>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+      </CustomListItems>
+
+    </Expand>
+  </Type>
+
+</AutoVisualizer>
