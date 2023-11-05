@@ -4,7 +4,6 @@
 
 extern void assist_thread_start();
 extern void assist_thread_exit();
-extern void lua_state_mgr_init();
 extern void update_time_now_cache();
 extern void rpc_handle_regist();
 extern void rpc_imp_input_tick();
@@ -17,7 +16,6 @@ void engine_init() {
     boost_asio_init();
     boost_asio_start();
     assist_thread_start();
-    lua_state_mgr_init();
 }
 
 void engine_tick() {

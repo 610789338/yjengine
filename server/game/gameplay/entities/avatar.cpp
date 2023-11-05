@@ -6,6 +6,10 @@
 GENERATE_ENTITY_OUT(BaseAvatar)
 
 
+static int average(int32_t i1, int32_t i2) {
+    return (i1 + i2) / 2;
+}
+
 void BaseAvatar::on_ready() {
 
     INFO_LOG("BaseAvatar on_ready\n");
@@ -13,6 +17,13 @@ void BaseAvatar::on_ready() {
     //test_timer = REGIST_TIMER(5, 60, true, avatar_timer_test, "1 minutes");
     //migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
+
+    LUA_METHOD_BIND(average);
+    REGIST_TIMER(0, 1, true, lua_test_timer);
+}
+
+void BaseAvatar::lua_test_timer() {
+    g_yjlua.do_str("print(string.format(\"average is %s\", average(7, 5)))");
 }
 
 void BaseAvatar::base_rpc_timer() {
@@ -26,11 +37,6 @@ void BaseAvatar::msg_from_cell(const GString& msg) {
 
 void BaseAvatar::msg_from_client(const GString& msg) {
     INFO_LOG("[base] msg.%s from client\n", msg.c_str());
-}
-
-void BaseAvatar::luado(const GString& luastr) {
-    //g_luas_mgr->do_str(luastr);
-    g_luas_mgr->do_file("E:/gitrepo/yjengine_new/server/engine/thirdparty/lua/test.lua");
 }
 
 void BaseAvatar::byte_swap_test(const GString& msg, int16_t arg1, int32_t arg2, int64_t arg3, float arg4, uint16_t arg5, uint32_t arg6, uint64_t arg7, double arg8) {

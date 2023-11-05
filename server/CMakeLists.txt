@@ -55,10 +55,16 @@ link_directories(${BOOST_DIR}/stage/lib lib)
 file(GLOB ENGINE "engine/*")
 source_group(engine FILES ${ENGINE})
 
-file(GLOB LUA "engine/thirdparty/lua/src/*")
-source_group(engine\\thirdparty\\lua FILES ${LUA})
+file(GLOB YJLUA "engine/yjlua/*")
+source_group(engine\\yjlua FILES ${YJLUA})
 
-add_library(engine STATIC ${ENGINE} ${LUA})
+file(GLOB LUA_NATVIS "engine/yjlua/lua/natvis/*")
+source_group(engine\\yjlua\\lua\\natvis FILES ${LUA_NATVIS})
+
+file(GLOB LUA_SRC "engine/yjlua/lua/src/*")
+source_group(engine\\yjlua\\lua\\src FILES ${LUA_SRC})
+
+add_library(engine STATIC ${ENGINE} ${YJLUA} ${LUA_NATVIS} ${LUA_SRC})
 IF (UNIX)
 	target_link_libraries(engine boost_thread pthread tcmalloc profiler)
 ELSEIF (WIN32)

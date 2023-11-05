@@ -11,7 +11,7 @@
 #include "entity_rpc_manager.h"
 #include "entity_property_manager.h"
 #include "entity_component_manager.h"
-#include "lua_state_manager.h"
+#include "yjlua/yjlua.h"
 
 // ------------------------------- definition ------------------------------- //
 
@@ -62,4 +62,3 @@ extern void set_engine_listen_ipport(GString ip, uint16_t port);
 extern void engine_init();
 extern void engine_tick();
 
-extern std::shared_ptr<LuaStateManager> g_luas_mgr;
