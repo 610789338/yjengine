@@ -4,13 +4,17 @@
 
 #include "lua/src/lua.hpp"
 #include "lua_method.h"
+#include "entity_bind.h"
 
+class Entity;
 struct LuaMethodBase;
 
 class YjLua {
 public:
     YjLua();
     ~YjLua();
+
+    lua_State* get_state() { return l; }
 
     void do_str(const GString& str);
     void do_file(const GString& filename);
@@ -19,6 +23,12 @@ public:
     void lua_method_bind(const GString& rpc_name, void(*cb)()) {
         LuaMethodBase* method = new LuaMethod0_NORET(cb);
         add_lua_function(rpc_name, method);
+    }
+
+    template<class T1>
+    void lua_method_bind(const GString& method_name, void(*cb)(T1)) {
+        LuaMethodBase* method = new LuaMethod1_NORET<T1>(cb);
+        add_lua_function(method_name, method);
     }
 
     template<class T1, class T2>
@@ -146,11 +156,21 @@ public:
     void add_lua_function(const GString& rpc_name, LuaMethodBase* method);
     LuaMethodBase* find_lua_function(const GString& rpc_name);
 
+    // class bind
+    ClassDesc* get_class_desc(Entity* entity);
+    bool class_bind(Entity* entity);
+    bool entity_bind(ClassDesc* class_desc, Entity* entity);
+
 private:
     lua_State* l = nullptr;
     unordered_map<GString, LuaMethodBase*> m_lua_methods;
+
+    unordered_map<GString, ClassDesc*> m_class_binds;
 };
 
 extern YjLua g_yjlua;
 
 #define LUA_METHOD_BIND(method) g_yjlua.lua_method_bind(#method, method);
+
+extern void notify_entity_create(Entity* entity);
+extern void notify_entity_call(Entity* entity, GString method_name);

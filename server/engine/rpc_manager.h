@@ -290,6 +290,8 @@ public:
     RpcMethodBase* find_rpc_method(const GString& rpc_name);
     void release_rpc_method();
 
+    unordered_map<GString, RpcMethodBase*>& get_rpc_methods();
+
 private:
     unordered_map<GString, RpcMethodBase*> m_rpc_methods;
 };

@@ -5,6 +5,7 @@
 #include "rpc_manager.h"
 #include "entity_component_manager.h"
 #include "entity_property_manager.h"
+#include "yjlua/yjlua.h"
 
 
 void Entity::tick() {
@@ -35,6 +36,8 @@ void Entity::on_create(const GDict& create_data) {
 
     ready_check_timerid = REGIST_TIMER_INNER(10, 0, false, "ready_check_timer", &Entity::ready_check_timer);
     create_heart_beat_timer();
+
+    notify_entity_create(this);
 }
 
 void Entity::ready_check_timer() {

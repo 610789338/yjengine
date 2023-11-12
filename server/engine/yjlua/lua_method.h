@@ -6,7 +6,10 @@
 
 struct LuaMethodBase;
 
-template<class T> T lua_arg_read(LuaMethodBase* lua_method) { return T(); }
+template<class T> T lua_arg_read(LuaMethodBase* lua_method) { 
+    return (T)lua_touserdata(lua_method->l, lua_method->lua_arg_idx++);
+}
+
 template<> bool     lua_arg_read<bool>      (LuaMethodBase* lua_method);
 template<> int8_t   lua_arg_read<int8_t>    (LuaMethodBase* lua_method);
 template<> int16_t  lua_arg_read<int16_t>   (LuaMethodBase* lua_method);
@@ -21,7 +24,10 @@ template<> double   lua_arg_read<double>    (LuaMethodBase* lua_method);
 template<> GString  lua_arg_read<GString>   (LuaMethodBase* lua_method);
 
 
-template<class T> void push_lua_ret(LuaMethodBase* lua_method, T ret) {}
+template<class T> void push_lua_ret(LuaMethodBase* lua_method, T ret) {
+    lua_pushlightuserdata(lua_method->l, (void*)ret);
+}
+
 template<> void push_lua_ret<bool>      (LuaMethodBase* lua_method, bool ret);
 template<> void push_lua_ret<int8_t>    (LuaMethodBase* lua_method, int8_t ret);
 template<> void push_lua_ret<int16_t>   (LuaMethodBase* lua_method, int16_t ret);

@@ -48,6 +48,8 @@ public:
     void lua_test_timer();
     void base_rpc_timer();
 
+    GString get_lua_module_name() { return GString("game.entity.base_avatar"); };
+
 private:
     TimerID test_timer;
     TimerID migrate_timer;

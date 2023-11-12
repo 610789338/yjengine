@@ -139,6 +139,10 @@ void RpcManagerBase::release_rpc_method() {
     m_rpc_methods.clear();
 }
 
+unordered_map<GString, RpcMethodBase*>& RpcManagerBase::get_rpc_methods() {
+    return m_rpc_methods;
+}
+
 RpcManager::RpcManager() {
     gen_global_rpc_name_turn();
 }

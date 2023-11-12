@@ -14,6 +14,7 @@
 #include "entity_property_manager.h"
 #include "entity_component_manager.h"
 #include "event.h"
+#include "yjlua/lua/src/lua.hpp"
 
 using namespace std;
 
@@ -158,6 +159,12 @@ public:
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
     bool need_destroy = false;
+
+    // lua bind
+    virtual GString get_lua_module_name() { return GString(); };
+    virtual GString get_full_entity_name() { return entity_name; };
+
+    lua_Integer entity_ref;
 };
 
 // ------------------------------- base ------------------------------- //
@@ -176,6 +183,7 @@ public:
     virtual void on_destroy() {}
 
     virtual MailBox get_self_mailbox();
+    virtual GString get_full_entity_name() { return "Base" + entity_name; };
 };
 
 class BaseEntityWithCell : public BaseEntity {
@@ -344,6 +352,8 @@ public:
     virtual BaseMailBox& get_base_mailbox() { return base; }
     MailBox get_self_mailbox();
 
+    virtual GString get_full_entity_name() { return "Cell" + entity_name; };
+
     BaseMailBox base;
 
     MigrateState migrate_state = Migrate_None;
@@ -447,6 +457,8 @@ public:
 
     virtual BaseMailBox& get_base_mailbox() { return base; }
     virtual CellMailBox& get_cell_mailbox() { return cell; }
+
+    virtual GString get_full_entity_name() { return "Client" + entity_name; };
 
     BaseMailBox base;
     CellMailBox cell;

@@ -1,10 +1,19 @@
-#include "engine/utils.h"
+#include "engine/engine.h"
 
 #include "avatar.h"
 
 
 GENERATE_ENTITY_OUT(BaseAvatar)
 
+
+Entity* entity = nullptr;
+Entity* get_entity() {
+    return entity;
+}
+
+void pass_entity(Entity* entity) {
+    INFO_LOG("entity uuid %s\n", entity->uuid.c_str());
+}
 
 static int average(int32_t i1, int32_t i2) {
     return (i1 + i2) / 2;
@@ -19,11 +28,15 @@ void BaseAvatar::on_ready() {
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
 
     LUA_METHOD_BIND(average);
+    LUA_METHOD_BIND(get_entity);
+    LUA_METHOD_BIND(pass_entity);
     REGIST_TIMER(0, 1, true, lua_test_timer);
 }
 
 void BaseAvatar::lua_test_timer() {
-    g_yjlua.do_str("print(string.format(\"average is %s\", average(7, 5)))");
+    entity = this;
+    //g_yjlua.do_str("print(string.format(\"average is %s\", average(7, 5)))");
+    g_yjlua.do_str("local entity = get_entity(); pass_entity(entity)");
 }
 
 void BaseAvatar::base_rpc_timer() {
@@ -33,6 +46,7 @@ void BaseAvatar::base_rpc_timer() {
 
 void BaseAvatar::msg_from_cell(const GString& msg) {
     INFO_LOG("[base] msg.%s from cell\n", msg.c_str()); 
+    notify_entity_call(this, "msg_from_cell");
 }
 
 void BaseAvatar::msg_from_client(const GString& msg) {
@@ -71,7 +85,7 @@ void CellAvatar::on_ready() {
 
     INFO_LOG("CellAvatar on_ready\n");
 
-    //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, cell_rpc_timer);
+    REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, cell_rpc_timer);
 
     //get_prop("test_timer")->update(REGIST_TIMER(0, 0, false, avatar_timer_test, "arg1"));
 

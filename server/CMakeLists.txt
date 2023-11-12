@@ -52,10 +52,10 @@ link_directories(${BOOST_DIR}/stage/lib lib)
 
 
 # build lib engine
-file(GLOB ENGINE "engine/*")
+file(GLOB ENGINE "engine/*.h" "engine/*.cpp")
 source_group(engine FILES ${ENGINE})
 
-file(GLOB YJLUA "engine/yjlua/*")
+file(GLOB YJLUA "engine/yjlua/*.h" "engine/yjlua/*.cpp")
 source_group(engine\\yjlua FILES ${YJLUA})
 
 file(GLOB LUA_NATVIS "engine/yjlua/lua/natvis/*")
@@ -72,22 +72,22 @@ ELSEIF (WIN32)
 ENDIF ()
 
 # build game exe
-file(GLOB GAME "game/*")
+file(GLOB GAME "game/*.h" "game/*.cpp")
 source_group(game FILES ${GAME})
 
-file(GLOB FRAMEWORK "game/framework/*")
+file(GLOB FRAMEWORK "game/framework/*.h" "game/framework/*.cpp")
 source_group(game\\framework FILES ${FRAMEWORK})
 
-file(GLOB GAMEPLAY "game/gameplay/*")
+file(GLOB GAMEPLAY "game/gameplay/*.h" "game/gameplay/*.cpp")
 source_group(game\\gameplay FILES ${GAMEPLAY})
 
-file(GLOB COMPONENTS "game/gameplay/components/*")
+file(GLOB COMPONENTS "game/gameplay/components/*.h" "game/gameplay/components/*.cpp")
 source_group(game\\gameplay\\components FILES ${COMPONENTS})
 
-file(GLOB ENTITIES "game/gameplay/entities/*")
+file(GLOB ENTITIES "game/gameplay/entities/*.h" "game/gameplay/entities/*.cpp")
 source_group(game\\gameplay\\entities FILES ${ENTITIES})
 
-file(GLOB STUBS "game/gameplay/entities/stubs/*")
+file(GLOB STUBS "game/gameplay/entities/stubs/*.h" "game/gameplay/entities/stubs/*.cpp")
 source_group(game\\gameplay\\entities\\stubs FILES ${STUBS})
 
 add_executable(game ${GAME} ${FRAMEWORK} ${GAMEPLAY} ${COMPONENTS} ${ENTITIES} ${STUBS})
@@ -95,10 +95,10 @@ target_link_libraries(game engine)
 set_target_properties(game PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY bin/windows)
 
 # build gate exe
-file(GLOB GATE "gate/*")
+file(GLOB GATE "gate/*.h" "gate/*.cpp")
 source_group(gate FILES ${GATE})
 
-file(GLOB FRAMEWORK "gate/framework/*")
+file(GLOB FRAMEWORK "gate/framework/*.h" "gate/framework/*.cpp")
 source_group(gate\\framework FILES ${FRAMEWORK})
 
 add_executable(gate ${GATE} ${FRAMEWORK})
@@ -106,19 +106,19 @@ target_link_libraries(gate engine)
 set_target_properties(gate PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY bin/windows)
 
 # build client exe
-file(GLOB CLIENT "client/*")
+file(GLOB CLIENT "client/*.h" "client/*.cpp")
 source_group(client FILES ${CLIENT})
 
-file(GLOB FRAMEWORK "client/framework/*")
+file(GLOB FRAMEWORK "client/framework/*.h" "client/framework/*.cpp")
 source_group(client\\framework FILES ${FRAMEWORK})
 
-file(GLOB GAMEPLAY "client/gameplay/*")
+file(GLOB GAMEPLAY "client/gameplay/*.h" "client/gameplay/*.cpp")
 source_group(client\\gameplay FILES ${GAMEPLAY})
 
-file(GLOB COMPONENTS "client/gameplay/components/*")
+file(GLOB COMPONENTS "client/gameplay/components/*.h" "client/gameplay/components/*.cpp")
 source_group(client\\gameplay\\components FILES ${COMPONENTS})
 
-file(GLOB ENTITIES "client/gameplay/entities/*")
+file(GLOB ENTITIES "client/gameplay/entities/*.h" "client/gameplay/entities/*.cpp")
 source_group(client\\gameplay\\entities FILES ${ENTITIES})
 
 add_executable(client ${CLIENT} ${FRAMEWORK} ${GAMEPLAY} ${COMPONENTS} ${ENTITIES})
