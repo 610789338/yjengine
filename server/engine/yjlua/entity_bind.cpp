@@ -21,13 +21,17 @@ void ClassDesc::method_bind(lua_State* l, Entity* entity) {
             continue;
         }
 
-        GString lua_method_name(lua_tostring(l, -2));
-        auto iter = rpc_methods.find(lua_method_name);
+        GString yj_method_name(lua_tostring(l, -2));
+        auto iter = rpc_methods.find(yj_method_name);
         if (iter != rpc_methods.end()) {
-            lua_methods.insert(make_pair(lua_method_name, iter->second));
+            yj_methods.insert(make_pair(yj_method_name, iter->second));
         }
         lua_pop(l, 1);
     }
 
     class_ref = luaL_ref(l, LUA_REGISTRYINDEX);
+}
+
+int8_t lua_push_args(lua_State* l) {
+    return 0;
 }

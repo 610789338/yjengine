@@ -4,46 +4,48 @@
 
 #include "../gvalue.h"
 
-struct LuaMethodBase;
+struct YjMethodBase;
 
-template<class T> T lua_arg_read(LuaMethodBase* lua_method) { 
-    return (T)lua_touserdata(lua_method->l, lua_method->lua_arg_idx++);
+template<class T> T lua_arg_read(YjMethodBase* yj_method) { 
+    return (T)lua_touserdata(yj_method->l, yj_method->lua_arg_idx++);
 }
 
-template<> bool     lua_arg_read<bool>      (LuaMethodBase* lua_method);
-template<> int8_t   lua_arg_read<int8_t>    (LuaMethodBase* lua_method);
-template<> int16_t  lua_arg_read<int16_t>   (LuaMethodBase* lua_method);
-template<> int32_t  lua_arg_read<int32_t>   (LuaMethodBase* lua_method);
-template<> int64_t  lua_arg_read<int64_t>   (LuaMethodBase* lua_method);
-template<> uint8_t  lua_arg_read<uint8_t>   (LuaMethodBase* lua_method);
-template<> uint16_t lua_arg_read<uint16_t>  (LuaMethodBase* lua_method);
-template<> uint32_t lua_arg_read<uint32_t>  (LuaMethodBase* lua_method);
-template<> uint64_t lua_arg_read<uint64_t>  (LuaMethodBase* lua_method);
-template<> float    lua_arg_read<float>     (LuaMethodBase* lua_method);
-template<> double   lua_arg_read<double>    (LuaMethodBase* lua_method);
-template<> GString  lua_arg_read<GString>   (LuaMethodBase* lua_method);
+template<> bool     lua_arg_read<bool>      (YjMethodBase* yj_method);
+template<> int8_t   lua_arg_read<int8_t>    (YjMethodBase* yj_method);
+template<> int16_t  lua_arg_read<int16_t>   (YjMethodBase* yj_method);
+template<> int32_t  lua_arg_read<int32_t>   (YjMethodBase* yj_method);
+template<> int64_t  lua_arg_read<int64_t>   (YjMethodBase* yj_method);
+template<> uint8_t  lua_arg_read<uint8_t>   (YjMethodBase* yj_method);
+template<> uint16_t lua_arg_read<uint16_t>  (YjMethodBase* yj_method);
+template<> uint32_t lua_arg_read<uint32_t>  (YjMethodBase* yj_method);
+template<> uint64_t lua_arg_read<uint64_t>  (YjMethodBase* yj_method);
+template<> float    lua_arg_read<float>     (YjMethodBase* yj_method);
+template<> double   lua_arg_read<double>    (YjMethodBase* yj_method);
+template<> GString  lua_arg_read<GString>   (YjMethodBase* yj_method);
 
 
-template<class T> void push_lua_ret(LuaMethodBase* lua_method, T ret) {
-    lua_pushlightuserdata(lua_method->l, (void*)ret);
+template<class T> void lua_push(lua_State* l, T ret) {
+    lua_pushlightuserdata(l, (void*)ret);
 }
 
-template<> void push_lua_ret<bool>      (LuaMethodBase* lua_method, bool ret);
-template<> void push_lua_ret<int8_t>    (LuaMethodBase* lua_method, int8_t ret);
-template<> void push_lua_ret<int16_t>   (LuaMethodBase* lua_method, int16_t ret);
-template<> void push_lua_ret<int32_t>   (LuaMethodBase* lua_method, int32_t ret);
-template<> void push_lua_ret<int64_t>   (LuaMethodBase* lua_method, int64_t ret);
-template<> void push_lua_ret<uint8_t>   (LuaMethodBase* lua_method, uint8_t ret);
-template<> void push_lua_ret<uint16_t>  (LuaMethodBase* lua_method, uint16_t ret);
-template<> void push_lua_ret<uint32_t>  (LuaMethodBase* lua_method, uint32_t ret);
-template<> void push_lua_ret<uint64_t>  (LuaMethodBase* lua_method, uint64_t ret);
-template<> void push_lua_ret<float>     (LuaMethodBase* lua_method, float ret);
-template<> void push_lua_ret<double>    (LuaMethodBase* lua_method, double ret);
-template<> void push_lua_ret<GString>   (LuaMethodBase* lua_method, GString ret);
+template<> void lua_push<bool>      (lua_State* l, bool ret);
+template<> void lua_push<int8_t>    (lua_State* l, int8_t ret);
+template<> void lua_push<int16_t>   (lua_State* l, int16_t ret);
+template<> void lua_push<int32_t>   (lua_State* l, int32_t ret);
+template<> void lua_push<int64_t>   (lua_State* l, int64_t ret);
+template<> void lua_push<uint8_t>   (lua_State* l, uint8_t ret);
+template<> void lua_push<uint16_t>  (lua_State* l, uint16_t ret);
+template<> void lua_push<uint32_t>  (lua_State* l, uint32_t ret);
+template<> void lua_push<uint64_t>  (lua_State* l, uint64_t ret);
+template<> void lua_push<float>     (lua_State* l, float ret);
+template<> void lua_push<double>    (lua_State* l, double ret);
+template<> void lua_push<GString>(lua_State* l, GString ret);
+
+#define LUA_PUSH_RET(l, ret) lua_push(l, ret)
 
 // lua method imp
-struct LuaMethodBase {
-    LuaMethodBase() {}
+struct YjMethodBase {
+    YjMethodBase() {}
 
     virtual void decode() { ASSERT(false); }
     virtual int8_t exec() { ASSERT(false); return 0; }
@@ -52,9 +54,9 @@ struct LuaMethodBase {
     int32_t lua_arg_idx = 1;
 };
 
-struct LuaMethod0_NORET : public LuaMethodBase {
+struct YjMethod0_NORET : public YjMethodBase {
     typedef void(*CBType)();
-    LuaMethod0_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod0_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
 
     void decode() {}
@@ -62,9 +64,9 @@ struct LuaMethod0_NORET : public LuaMethodBase {
 };
 
 template<class T1>
-struct LuaMethod1_NORET : public LuaMethodBase {
+struct YjMethod1_NORET : public YjMethodBase {
     typedef void(*CBType)(T1);
-    LuaMethod1_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod1_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
 
@@ -78,9 +80,9 @@ struct LuaMethod1_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2>
-struct LuaMethod2_NORET : public LuaMethodBase {
+struct YjMethod2_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2);
-    LuaMethod2_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod2_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -97,9 +99,9 @@ struct LuaMethod2_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3>
-struct LuaMethod3_NORET : public LuaMethodBase {
+struct YjMethod3_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3);
-    LuaMethod3_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod3_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -118,9 +120,9 @@ struct LuaMethod3_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4>
-struct LuaMethod4_NORET : public LuaMethodBase {
+struct YjMethod4_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4);
-    LuaMethod4_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod4_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -141,9 +143,9 @@ struct LuaMethod4_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5>
-struct LuaMethod5_NORET : public LuaMethodBase {
+struct YjMethod5_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5);
-    LuaMethod5_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod5_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -166,9 +168,9 @@ struct LuaMethod5_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6>
-struct LuaMethod6_NORET : public LuaMethodBase {
+struct YjMethod6_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6);
-    LuaMethod6_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod6_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -193,9 +195,9 @@ struct LuaMethod6_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
-struct LuaMethod7_NORET : public LuaMethodBase {
+struct YjMethod7_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7);
-    LuaMethod7_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod7_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -222,9 +224,9 @@ struct LuaMethod7_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
-struct LuaMethod8_NORET : public LuaMethodBase {
+struct YjMethod8_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8);
-    LuaMethod8_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod8_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -253,9 +255,9 @@ struct LuaMethod8_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
-struct LuaMethod9_NORET : public LuaMethodBase {
+struct YjMethod9_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9);
-    LuaMethod9_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod9_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -286,9 +288,9 @@ struct LuaMethod9_NORET : public LuaMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
-struct LuaMethod10_NORET : public LuaMethodBase {
+struct YjMethod10_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-    LuaMethod10_NORET(CBType _cb) : cb(_cb) {}
+    YjMethod10_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -324,23 +326,23 @@ struct LuaMethod10_NORET : public LuaMethodBase {
 // -------------------------------------------------------------------------
 
 template<class RT>
-struct LuaMethod0 : public LuaMethodBase {
+struct YjMethod0 : public YjMethodBase {
     typedef RT(*CBType)();
-    LuaMethod0(CBType _cb) : cb(_cb) {}
+    YjMethod0(CBType _cb) : cb(_cb) {}
     CBType cb;
 
     void decode() {}
     int8_t exec() {
         RMCVR(RT) ret = cb();
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class RT>
-struct LuaMethod1 : public LuaMethodBase {
+struct YjMethod1 : public YjMethodBase {
     typedef RT(*CBType)(T1);
-    LuaMethod1(CBType _cb) : cb(_cb) {}
+    YjMethod1(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
 
@@ -349,15 +351,15 @@ struct LuaMethod1 : public LuaMethodBase {
     }
     int8_t exec() { 
         RMCVR(RT) ret = cb(t1);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class RT>
-struct LuaMethod2 : public LuaMethodBase {
+struct YjMethod2 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2);
-    LuaMethod2(CBType _cb) : cb(_cb) {}
+    YjMethod2(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -369,15 +371,15 @@ struct LuaMethod2 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class RT>
-struct LuaMethod3 : public LuaMethodBase {
+struct YjMethod3 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3);
-    LuaMethod3(CBType _cb) : cb(_cb) {}
+    YjMethod3(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -391,15 +393,15 @@ struct LuaMethod3 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class RT>
-struct LuaMethod4 : public LuaMethodBase {
+struct YjMethod4 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4);
-    LuaMethod4(CBType _cb) : cb(_cb) {}
+    YjMethod4(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -415,15 +417,15 @@ struct LuaMethod4 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class RT>
-struct LuaMethod5 : public LuaMethodBase {
+struct YjMethod5 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5);
-    LuaMethod5(CBType _cb) : cb(_cb) {}
+    YjMethod5(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -441,15 +443,15 @@ struct LuaMethod5 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class RT>
-struct LuaMethod6 : public LuaMethodBase {
+struct YjMethod6 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6);
-    LuaMethod6(CBType _cb) : cb(_cb) {}
+    YjMethod6(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -469,15 +471,15 @@ struct LuaMethod6 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5, t6);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class RT>
-struct LuaMethod7 : public LuaMethodBase {
+struct YjMethod7 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7);
-    LuaMethod7(CBType _cb) : cb(_cb) {}
+    YjMethod7(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -499,15 +501,15 @@ struct LuaMethod7 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5, t6, t7);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class RT>
-struct LuaMethod8 : public LuaMethodBase {
+struct YjMethod8 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8);
-    LuaMethod8(CBType _cb) : cb(_cb) {}
+    YjMethod8(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -531,15 +533,15 @@ struct LuaMethod8 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5, t6, t7, t8);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class RT>
-struct LuaMethod9 : public LuaMethodBase {
+struct YjMethod9 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9);
-    LuaMethod9(CBType _cb) : cb(_cb) {}
+    YjMethod9(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -565,15 +567,15 @@ struct LuaMethod9 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5, t6, t7, t8, t9);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10, class RT>
-struct LuaMethod10 : public LuaMethodBase {
+struct YjMethod10 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-    LuaMethod10(CBType _cb) : cb(_cb) {}
+    YjMethod10(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -601,7 +603,7 @@ struct LuaMethod10 : public LuaMethodBase {
 
     int8_t exec() {
         RMCVR(RT) ret = cb(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
-        push_lua_ret<RMCVR(RT)>(this, ret);
+        LUA_PUSH_RET(l, ret);
         return 1;
     }
 };

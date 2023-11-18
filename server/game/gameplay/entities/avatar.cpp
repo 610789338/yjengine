@@ -27,9 +27,9 @@ void BaseAvatar::on_ready() {
     //migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
 
-    LUA_METHOD_BIND(average);
-    LUA_METHOD_BIND(get_entity);
-    LUA_METHOD_BIND(pass_entity);
+    YJ_METHOD(average);
+    YJ_METHOD(get_entity);
+    YJ_METHOD(pass_entity);
     REGIST_TIMER(0, 1, true, lua_test_timer);
 }
 
@@ -46,7 +46,7 @@ void BaseAvatar::base_rpc_timer() {
 
 void BaseAvatar::msg_from_cell(const GString& msg) {
     INFO_LOG("[base] msg.%s from cell\n", msg.c_str()); 
-    notify_entity_call(this, "msg_from_cell");
+    CALL_LUA("msg_from_cell", msg);
 }
 
 void BaseAvatar::msg_from_client(const GString& msg) {

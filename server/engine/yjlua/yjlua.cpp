@@ -8,8 +8,21 @@
 #include "yjlua.h"
 
 
+int32_t error_handler(lua_State *l) {
+    const char* msg = lua_tostring(l, -1);
+    int32_t type = lua_type(l, -1);
+    if (type == LUA_TSTRING) {
+        luaL_traceback(l, l, msg, 1);
+        msg = lua_tostring(l, -1);
+        lua_pop(l, 1);
+    }
+    lua_pop(l, 1);
+
+    ERROR_LOG("%s\n", msg);
+    return 0;
+}
+
 static int32_t func_pre_call(lua_State *l);
-static int32_t error_handler(lua_State *l);
 
 YjLua::YjLua() {
     l = luaL_newstate();
@@ -35,10 +48,10 @@ YjLua::YjLua() {
 }
 
 YjLua::~YjLua() {
-    for (auto iter = m_lua_methods.begin(); iter != m_lua_methods.end(); ++iter) {
+    for (auto iter = m_yj_methods.begin(); iter != m_yj_methods.end(); ++iter) {
         delete iter->second;
     }
-    m_lua_methods.clear();
+    m_yj_methods.clear();
 
     for (auto iter = m_class_binds.begin(); iter != m_class_binds.end(); ++iter) {
         delete iter->second;
@@ -56,14 +69,14 @@ void YjLua::do_file(const GString& filename) {
     luaL_dofile(l, filename.c_str());
 }
 
-void YjLua::add_lua_function(const GString& rpc_name, LuaMethodBase* method) {
-    ASSERT_LOG(m_lua_methods.find(rpc_name) == m_lua_methods.end(), "lua method(%s) already exist\n", rpc_name.c_str());
-    m_lua_methods.emplace(rpc_name, method);
+void YjLua::add_yj_method(const GString& rpc_name, YjMethodBase* method) {
+    ASSERT_LOG(m_yj_methods.find(rpc_name) == m_yj_methods.end(), "lua method(%s) already exist\n", rpc_name.c_str());
+    m_yj_methods.emplace(rpc_name, method);
 }
 
-LuaMethodBase* YjLua::find_lua_function(const GString& rpc_name) {
-    auto iter = m_lua_methods.find(rpc_name);
-    if (iter == m_lua_methods.end()) {
+YjMethodBase* YjLua::find_yj_method(const GString& rpc_name) {
+    auto iter = m_yj_methods.find(rpc_name);
+    if (iter == m_yj_methods.end()) {
         return nullptr;
     }
     return iter->second;
@@ -148,24 +161,11 @@ static int32_t func_pre_call(lua_State *l) {
 }
 
 static int32_t func_call(lua_State *l) {
-    auto lua_method = g_yjlua.find_lua_function(lua_func_name);
-    lua_method->l = l;
-    lua_method->lua_arg_idx = 1;
-    lua_method->decode();
-    return lua_method->exec();
-}
-
-static int32_t error_handler(lua_State *l) {
-    const char* msg = lua_tostring(l, -1);
-    int32_t type = lua_type(l, -1);
-    if (type == LUA_TSTRING) {
-        luaL_traceback(l, l, msg, 1);
-        msg = lua_tostring(l, -1);
-    }
-    lua_pop(l, 1);
-
-    ERROR_LOG("%s\n", msg);
-    return 0;
+    auto yj_method = g_yjlua.find_yj_method(lua_func_name);
+    yj_method->l = l;
+    yj_method->lua_arg_idx = 1;
+    yj_method->decode();
+    return yj_method->exec();
 }
 
 void notify_entity_create(Entity* entity) {
@@ -178,25 +178,4 @@ void notify_entity_create(Entity* entity) {
     }
 
     g_yjlua.entity_bind(class_desc, entity);
-}
-
-void notify_entity_call(Entity* entity, GString method_name) {
-    ClassDesc* class_desc = g_yjlua.get_class_desc(entity);
-    if (class_desc == nullptr) {
-        return;
-    }
-
-    auto iter = class_desc->lua_methods.find(method_name);
-    if (iter == class_desc->lua_methods.end()) {
-        return;
-    }
-
-    auto l = g_yjlua.get_state();
-    lua_pushcfunction(l, error_handler);
-
-    lua_rawgeti(l, LUA_REGISTRYINDEX, class_desc->class_ref);
-    lua_getfield(l, -1, method_name.c_str());
-    lua_rawgeti(l, LUA_REGISTRYINDEX, entity->entity_ref);
-    lua_pushstring(l, "hahaha");
-    lua_pcall(l, 2, LUA_MULTRET, -5);
 }
