@@ -6,18 +6,18 @@
 GENERATE_ENTITY_OUT(BaseAvatar)
 
 
-Entity* entity = nullptr;
-Entity* get_entity() {
-    return entity;
-}
-
-void pass_entity(Entity* entity) {
-    INFO_LOG("entity uuid %s\n", entity->uuid.c_str());
-}
-
-static int average(int32_t i1, int32_t i2) {
-    return (i1 + i2) / 2;
-}
+//Entity* entity = nullptr;
+//Entity* get_entity() {
+//    return entity;
+//}
+//
+//void pass_entity(Entity* entity) {
+//    INFO_LOG("entity uuid %s\n", entity->uuid.c_str());
+//}
+//
+//static int average(int32_t i1, int32_t i2) {
+//    return (i1 + i2) / 2;
+//}
 
 void BaseAvatar::on_ready() {
 
@@ -27,16 +27,18 @@ void BaseAvatar::on_ready() {
     //migrate_timer = REGIST_TIMER(0, 20, true, avatar_migrate_timer);
     //REGIST_TIMER(0, ini_get_float("Utils", "rpc_timer_interval", 5.0), true, base_rpc_timer);
 
-    YJ_METHOD(average);
-    YJ_METHOD(get_entity);
-    YJ_METHOD(pass_entity);
-    REGIST_TIMER(0, 1, true, lua_test_timer);
+    //YJ_GMETHOD(average);
+    //YJ_GMETHOD(get_entity);
+    //YJ_GMETHOD(pass_entity);
+
+    //REGIST_TIMER(0, 1, true, lua_test_timer);
+    CALL_LUA("on_ready");
 }
 
 void BaseAvatar::lua_test_timer() {
-    entity = this;
-    //g_yjlua.do_str("print(string.format(\"average is %s\", average(7, 5)))");
-    g_yjlua.do_str("local entity = get_entity(); pass_entity(entity)");
+    //entity = this;
+    //YjLua::do_str("print(string.format(\"average is %s\", average(7, 5)))");
+    //YjLua::do_str("local entity = get_entity(); pass_entity(entity)");
 }
 
 void BaseAvatar::base_rpc_timer() {
@@ -77,6 +79,10 @@ void BaseAvatar::avatar_migrate_timer() {
 
 void BaseAvatar::add_migrate_int_from_client() {
     cell.call("add_migrate_int_from_base");
+}
+
+int BaseAvatar::yj_method_test(int32_t i1, int32_t i2) {
+    return (i1 + i2) / 2;
 }
 
 GENERATE_ENTITY_OUT(CellAvatar)

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdint.h>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "gvalue.h"
+#include "yjobj.h"
 #include "boost_asio.h"
 #include "mailbox.h"
 #include "timer.h"
@@ -14,7 +14,6 @@
 #include "entity_property_manager.h"
 #include "entity_component_manager.h"
 #include "event.h"
-#include "yjlua/lua/src/lua.hpp"
 
 using namespace std;
 
@@ -36,7 +35,7 @@ enum MigrateState {
     Migrate_RealMigrate,
 };
 
-class Entity {
+class Entity : public YjObj {
 public:
     enum {
         ENTITY_TYPE = EntityType::EntityType_None
@@ -53,6 +52,7 @@ public:
 
     void tick();
 
+    virtual GString& get_name() { return entity_name; }
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
     virtual void apply_init_data(const GDict& create_data) {}
     virtual void on_create(const GDict& create_data);
@@ -159,12 +159,6 @@ public:
     RpcManagerBase* rpc_mgr;
     bool is_ready = false;
     bool need_destroy = false;
-
-    // lua bind
-    virtual GString get_lua_module_name() { return GString(); };
-    virtual GString get_full_entity_name() { return entity_name; };
-
-    lua_Integer entity_ref;
 };
 
 // ------------------------------- base ------------------------------- //
@@ -183,7 +177,6 @@ public:
     virtual void on_destroy() {}
 
     virtual MailBox get_self_mailbox();
-    virtual GString get_full_entity_name() { return "Base" + entity_name; };
 };
 
 class BaseEntityWithCell : public BaseEntity {
@@ -352,7 +345,6 @@ public:
     virtual BaseMailBox& get_base_mailbox() { return base; }
     MailBox get_self_mailbox();
 
-    virtual GString get_full_entity_name() { return "Cell" + entity_name; };
 
     BaseMailBox base;
 
@@ -458,7 +450,6 @@ public:
     virtual BaseMailBox& get_base_mailbox() { return base; }
     virtual CellMailBox& get_cell_mailbox() { return cell; }
 
-    virtual GString get_full_entity_name() { return "Client" + entity_name; };
 
     BaseMailBox base;
     CellMailBox cell;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gvalue.h"
+#include "yjobj.h"
 #include "timer.h"
 #include "entity_rpc_manager.h"
 #include "event.h"
@@ -9,7 +10,7 @@
 struct EntityPropertyBase;
 class EventManagerBase;
 
-class EntityComponentBase {
+class EntityComponentBase : public YjObj {
 public:
     EntityComponentBase() {}
     virtual ~EntityComponentBase();
@@ -288,6 +289,7 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \
+    ClassDescBase* get_class_desc() { /* TODO */ return nullptr; } \
     static GString get_name() { return #TEntityComp; } \
     EntityComponentBase* create_self(Entity* owner) { \
         TEntityComp* component = new TEntityComp; \

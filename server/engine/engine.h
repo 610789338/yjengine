@@ -18,6 +18,8 @@
 
 #define GENERATE_ENTITY_INNER(TCLASS) \
 public: \
+    static ClassDesc<TCLASS> class_desc; \
+    ClassDescBase* get_class_desc() { return &class_desc; } \
     EntityType get_entity_type() { return (EntityType)TCLASS::ENTITY_TYPE; } \
     static EntityPropertyManager<TCLASS> property_manager; \
     static EntityRpcManager<TCLASS> rpc_manager; \
@@ -46,6 +48,7 @@ public: \
     GString get_entity_name() { return #TCLASS; }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
+ClassDesc<TCLASS> TCLASS::class_desc(#TCLASS); \
 EntityPropertyManager<TCLASS> TCLASS::property_manager; \
 EntityRpcManager<TCLASS> TCLASS::rpc_manager(#TCLASS, (EntityType)TCLASS::ENTITY_TYPE, []()->TCLASS* { \
     auto entity = new TCLASS(); \

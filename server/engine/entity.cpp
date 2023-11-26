@@ -37,7 +37,7 @@ void Entity::on_create(const GDict& create_data) {
     ready_check_timerid = REGIST_TIMER_INNER(10, 0, false, "ready_check_timer", &Entity::ready_check_timer);
     create_heart_beat_timer();
 
-    notify_entity_create(this);
+    notify_yjobj_create(this);
 }
 
 void Entity::ready_check_timer() {

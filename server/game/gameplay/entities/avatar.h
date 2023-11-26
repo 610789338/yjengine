@@ -21,6 +21,13 @@ class BaseAvatar : public BaseEntityWithCellAndClient {
         RPC_METHOD(RpcType::EXPOSED, msg_from_client);
         RPC_METHOD(RpcType::EXPOSED, byte_swap_test);
         RPC_METHOD(RpcType::EXPOSED, add_migrate_int_from_client);
+
+        yj_method_define();
+    }
+    static void yj_method_define() {
+        // TODO
+        YJ_METHOD(yj_method_test);
+        class_desc.bind(GString("game.entity.base_avatar"));
     }
     static void property_define() {
     }
@@ -48,7 +55,7 @@ public:
     void lua_test_timer();
     void base_rpc_timer();
 
-    GString get_lua_module_name() { return GString("game.entity.base_avatar"); };
+    int yj_method_test(int32_t i1, int32_t i2);
 
 private:
     TimerID test_timer;

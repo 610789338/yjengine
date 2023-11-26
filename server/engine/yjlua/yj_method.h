@@ -39,24 +39,26 @@ template<> void lua_push<uint32_t>  (lua_State* l, uint32_t ret);
 template<> void lua_push<uint64_t>  (lua_State* l, uint64_t ret);
 template<> void lua_push<float>     (lua_State* l, float ret);
 template<> void lua_push<double>    (lua_State* l, double ret);
-template<> void lua_push<GString>(lua_State* l, GString ret);
+template<> void lua_push<GString>   (lua_State* l, GString ret);
 
 #define LUA_PUSH_RET(l, ret) lua_push(l, ret)
 
 // lua method imp
 struct YjMethodBase {
     YjMethodBase() {}
+    virtual ~YjMethodBase() {}
 
     virtual void decode() { ASSERT(false); }
     virtual int8_t exec() { ASSERT(false); return 0; }
+    virtual int8_t exec(void* _this) { ASSERT(false); return 0; }
 
     lua_State* l = nullptr;
     int32_t lua_arg_idx = 1;
 };
 
-struct YjMethod0_NORET : public YjMethodBase {
+struct YjGMethod0_NORET : public YjMethodBase {
     typedef void(*CBType)();
-    YjMethod0_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod0_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
 
     void decode() {}
@@ -64,9 +66,9 @@ struct YjMethod0_NORET : public YjMethodBase {
 };
 
 template<class T1>
-struct YjMethod1_NORET : public YjMethodBase {
+struct YjGMethod1_NORET : public YjMethodBase {
     typedef void(*CBType)(T1);
-    YjMethod1_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod1_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
 
@@ -80,9 +82,9 @@ struct YjMethod1_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2>
-struct YjMethod2_NORET : public YjMethodBase {
+struct YjGMethod2_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2);
-    YjMethod2_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod2_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -99,9 +101,9 @@ struct YjMethod2_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3>
-struct YjMethod3_NORET : public YjMethodBase {
+struct YjGMethod3_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3);
-    YjMethod3_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod3_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -120,9 +122,9 @@ struct YjMethod3_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4>
-struct YjMethod4_NORET : public YjMethodBase {
+struct YjGMethod4_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4);
-    YjMethod4_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod4_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -143,9 +145,9 @@ struct YjMethod4_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5>
-struct YjMethod5_NORET : public YjMethodBase {
+struct YjGMethod5_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5);
-    YjMethod5_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod5_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -168,9 +170,9 @@ struct YjMethod5_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6>
-struct YjMethod6_NORET : public YjMethodBase {
+struct YjGMethod6_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6);
-    YjMethod6_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod6_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -195,9 +197,9 @@ struct YjMethod6_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7>
-struct YjMethod7_NORET : public YjMethodBase {
+struct YjGMethod7_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7);
-    YjMethod7_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod7_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -224,9 +226,9 @@ struct YjMethod7_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
-struct YjMethod8_NORET : public YjMethodBase {
+struct YjGMethod8_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8);
-    YjMethod8_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod8_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -255,9 +257,9 @@ struct YjMethod8_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9>
-struct YjMethod9_NORET : public YjMethodBase {
+struct YjGMethod9_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9);
-    YjMethod9_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod9_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -288,9 +290,9 @@ struct YjMethod9_NORET : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10>
-struct YjMethod10_NORET : public YjMethodBase {
+struct YjGMethod10_NORET : public YjMethodBase {
     typedef void(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-    YjMethod10_NORET(CBType _cb) : cb(_cb) {}
+    YjGMethod10_NORET(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -326,9 +328,9 @@ struct YjMethod10_NORET : public YjMethodBase {
 // -------------------------------------------------------------------------
 
 template<class RT>
-struct YjMethod0 : public YjMethodBase {
+struct YjGMethod0 : public YjMethodBase {
     typedef RT(*CBType)();
-    YjMethod0(CBType _cb) : cb(_cb) {}
+    YjGMethod0(CBType _cb) : cb(_cb) {}
     CBType cb;
 
     void decode() {}
@@ -340,9 +342,9 @@ struct YjMethod0 : public YjMethodBase {
 };
 
 template<class T1, class RT>
-struct YjMethod1 : public YjMethodBase {
+struct YjGMethod1 : public YjMethodBase {
     typedef RT(*CBType)(T1);
-    YjMethod1(CBType _cb) : cb(_cb) {}
+    YjGMethod1(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
 
@@ -357,9 +359,9 @@ struct YjMethod1 : public YjMethodBase {
 };
 
 template<class T1, class T2, class RT>
-struct YjMethod2 : public YjMethodBase {
+struct YjGMethod2 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2);
-    YjMethod2(CBType _cb) : cb(_cb) {}
+    YjGMethod2(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -377,9 +379,9 @@ struct YjMethod2 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class RT>
-struct YjMethod3 : public YjMethodBase {
+struct YjGMethod3 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3);
-    YjMethod3(CBType _cb) : cb(_cb) {}
+    YjGMethod3(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -399,9 +401,9 @@ struct YjMethod3 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class RT>
-struct YjMethod4 : public YjMethodBase {
+struct YjGMethod4 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4);
-    YjMethod4(CBType _cb) : cb(_cb) {}
+    YjGMethod4(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -423,9 +425,9 @@ struct YjMethod4 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class RT>
-struct YjMethod5 : public YjMethodBase {
+struct YjGMethod5 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5);
-    YjMethod5(CBType _cb) : cb(_cb) {}
+    YjGMethod5(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -449,9 +451,9 @@ struct YjMethod5 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class RT>
-struct YjMethod6 : public YjMethodBase {
+struct YjGMethod6 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6);
-    YjMethod6(CBType _cb) : cb(_cb) {}
+    YjGMethod6(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -477,9 +479,9 @@ struct YjMethod6 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class RT>
-struct YjMethod7 : public YjMethodBase {
+struct YjGMethod7 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7);
-    YjMethod7(CBType _cb) : cb(_cb) {}
+    YjGMethod7(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -507,9 +509,9 @@ struct YjMethod7 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class RT>
-struct YjMethod8 : public YjMethodBase {
+struct YjGMethod8 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8);
-    YjMethod8(CBType _cb) : cb(_cb) {}
+    YjGMethod8(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -539,9 +541,9 @@ struct YjMethod8 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class RT>
-struct YjMethod9 : public YjMethodBase {
+struct YjGMethod9 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9);
-    YjMethod9(CBType _cb) : cb(_cb) {}
+    YjGMethod9(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
@@ -573,9 +575,9 @@ struct YjMethod9 : public YjMethodBase {
 };
 
 template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10, class RT>
-struct YjMethod10 : public YjMethodBase {
+struct YjGMethod10 : public YjMethodBase {
     typedef RT(*CBType)(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-    YjMethod10(CBType _cb) : cb(_cb) {}
+    YjGMethod10(CBType _cb) : cb(_cb) {}
     CBType cb;
     RMCVR(T1) t1;
     RMCVR(T2) t2;
