@@ -10,9 +10,6 @@ public:
     ~StubBase() {}
 
     virtual void on_create(const GDict& create_data);
-
-    virtual GString get_entity_name() { return ""; };
-
 };
 
 

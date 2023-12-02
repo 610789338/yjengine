@@ -4,8 +4,8 @@
 
 
 void StubBase::on_create(const GDict& create_data) {
-    INFO_LOG("stub(%s) create\n", get_entity_name().c_str());
-    GAME_BROADCAST(on_stub_create, get_entity_name(), get_self_mailbox());
+    INFO_LOG("stub(%s) create\n", get_class_name().c_str());
+    GAME_BROADCAST(on_stub_create, get_class_name(), get_self_mailbox());
 
     BaseEntity::on_create(create_data);
 }

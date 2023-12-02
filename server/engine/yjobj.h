@@ -14,7 +14,7 @@ public:
 
     // lua bind
     virtual ClassDescBase* get_class_desc() { ASSERT(false); return nullptr; }
-    virtual GString& get_name() { ASSERT(false);  static GString ret;  return ret; }
+    virtual GString get_class_name() { ASSERT(false); return ""; }
 
     lua_Integer obj_ref;
 };

@@ -19,9 +19,6 @@ public:
 
     virtual void tick() {}
 
-    void set_name(GString _name) { name = _name; }
-    GString& get_name() { return name; }
-
     void set_owner(Entity* _owner) { owner = _owner; }
     Entity* get_owner() { return owner; }
 
@@ -57,7 +54,7 @@ public:
     template<class TEntityComp>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)()) {
         RpcMethodBase* method = new EntityRpcMethod0<TEntityComp>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
@@ -66,7 +63,7 @@ public:
     template<class TEntityComp, class T1>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1)) {
         RpcMethodBase* method = new EntityRpcMethod1<TEntityComp, T1>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
@@ -75,7 +72,7 @@ public:
     template<class TEntityComp, class T1, class T2>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2)) {
         RpcMethodBase* method = new EntityRpcMethod2<TEntityComp, T1, T2>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
@@ -84,7 +81,7 @@ public:
     template<class TEntityComp, class T1, class T2, class T3>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3)) {
         RpcMethodBase* method = new EntityRpcMethod3<TEntityComp, T1, T2, T3>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
@@ -93,7 +90,7 @@ public:
     template<class TEntityComp, class T1, class T2, class T3, class T4>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
         RpcMethodBase* method = new EntityRpcMethod4<TEntityComp, T1, T2, T3, T4>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
@@ -102,13 +99,13 @@ public:
     template<class TEntityComp, class T1, class T2, class T3, class T4, class T5>
     void entity_comp_rpc_regist(enum RpcType entity_rpc_type, const GString& rpc_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
         RpcMethodBase* method = new EntityRpcMethod5<TEntityComp, T1, T2, T3, T4, T5>(cb);
-        method->component_name = TEntityComp::get_name();
+        method->component_name = TEntityComp::get_component_name();
         method->type = entity_rpc_type;
         get_rpc_mgr()->add_rpc_method(rpc_name, method);
         get_local_entity_rpc_names()->push_back(rpc_name);
     }
 
-    virtual void component_regist(EntityComponentBase* component);
+    virtual void component_regist(GString component_name, EntityComponentBase* component);
     virtual void generate_entity_components(Entity* owner);
     virtual void rpc_call(Entity* entity, bool from_client, const GString& rpc_name, RpcMethodBase* rpc_method);
     virtual RpcManagerBase* get_rpc_mgr() { return nullptr; }
@@ -121,7 +118,7 @@ public:
         timer->m_start_time = start_time; \
         timer->m_expiration = start_time; \
         timer->m_cb_name = cb_name; \
-        timer->m_component_name = TEntityComp::get_name();
+        timer->m_component_name = TEntityComp::get_component_name();
 
     template<class TEntityComp>
     Timer0<TEntityComp>* regist_timer(TEntityComp* entity_comp, double start, double interval, bool repeat, const GString& cb_name, void(TEntityComp::*cb)()) {
@@ -175,7 +172,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)()) {
         auto event = new Event0<TEntityComp>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -183,7 +180,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1)) {
         auto event = new Event1<TEntityComp, T1>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -191,7 +188,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2)) {
         auto event = new Event2<TEntityComp, T1, T2>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -199,7 +196,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3)) {
         auto event = new Event3<TEntityComp, T1, T2, T3>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -207,7 +204,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3, T4)) {
         auto event = new Event4<TEntityComp, T1, T2, T3, T4>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -215,7 +212,7 @@ public:
     void regist_event(TEntityComp* entity_comp, const GString& event_name, void(TEntityComp::*cb)(T1, T2, T3, T4, T5)) {
         auto event = new Event5<TEntityComp, T1, T2, T3, T4, T5>(entity_comp, cb);
         event->m_event_name = event_name;
-        event->m_component_name = TEntityComp::get_name();
+        event->m_component_name = TEntityComp::get_component_name();
         entity_comp->get_owner()->add_event(event);
     }
 
@@ -269,19 +266,18 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 #define COMP_REGIST_TIMER(start, interval, repeat, cb, ...) \
     get_owner()->get_comp_mgr()->regist_timer(this, start, interval, repeat, #cb, &RMP(decltype(youjun))::cb)->set_args(__VA_ARGS__)
 #define COMP_MIGRATE_TIMER_DEF(cb) \
-    TEntity::timer_manager.store_timer_cb_for_migrate((GString(#cb) + TEntityComp::get_name()).c_str(), &RMP(decltype(youjun))::cb);
+    TEntity::timer_manager.store_timer_cb_for_migrate((GString(#cb) + TEntityComp::get_component_name()).c_str(), &RMP(decltype(youjun))::cb);
 
 #define COMP_REGIST_EVENT(event) \
     get_owner()->get_comp_mgr()->regist_event(this, #event, &RMP(decltype(youjun))::event);
 #define COMP_MIGRATE_EVENT_DEF(event) \
-    TEntity::event_manager.store_event_cb_for_migrate((GString(#event) + TEntityComp::get_name()).c_str(), &RMP(decltype(youjun))::event)
+    TEntity::event_manager.store_event_cb_for_migrate((GString(#event) + TEntityComp::get_component_name()).c_str(), &RMP(decltype(youjun))::event)
 
 
 #define REGIST_COMPONENT(TEntity, TEntityComp) \
     TEntityComp* component_##TEntityComp = new TEntityComp; \
-    component_##TEntityComp->set_name(TEntityComp::get_name()); \
     component_##TEntityComp ->set_owner(nullptr); \
-    component_manager.component_regist(component_##TEntityComp ); \
+    component_manager.component_regist(#TEntityComp, component_##TEntityComp ); \
     TEntityComp::rpc_method_define<TEntity>(); \
     TEntityComp::property_define<TEntity>(); \
     TEntityComp::migrate_timer_define<TEntity, TEntityComp>(); \
@@ -290,15 +286,15 @@ void rpc_call(bool from_client, const GString& rpc_name, RpcMethodBase* rpc_meth
 #define GENERATE_COMPONENT_INNER(TEntityComp) \
 public: \
     ClassDescBase* get_class_desc() { /* TODO */ return nullptr; } \
-    static GString get_name() { return #TEntityComp; } \
+    static GString get_component_name() { return #TEntityComp; } \
     EntityComponentBase* create_self(Entity* owner) { \
         TEntityComp* component = new TEntityComp; \
-        component->set_name(TEntityComp::get_name()); \
         component->set_owner(owner); \
         return component; \
     } \
     COMP_RPC_CALL_DEFINE(TEntityComp) \
-    TEntityComp* youjun;
+    TEntityComp* youjun; \
+    GString get_class_name() { return TEntityComp::get_component_name(); }
 
 #define COMP_RPC_DEFINE template<class TEntity> static void rpc_method_define
 #define COMP_PROPERTY_DEFINE template<class TEntity> static void property_define

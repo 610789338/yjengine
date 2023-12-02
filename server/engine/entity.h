@@ -52,7 +52,7 @@ public:
 
     void tick();
 
-    virtual GString& get_name() { return entity_name; }
+    virtual GString& get_entity_name() { return entity_name; }
     virtual EntityType get_entity_type() { ASSERT(false); return EntityType::EntityType_None; }
     virtual void apply_init_data(const GDict& create_data) {}
     virtual void on_create(const GDict& create_data);

@@ -16,7 +16,7 @@ bool pre_call_lua(YjObj* obj, GString method_name) {
     lua_rawgeti(l, LUA_REGISTRYINDEX, class_desc->class_ref);
     lua_getfield(l, -1, method_name.c_str());
     if (lua_type(l, -1) != LUA_TFUNCTION) {
-        ERROR_LOG("%s has no lua funciont named %s\n", obj->get_name().c_str(), method_name.c_str());
+        ERROR_LOG("%s has no lua funciont named %s\n", obj->get_class_name().c_str(), method_name.c_str());
         return false;
     }
 

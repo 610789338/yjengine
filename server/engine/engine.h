@@ -45,7 +45,7 @@ public: \
     void time_to_disaster_backup() { real_time_to_disaster_backup(); } \
     static EventManager<TCLASS> event_manager; \
     EventManagerBase* get_event_manager() { return &event_manager; } \
-    GString get_entity_name() { return #TCLASS; }
+    GString get_class_name() { return #TCLASS; }
 
 #define GENERATE_ENTITY_OUT(TCLASS) \
 ClassDesc<TCLASS> TCLASS::class_desc(#TCLASS); \

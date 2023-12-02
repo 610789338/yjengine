@@ -32,14 +32,14 @@ ComponentManagerBase::~ComponentManagerBase() {
     components.clear();
 }
 
-void ComponentManagerBase::component_regist(EntityComponentBase* component) {
+void ComponentManagerBase::component_regist(GString component_name, EntityComponentBase* component) {
 
-    if (components.find(component->get_name()) != components.end()) {
-        WARN_LOG("component.%s exist\n", component->get_name().c_str());
+    if (components.find(component_name) != components.end()) {
+        WARN_LOG("component.%s exist\n", component_name.c_str());
         return;
     }
 
-    components[component->get_name()] = component;
+    components[component_name] = component;
 }
 
 void ComponentManagerBase::generate_entity_components(Entity* owner) {
