@@ -81,7 +81,9 @@ bool ClassDescBase::bind(const GString& module_name) {
         return false;
     }
 
+#ifndef USE_LUAJIT
     lua_pop(l, 1);
+#endif
 
     if (lua_type(l, -1) != LUA_TTABLE) {
         ERROR_LOG("entity class(%s) lua module(%s) must return table\n", class_name.c_str(), lua_module_name.c_str());

@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef USE_LUAJIT
+#include "luajit/src/lua.hpp"
+#else
 #include "lua/src/lua.hpp"
+#endif
 
 #include "../gvalue.h"
 

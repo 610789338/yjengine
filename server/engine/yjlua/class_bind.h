@@ -1,7 +1,12 @@
 #pragma once
 
 #include "../gvalue.h"
+
+#ifdef USE_LUAJIT
+#include "luajit/src/lua.hpp"
+#else
 #include "lua/src/lua.hpp"
+#endif
 
 class YjMethodBase;
 

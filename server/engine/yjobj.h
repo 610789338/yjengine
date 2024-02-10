@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gvalue.h"
-#include "yjlua/lua/src/lua.hpp"
+#include "yjlua/yjlua.h"
 
 using namespace std;
 
